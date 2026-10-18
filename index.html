@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>大介先生から逃げろ</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<style>
+:root{--red:#d3261f;--fg:#efe7e2;--dim:rgba(239,231,226,.65);--bg:#000;color-scheme:dark}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.layer{position:fixed;inset:0;pointer-events:none}
+#hud{padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left))}
+#count{font-size:22px;font-weight:700;text-shadow:0 2px 6px #000;letter-spacing:.04em}
+#hint{font-size:15px;color:var(--dim);margin-top:4px;text-shadow:0 2px 4px #000}
+#msg{position:fixed;left:0;right:0;bottom:calc(120px + env(safe-area-inset-bottom));text-align:center;font-size:22px;
+  text-shadow:0 2px 8px #000;opacity:0;transition:opacity .4s;padding:0 20px}
+#stam{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));width:220px;height:6px;
+  background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden}
+#stam>i{display:block;height:100%;width:100%;background:#e9e3d0;border-radius:3px;transform-origin:left center;will-change:transform}
+#stam.low>i{background:#c44}
+#mapwrap{position:fixed;right:calc(14px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));
+  width:210px;height:84px;opacity:.85;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden}
+#map{width:210px;height:84px;display:block}
+#arrow{position:absolute;left:-5px;top:-6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:12px solid #fff;transform-origin:5px 6px;will-change:transform}
+#vign{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(130,0,0,1) 100%);opacity:0;will-change:opacity}
+#flash{background:#c00;opacity:0}
+#cross{position:fixed;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(255,255,255,.35)}
+/* panels */
+.panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  background:rgba(0,0,0,.72);pointer-events:auto;text-align:center;padding:24px}
+.panel h1{font-size:clamp(34px,7vw,72px);color:var(--red);margin:0 0 14px;letter-spacing:.08em;
+  text-shadow:0 0 24px rgba(200,0,0,.55)}
+.panel p{max-width:640px;line-height:1.75;margin:6px auto;color:var(--fg);font-size:16px}
+.panel .keys{color:var(--dim);font-size:14px;margin-top:14px}
+.btn{pointer-events:auto;margin-top:18px;padding:14px 34px;font-size:20px;font-weight:700;color:#fff;
+  background:#7d0d0a;border:1px solid #c5332b;border-radius:12px;cursor:pointer;font-family:inherit;letter-spacing:.06em}
+.btn:active{transform:scale(.97)}
+.row{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px;color:var(--dim);font-size:14px}
+.row input[type=range]{width:160px}
+#loading{font-size:16px;color:var(--dim)}
+.hidden{display:none!important}
+/* touch controls */
+#touch{pointer-events:none}
+#stickBase{position:fixed;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.05);display:none}
+#stickKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+  background:rgba(255,255,255,.28)}
+#stickHint{position:fixed;left:calc(40px + env(safe-area-inset-left));bottom:calc(60px + env(safe-area-inset-bottom));
+  width:110px;height:110px;border-radius:50%;border:2px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:rgba(255,255,255,.35)}
+.tbtn{position:fixed;pointer-events:auto;width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.28);touch-action:none}
+.tbtn.on{background:rgba(200,30,20,.55);border-color:#e55}
+#bRun{right:calc(34px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom))}
+#bLight{right:calc(128px + env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:13px}
+#bPause{right:calc(14px + env(safe-area-inset-right));top:calc(108px + env(safe-area-inset-top));width:46px;height:46px;font-size:18px}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vign" class="layer"></div>
+<div id="flash" class="layer"></div>
+<div id="hud" class="layer hidden">
+  <div id="count">封印札 0 / 3</div>
+  <div id="hint"></div>
+</div>
+<div id="mapwrap" class="hidden"><canvas id="map" width="420" height="168"></canvas><div id="arrow"></div></div>
+<div id="cross" class="hidden"></div>
+<div id="msg"></div>
+<div id="stam" class="hidden"><i></i></div>
+
+<div id="touch" class="layer hidden">
+  <div id="stickHint">移動</div>
+  <div id="stickBase"><div id="stickKnob"></div></div>
+  <div id="bRun" class="tbtn">ダッシュ</div>
+  <div id="bLight" class="tbtn on">ライト</div>
+  <div id="bPause" class="tbtn">Ⅱ</div>
+</div>
+
+<div id="title" class="panel">
+  <h1>大介先生から逃げろ</h1>
+  <p>夜の校舎に閉じ込められた。<br>教室のどこかにある「封印札」を<b>3枚</b>集めて、<b>玄関の非常口</b>から脱出しろ。<br>赤い目の大介先生に見つかったら――走れ。</p>
+  <p class="keys" id="howto"></p>
+  <div id="loading">読み込み中… 0%</div>
+  <button id="start" class="btn hidden">はじめる</button>
+  <div class="row">
+    <label>視点の感度 <input id="sens" type="range" min="0.3" max="2.5" step="0.1" value="1"></label>
+    <label><input id="hq" type="checkbox"> 高画質（影あり）</label>
+  </div>
+</div>
+<div id="pause" class="panel hidden">
+  <h1 style="font-size:40px">一時停止</h1>
+  <button id="resume" class="btn">つづける</button>
+  <div class="row"><label>視点の感度 <input id="sens2" type="range" min="0.3" max="2.5" step="0.1" value="1"></label></div>
+</div>
+<div id="end" class="panel hidden">
+  <h1 id="endTitle">つかまった…</h1>
+  <p id="endText"></p>
+  <button id="retry" class="btn">もう一度</button>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const $ = (id) => document.getElementById(id);
+const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+// ------------------------------------------------------------------ settings
+let sens = parseFloat(store.get('dk_sens', IS_TOUCH ? '1.0' : '1.0'));
+let hq = store.get('dk_hq', IS_TOUCH ? '0' : '1') === '1';
+$('sens').value = $('sens2').value = sens; $('hq').checked = hq;
+for (const id of ['sens', 'sens2']) $(id).addEventListener('input', e => { sens = parseFloat(e.target.value); $('sens').value = $('sens2').value = sens; store.set('dk_sens', sens); });
+$('hq').addEventListener('change', e => { hq = e.target.checked; store.set('dk_hq', hq ? '1' : '0'); applyQuality(); });
+$('howto').innerHTML = IS_TOUCH
+  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「ダッシュ」で全力疾走・「ライト」で懐中電灯'
+  : 'WASD・矢印：移動　Shift：走る　マウス：見回す　F：ライト　M：地図　Esc：一時停止';
+
+// ------------------------------------------------------------------ renderer / scene
+const canvas = $('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_TOUCH, powerPreference: 'high-performance' });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x000000, 0.075);
+const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 80);
+scene.add(camera);
+scene.add(new THREE.AmbientLight(0x5a6878, 0.22));
+const hemi = new THREE.HemisphereLight(0x2a3240, 0x050505, 0.25); scene.add(hemi);
+
+// flashlight
+const flash = new THREE.SpotLight(0xfff0dc, 30, 26, THREE.MathUtils.degToRad(30), 0.55, 1.4);
+flash.position.set(0.15, -0.15, 0.05);
+camera.add(flash); camera.add(flash.target); flash.target.position.set(0, 0, -1);
+let flashOn = true, flashBase = 30;
+
+function applyQuality() {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : (hq ? 2 : 1.25)));
+  renderer.shadowMap.enabled = hq;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  flash.castShadow = hq;
+  flash.shadow.mapSize.set(1024, 1024);
+  flash.shadow.bias = -0.0008;
+  scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  resize();
+}
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = w < h ? 82 : 70; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+// ------------------------------------------------------------------ loading
+const manager = new THREE.LoadingManager();
+
+const texLoader = new THREE.TextureLoader(manager);
+const gltfLoader = new GLTFLoader(manager);
+function tex(name, srgb = true) {
+  const t = texLoader.load('assets/tex/' + name);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.flipY = false; t.anisotropy = 4;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const T = { terrazzo: tex('terrazzo.jpg'), woodfloor: tex('woodfloor.jpg'), plaster: tex('plaster.jpg'), ceiling: tex('ceiling.jpg'),
+  wood: tex('wood.jpg'), metal: tex('metal.jpg'), door: tex('door.jpg'), blackboard: tex('blackboard.jpg'), exit: tex('exit.png') };
+const ofudaTex = texLoader.load('assets/tex/ofuda.png'); ofudaTex.colorSpace = THREE.SRGBColorSpace;
+
+const M = (o) => new THREE.MeshStandardMaterial(o);
+const MATS = {
+  Floor_Corridor: M({ map: T.terrazzo, roughness: 0.45 }), Stairs: M({ map: T.terrazzo, roughness: 0.5 }),
+  Floor_Room: M({ map: T.woodfloor, roughness: 0.6 }), Ceiling: M({ map: T.ceiling, roughness: 0.9 }),
+  Wall: M({ map: T.plaster, roughness: 0.85 }), Door: M({ map: T.door, roughness: 0.7 }),
+  Blackboard: M({ map: T.blackboard, roughness: 0.9 }), Wood: M({ map: T.wood, roughness: 0.6 }),
+  Metal: M({ map: T.metal, roughness: 0.4, metalness: 0.4 }), Locker: M({ map: T.metal, color: 0xbfccc6, roughness: 0.5, metalness: 0.3 }),
+  Frame: M({ map: T.metal, color: 0xdde1e6, roughness: 0.35, metalness: 0.5 }),
+  Glass: M({ color: 0x3a4a58, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.25, depthWrite: false }),
+  ExitDoor: M({ color: 0x4a5a64, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false }),
+  Lamp: M({ color: 0xdddddd, emissive: 0x404448, roughness: 0.5 }),
+  Sign: M({ map: T.exit, emissive: 0xffffff, emissiveMap: T.exit, emissiveIntensity: 1.3 }),
+};
+
+let level, mapData, boxes, daisukeGltf;
+// models are shipped as base64 text (the host only serves standard web file types)
+const progress = {};
+function showProgress() { const v = Object.values(progress); $('loading').textContent = `読み込み中… ${Math.round(v.reduce((a, b) => a + b, 0) / Math.max(1, v.length) * 100)}%`; }
+async function loadGlb(url) {
+  const r = await fetch(url); if (!r.ok) throw new Error(url + ' ' + r.status);
+  const total = +r.headers.get('content-length') || 0; progress[url] = 0;
+  let text;
+  if (r.body && total) {
+    const reader = r.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; progress[url] = got / total; showProgress(); }
+    text = await new Blob(parts).text();
+  } else text = await r.text();
+  progress[url] = 1; showProgress();
+  const bin = atob(text.trim()); const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Promise((res, rej) => gltfLoader.parse(buf.buffer, './assets/', res, rej));
+}
+const pending = [
+  fetch('assets/map.json').then(r => r.json()).then(j => mapData = j),
+  fetch('assets/collision.json').then(r => r.json()).then(j => boxes = j),
+  loadGlb('assets/level.glb.b64.txt').then(g => { level = g.scene; }),
+  loadGlb('assets/daisuke.glb.b64.txt').then(g => { daisukeGltf = g; }),
+];
+Promise.all(pending).then(init).catch(e => { $('loading').textContent = '読み込みに失敗しました：' + e; console.error(e); });
+
+// ------------------------------------------------------------------ world
+const CELL = 3;
+const spots = {};
+let exitDoorMesh, exitBoxIdx = [];
+const grid = new Map();   // spatial hash of collision boxes
+function gkey(ix, iz) { return ix * 1000 + iz; }
+function addToGrid(i, b) {
+  for (let ix = Math.floor(b[0] / 2); ix <= Math.floor(b[2] / 2); ix++)
+    for (let iz = Math.floor(b[1] / 2); iz <= Math.floor(b[3] / 2); iz++) {
+      const k = gkey(ix, iz); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i);
+    }
+}
+function nearBoxes(x, z, r) {
+  const out = new Set();
+  for (let ix = Math.floor((x - r) / 2); ix <= Math.floor((x + r) / 2); ix++)
+    for (let iz = Math.floor((z - r) / 2); iz <= Math.floor((z + r) / 2); iz++) {
+      const l = grid.get(gkey(ix, iz)); if (l) for (const i of l) out.add(i);
+    }
+  return out;
+}
+let exitOpen = false;
+function solid(b) { return !(b[4] === 'X' && exitOpen); }
+
+function collide(p, r, includeFurniture = true) {
+  for (let iter = 0; iter < 3; iter++) {
+    for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
+      const b = boxes[i];
+      if (!solid(b) || (!includeFurniture && b[4] === 'F')) continue;
+      const cx = Math.max(b[0], Math.min(p.x, b[2])), cz = Math.max(b[1], Math.min(p.z, b[3]));
+      let dx = p.x - cx, dz = p.z - cz; const d2 = dx * dx + dz * dz;
+      if (d2 < r * r) {
+        if (d2 > 1e-9) { const d = Math.sqrt(d2); p.x += dx / d * (r - d); p.z += dz / d * (r - d); }
+        else { // center inside box: push out along smallest axis
+          const pl = p.x - b[0], pr = b[2] - p.x, pt = p.z - b[1], pb = b[3] - p.z; const m = Math.min(pl, pr, pt, pb);
+          if (m === pl) p.x = b[0] - r; else if (m === pr) p.x = b[2] + r; else if (m === pt) p.z = b[1] - r; else p.z = b[3] + r;
+        }
+      }
+    }
+  }
+}
+// line of sight (2D) against walls
+function segBox(x0, z0, x1, z1, b) {
+  let t0 = 0, t1 = 1; const dx = x1 - x0, dz = z1 - z0;
+  for (const [p, q] of [[-dx, x0 - b[0]], [dx, b[2] - x0], [-dz, z0 - b[1]], [dz, b[3] - z0]]) {
+    if (Math.abs(p) < 1e-9) { if (q < 0) return false; }
+    else { const t = q / p; if (p < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; } }
+  }
+  return true;
+}
+function lineClear(a, b) {
+  const len = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(len / 1.5) + 1;
+  const cand = new Set();
+  for (let k = 0; k <= n; k++) { const t = k / n; for (const i of nearBoxes(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t, 0.5)) cand.add(i); }
+  for (const i of cand) { const bx = boxes[i]; if (bx[4] === 'F' || !solid(bx)) continue; if (segBox(a.x, a.z, b.x, b.z, bx)) return false; }
+  return true;
+}
+// stairs (x 30..33, z 0..9) rise to 3m toward z=0
+function floorY(x, z) {
+  if (x > 30.05 && x < 32.95 && z < 9 && z > -0.5) return Math.min(3, Math.max(0, (9 - z) / 0.4 * (3 / 18)));
+  return 0;
+}
+
+// map / pathfinding
+let zone, links;
+function inside(x, y) { return x >= 0 && y >= 0 && x < mapData.W && y < mapData.H && zone[y][x] !== '.'; }
+function passable(x, y, nx, ny) { if (!inside(x, y) || !inside(nx, ny)) return false; return zone[y][x] === zone[ny][nx] || links.has(`${x},${y},${nx},${ny}`); }
+const cellCenter = (c) => new THREE.Vector3(c[0] * CELL + 1.5, 0, c[1] * CELL + 1.5);
+const toCell = (p) => [Math.max(0, Math.min(mapData.W - 1, Math.floor(p.x / CELL))), Math.max(0, Math.min(mapData.H - 1, Math.floor(p.z / CELL)))];
+function bfs(a, b) {
+  const key = (c) => c[0] + ',' + c[1]; const prev = new Map([[key(a), null]]); const q = [a];
+  while (q.length) { const c = q.shift(); if (c[0] === b[0] && c[1] === b[1]) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const n = [c[0] + dx, c[1] + dy];
+      if (!prev.has(key(n)) && passable(c[0], c[1], n[0], n[1])) { prev.set(key(n), c); q.push(n); } } }
+  if (!prev.has(key(b))) return null;
+  const path = []; for (let c = b; c && key(c) !== key(a); c = prev.get(key(c))) path.push(c); return path.reverse();
+}
+
+// ------------------------------------------------------------------ init
+let enemy, mixer, actions = {}, eyeLight, ofudas = [], lamps = [];
+function init() {
+  zone = mapData.rows; links = new Set();
+  for (const d of [...mapData.doors, ...mapData.opens]) { links.add(d.join(',')); links.add([d[2], d[3], d[0], d[1]].join(',')); }
+  boxes.forEach((b, i) => { addToGrid(i, b); if (b[4] === 'X') exitBoxIdx.push(i); });
+
+  level.traverse(o => {
+    if (o.isMesh) {
+      const key = o.name.split('.')[0];
+      o.material = MATS[key] || MATS.Wall;
+      o.receiveShadow = true; o.castShadow = ['Wood', 'Metal', 'Locker', 'Door'].includes(key);
+      if (key === 'ExitDoor') exitDoorMesh = o;
+    } else if (o.name.startsWith('Spot_') || o.name.startsWith('Marker_')) {
+      spots[o.name] = o.getWorldPosition(new THREE.Vector3());
+    }
+  });
+  scene.add(level);
+
+  // flickering corridor lamps (limited number for mobile)
+  const lampSpots = Object.keys(spots).filter(k => k.startsWith('Spot_Light_')).sort(() => Math.random() - 0.5).slice(0, IS_TOUCH ? 5 : 8);
+  for (const k of lampSpots) {
+    const l = new THREE.PointLight(0xc2d6ff, 5, 8, 1.6); l.position.copy(spots[k]); scene.add(l);
+    lamps.push({ l, seed: Math.random() * 100, base: 5 });
+  }
+  const green = new THREE.PointLight(0x33ff55, 6, 7, 1.5); green.position.copy(spots.Spot_Exit).add(new THREE.Vector3(-0.4, 1.6, 0)); scene.add(green);
+
+  // enemy
+  enemy = new THREE.Group();
+  const model = daisukeGltf.scene; enemy.add(model);
+  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (o.material) { o.material.roughness = 0.8; } } });
+  mixer = new THREE.AnimationMixer(model);
+  for (const c of daisukeGltf.animations) actions[c.name] = mixer.clipAction(c);
+  actions.Run.play(); actions.Sprint.play(); actions.Sprint.setEffectiveWeight(0);
+  let head = null; model.traverse(o => { if (o.isBone && o.name === 'head') head = o; });
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2010 });
+  const eyeGeo = new THREE.SphereGeometry(0.011, 10, 8);
+  for (const sx of [-0.034, 0.034]) {
+    const e = new THREE.Mesh(eyeGeo, eyeMat);
+    // head bone sits at (0,1.53,0) in bind pose; eyes at (sx,1.555,0.10)
+    e.position.set(sx, 0.025, 0.1); (head || enemy).add(e);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: 0xff2a1a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    glow.scale.set(0.09, 0.09, 1); e.add(glow);
+  }
+  eyeLight = new THREE.PointLight(0xff1a08, 2.5, 2.6, 1.5); eyeLight.position.set(0, 0.03, 0.25); (head || enemy).add(eyeLight);
+  scene.add(enemy); window.__dk.enemy = enemy;
+
+  applyQuality();
+  $('loading').classList.add('hidden'); $('start').classList.remove('hidden');
+  resetGame();
+  requestAnimationFrame(loop);
+}
+function glowTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,120,100,.8)'); gr.addColorStop(1, 'rgba(255,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+// ------------------------------------------------------------------ game state
+const P = { pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, stamina: 4.5, staminaMax: 4.5, sprinting: false, bob: 0, y: 0 };
+const E = { state: 'wait', timer: 0, route: [], lastKnown: new THREE.Vector3(), lost: 0, sense: 0, repath: 0, sees: false, bonus: 0, speed: 0, yaw: 0, y: 0 };
+let state = 'title', collected = 0, msgT = 0, showMap = true;
+const NEEDED = 3;
+
+function resetGame() {
+  collected = 0; exitOpen = false; if (exitDoorMesh) exitDoorMesh.visible = true;
+  for (const o of ofudas) scene.remove(o.g); ofudas = [];
+  P.pos.copy(spots.Spot_PlayerStart); P.vel.set(0, 0, 0); P.yaw = -Math.PI / 2; P.pitch = 0; P.stamina = P.staminaMax; P.y = 0;
+  enemy.position.copy(spots.Spot_Enemy); E.yaw = Math.PI / 2; E.state = 'wait'; E.timer = 12; E.route = []; E.bonus = 0; E.sees = false; E.y = 0;
+  // ofuda
+  const keys = Object.keys(spots).filter(k => k.startsWith('Spot_Ofuda_')).sort(() => Math.random() - 0.5).slice(0, NEEDED);
+  const mat = new THREE.MeshBasicMaterial({ map: ofudaTex, side: THREE.DoubleSide, color: 0xd8d0c8 });
+  for (const k of keys) {
+    const g = new THREE.Group(); g.position.copy(spots[k]).add(new THREE.Vector3(0, 0.35, 0));
+    const q = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.54), mat); g.add(q);
+    const l = new THREE.PointLight(0xff3020, 3, 3, 1.6); g.add(l);
+    scene.add(g); ofudas.push({ g, base: g.position.y });
+  }
+  updateCount(); drawMapBase(); flashOn = true; $('bLight').classList.add('on');
+}
+function updateCount() {
+  $('count').textContent = `封印札 ${collected} / ${NEEDED}`;
+  $('hint').textContent = exitOpen ? '玄関（右下の非常口）へ急げ！' : '教室の教卓を探せ';
+}
+function message(s, t = 3) { const m = $('msg'); m.textContent = s; m.style.opacity = 1; msgT = t; }
+
+// ------------------------------------------------------------------ input
+const keys = new Set();
+addEventListener('keydown', e => {
+  keys.add(e.code);
+  if (state === 'play') {
+    if (e.code === 'KeyF') toggleLight();
+    if (e.code === 'KeyM') { showMap = !showMap; $('mapwrap').classList.toggle('hidden', !showMap); }
+    if (e.code === 'Escape') pause();
+  } else if (state === 'title' && (e.code === 'Enter' || e.code === 'Space') && !$('start').classList.contains('hidden')) startGame();
+  else if (state === 'end' && (e.code === 'Enter' || e.code === 'KeyR')) retry();
+});
+addEventListener('keyup', e => keys.delete(e.code));
+addEventListener('blur', () => keys.clear());
+function toggleLight() { flashOn = !flashOn; $('bLight').classList.toggle('on', flashOn); }
+
+// mouse look: pointer lock when allowed, otherwise drag-to-look (e.g. inside an embedded frame)
+let lookDX = 0, lookDY = 0, locked = false, noLock = false, mouseDown = false;
+function lockPointer() {
+  if (IS_TOUCH || noLock || !canvas.requestPointerLock) return;
+  try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => { noLock = true; message('マウスをドラッグして見回せます', 3); }); }
+  catch (e) { noLock = true; }
+}
+document.addEventListener('mousemove', e => {
+  if (state !== 'play') return;
+  if (Math.abs(e.movementX) > 300 || Math.abs(e.movementY) > 300) return; // ignore lock jump
+  if (locked || mouseDown) { lookDX += e.movementX; lookDY += e.movementY; }
+});
+canvas.addEventListener('mousedown', e => { if (e.button === 0) { mouseDown = true; if (state === 'play' && !locked) lockPointer(); } });
+addEventListener('mouseup', () => { mouseDown = false; });
+document.addEventListener('pointerlockchange', () => {
+  if (document.pointerLockElement === canvas) { locked = true; lookDX = lookDY = 0; }
+  else if (locked) { locked = false; if (state === 'play') pause(); }
+});
+document.addEventListener('pointerlockerror', () => { noLock = true; message('マウスをドラッグして見回せます', 3); });
+function goFullscreen() {
+  if (!IS_TOUCH) return;
+  const el = document.documentElement;
+  try { const r = (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+}
+
+// touch: left = joystick, right = look
+const stick = { id: null, ox: 0, oy: 0, x: 0, y: 0 }, look = { id: null, lx: 0, ly: 0 };
+let runToggle = false;
+function onTouchStart(e) {
+  if (state !== 'play') return;
+  for (const t of e.changedTouches) {
+    if (t.target.closest && t.target.closest('.tbtn')) continue;
+    if (t.clientX < innerWidth * 0.45 && stick.id === null) {
+      stick.id = t.identifier; stick.ox = t.clientX; stick.oy = t.clientY; stick.x = stick.y = 0;
+      const b = $('stickBase'); b.style.left = t.clientX + 'px'; b.style.top = t.clientY + 'px'; b.style.display = 'block'; $('stickHint').style.opacity = 0;
+    } else if (look.id === null) { look.id = t.identifier; look.lx = t.clientX; look.ly = t.clientY; }
+  }
+  e.preventDefault();
+}
+function onTouchMove(e) {
+  for (const t of e.changedTouches) {
+    if (t.identifier === stick.id) {
+      let dx = t.clientX - stick.ox, dy = t.clientY - stick.oy; const d = Math.hypot(dx, dy), R = 60;
+      if (d > R) { dx *= R / d; dy *= R / d; }
+      stick.x = dx / R; stick.y = dy / R;
+      $('stickKnob').style.transform = `translate(${dx}px,${dy}px)`;
+    } else if (t.identifier === look.id) {
+      lookDX += (t.clientX - look.lx) * 1.6; lookDY += (t.clientY - look.ly) * 1.6; look.lx = t.clientX; look.ly = t.clientY;
+    }
+  }
+  e.preventDefault();
+}
+function onTouchEnd(e) {
+  for (const t of e.changedTouches) {
+    if (t.identifier === stick.id) { stick.id = null; stick.x = stick.y = 0; $('stickBase').style.display = 'none'; $('stickKnob').style.transform = ''; $('stickHint').style.opacity = 1; }
+    if (t.identifier === look.id) look.id = null;
+  }
+}
+document.addEventListener('touchstart', onTouchStart, { passive: false });
+document.addEventListener('touchmove', onTouchMove, { passive: false });
+document.addEventListener('touchend', onTouchEnd); document.addEventListener('touchcancel', onTouchEnd);
+function tapBtn(id, fn) { $(id).addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(); }, { passive: false }); $(id).addEventListener('click', fn); }
+tapBtn('bRun', () => { runToggle = !runToggle; $('bRun').classList.toggle('on', runToggle); });
+tapBtn('bLight', toggleLight);
+tapBtn('bPause', () => pause());
+
+$('start').addEventListener('click', startGame);
+$('resume').addEventListener('click', resume);
+$('retry').addEventListener('click', retry);
+function showPlayUI(on) {
+  $('hud').classList.toggle('hidden', !on); $('stam').classList.toggle('hidden', !on);
+  $('mapwrap').classList.toggle('hidden', !on || !showMap); $('cross').classList.toggle('hidden', !on || IS_TOUCH);
+  $('touch').classList.toggle('hidden', !on || !IS_TOUCH);
+}
+function startGame() {
+  $('title').classList.add('hidden'); state = 'play'; showPlayUI(true);
+  goFullscreen(); lockPointer();
+  message('…誰かいる。懐中電灯を頼りに、封印札を探せ。', 4);
+}
+function pause() { if (state !== 'play') return; state = 'pause'; $('pause').classList.remove('hidden'); showPlayUI(false); locked = false; if (document.pointerLockElement) document.exitPointerLock(); }
+function resume() { $('pause').classList.add('hidden'); state = 'play'; showPlayUI(true); lockPointer(); lookDX = lookDY = 0; }
+function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); message('もう一度…', 2); }
+
+// ------------------------------------------------------------------ update
+const tmp = new THREE.Vector3();
+function updatePlayer(dt) {
+  // look
+  const k = 0.0022 * sens;
+  P.yaw -= lookDX * k; P.pitch = THREE.MathUtils.clamp(P.pitch - lookDY * k, -1.3, 1.3); lookDX = lookDY = 0;
+  if (keys.has('KeyQ')) P.yaw += 2.2 * dt; if (keys.has('KeyE')) P.yaw -= 2.2 * dt;
+  // move input (x: right, y: forward)
+  let ix = 0, iy = 0;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) iy += 1; if (keys.has('KeyS') || keys.has('ArrowDown')) iy -= 1;
+  if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1; if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1;
+  let mag = Math.hypot(ix, iy); if (mag > 1) { ix /= mag; iy /= mag; mag = 1; }
+  let stickPush = 0;
+  if (stick.id !== null) { ix = stick.x; iy = -stick.y; stickPush = Math.hypot(ix, iy); mag = Math.min(1, stickPush); }
+  const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || stickPush > 0.92) && mag > 0.1;
+  P.sprinting = wantRun && P.stamina > 0.05;
+  P.stamina = P.sprinting ? Math.max(0, P.stamina - dt) : Math.min(P.staminaMax, P.stamina + dt * (mag > 0.1 ? 0.55 : 1.0));
+  if (P.stamina <= 0.05 && runToggle) { runToggle = false; $('bRun').classList.remove('on'); }
+  const speed = (P.sprinting ? 5.6 : 3.0) * (stick.id !== null ? Math.max(0.35, mag) : 1);
+  const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw);
+  const tvx = (fx * iy + rx * ix) * speed, tvz = (fz * iy + rz * ix) * speed;
+  const a = 1 - Math.exp(-14 * dt);
+  P.vel.x += (tvx - P.vel.x) * a; P.vel.z += (tvz - P.vel.z) * a;
+  P.pos.x += P.vel.x * dt; P.pos.z += P.vel.z * dt;
+  collide(P.pos, 0.3);
+  P.y += (floorY(P.pos.x, P.pos.z) - P.y) * Math.min(1, dt * 12);
+  const hv = Math.hypot(P.vel.x, P.vel.z); P.bob += dt * hv * 2.2;
+  const bob = Math.sin(P.bob) * 0.035 * Math.min(1, hv / 3);
+  camera.position.set(P.pos.x, P.y + 1.6 + bob, P.pos.z);
+  camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob * 0.5) * 0.008 * Math.min(1, hv / 3), 'YXZ');
+}
+
+function routeTo(target) {
+  const p = bfs(toCell(enemy.position), toCell(target)); if (!p) return false;
+  E.route = p.map(cellCenter); if (E.state === 'chase' || E.state === 'search') E.route.push(target.clone()); return true;
+}
+function newPatrol() {
+  for (let i = 0; i < 10; i++) { const x = Math.floor(Math.random() * mapData.W), y = Math.floor(Math.random() * mapData.H); if (inside(x, y) && routeTo(cellCenter([x, y]))) return; }
+}
+function distP() { return Math.hypot(enemy.position.x - P.pos.x, enemy.position.z - P.pos.z); }
+function updateEnemy(dt) {
+  if (E.state === 'wait') { E.timer -= dt; setAnim(0, dt); if (E.timer <= 0) { E.state = 'patrol'; newPatrol(); } return; }
+  E.sense -= dt;
+  if (E.sense <= 0) {
+    E.sense = 0.15;
+    const d = distP(); const dirx = Math.sin(E.yaw), dirz = Math.cos(E.yaw);
+    const tx = (P.pos.x - enemy.position.x) / d, tz = (P.pos.z - enemy.position.z) / d;
+    const inCone = dirx * tx + dirz * tz > Math.cos(THREE.MathUtils.degToRad(75)) || d < 4;
+    const lit = flashOn && d < 14;
+    E.sees = d < (flashOn ? 30 : 22) && (inCone || lit) && lineClear(enemy.position, P.pos);
+    const heard = P.sprinting && d < 11;
+    if (E.sees) { E.lastKnown.copy(P.pos); E.lost = 0; if (E.state !== 'chase') { E.state = 'chase'; E.repath = 0; message('見つかった――走れ！', 2); } }
+    else if (heard && E.state !== 'chase') { E.lastKnown.copy(P.pos); E.state = 'search'; routeTo(E.lastKnown); }
+  }
+  let speed = 1.7;
+  if (E.state === 'patrol') { if (!E.route.length) newPatrol(); }
+  else if (E.state === 'chase') {
+    speed = 4.25 + E.bonus; E.repath -= dt;
+    if (E.sees && distP() < 7) E.route = [P.pos.clone()];
+    else if (E.repath <= 0) { E.repath = 0.35; routeTo(E.lastKnown); }
+    if (!E.sees) { E.lost += dt; if (E.lost > 6) { E.state = 'search'; routeTo(E.lastKnown); } }
+  } else if (E.state === 'search') { speed = 2.7 + E.bonus * 0.5; if (!E.route.length) { E.state = 'patrol'; newPatrol(); } }
+  // move
+  if (E.route.length) {
+    const t = E.route[0]; const dx = t.x - enemy.position.x, dz = t.z - enemy.position.z, d = Math.hypot(dx, dz);
+    if (d < 0.25) E.route.shift();
+    else {
+      const s = Math.min(speed * dt, d); enemy.position.x += dx / d * s; enemy.position.z += dz / d * s;
+      const ty = Math.atan2(dx, dz); let dy = ty - E.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); E.yaw += dy * Math.min(1, dt * 8);
+      setAnim(speed, dt);
+    }
+  } else setAnim(0, dt);
+  E.y += (floorY(enemy.position.x, enemy.position.z) - E.y) * Math.min(1, dt * 10);
+  enemy.position.y = E.y; enemy.rotation.y = E.yaw;
+  if (distP() < 1.1 && Math.abs(E.y - P.y) < 1.2) caught();
+}
+function setAnim(speed, dt) {
+  const sprint = speed > 3.5;
+  actions.Run.setEffectiveWeight(sprint ? 0 : 1); actions.Sprint.setEffectiveWeight(sprint ? 1 : 0);
+  mixer.timeScale = speed < 0.05 ? 0 : THREE.MathUtils.clamp(speed / (sprint ? 4.6 : 3.0), 0.45, 1.5);
+  mixer.update(dt);
+}
+
+let scareT = 0;
+function caught() {
+  state = 'scare'; scareT = 0; locked = false; if (document.pointerLockElement) document.exitPointerLock();
+  const f = new THREE.Vector3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
+  enemy.position.set(P.pos.x + f.x * 0.8, P.y, P.pos.z + f.z * 0.8);
+  E.yaw = Math.atan2(-f.x, -f.z); enemy.rotation.y = E.yaw;
+  flashOn = true;
+  showPlayUI(false);
+}
+function updateScare(dt) {
+  scareT += dt;
+  const face = enemy.position.clone().add(new THREE.Vector3(0, 1.52, 0));
+  const m = new THREE.Matrix4().lookAt(camera.position, face, new THREE.Vector3(0, 1, 0));
+  const q = new THREE.Quaternion().setFromRotationMatrix(m);
+  camera.quaternion.slerp(q, Math.min(1, dt * 10));
+  camera.position.x += (Math.random() - 0.5) * 0.03; camera.position.y += (Math.random() - 0.5) * 0.03;
+  flash.intensity = 34;
+  setAnim(4.6, dt);
+  $('flash').style.opacity = (Math.floor(scareT * 12) % 2 ? 0.45 : 0.15);
+  if (scareT > 1.4) {
+    state = 'end'; $('flash').style.opacity = 0.0;
+    $('endTitle').textContent = 'つかまった…'; $('endTitle').style.color = '';
+    $('endText').textContent = `集めた封印札：${collected} / ${NEEDED}`;
+    $('end').classList.remove('hidden');
+  }
+}
+function win() {
+  state = 'end'; showPlayUI(false); locked = false; if (document.pointerLockElement) document.exitPointerLock();
+  $('endTitle').textContent = '脱出成功！'; $('endTitle').style.color = '#7de08a';
+  $('endText').innerHTML = '大介先生から逃げ切った。<br>…でも、明日も学校で会うことになる。';
+  $('end').classList.remove('hidden');
+}
+
+const UI = {};
+function updateWorld(dt, t) {
+  // ofuda
+  for (let i = ofudas.length - 1; i >= 0; i--) {
+    const o = ofudas[i]; o.g.rotation.y += dt * 1.2; o.g.position.y = o.base + Math.sin(t * 2 + i) * 0.06;
+    if (o.g.position.distanceTo(new THREE.Vector3(P.pos.x, P.y + 1.0, P.pos.z)) < 1.7) {
+      scene.remove(o.g); ofudas.splice(i, 1); collected++; E.bonus += 0.35;
+      if (collected >= NEEDED) { exitOpen = true; if (exitDoorMesh) exitDoorMesh.visible = false; E.bonus += 0.4; drawMapBase(); message('すべて集めた！ 玄関の非常口が開いた――急げ！', 5); }
+      else message(`封印札を手に入れた（${collected}/${NEEDED}）…どこかで足音が速くなった`, 3);
+      updateCount();
+    }
+  }
+  if (exitOpen && Math.hypot(P.pos.x - spots.Spot_Exit.x, P.pos.z - spots.Spot_Exit.z) < 1.8) win();
+  // lamps flicker
+  for (const L of lamps) { const n = (Math.sin(t * 7.3 + L.seed) + Math.sin(t * 13.1 + L.seed * 2)) * 0.5; L.l.intensity = n < -0.55 ? 0.1 : L.base * (0.85 + 0.15 * n); }
+  // fear
+  const d = distP(); let fear = THREE.MathUtils.clamp(1 - (d - 2) / 14, 0, 1); if (E.state === 'chase') fear = Math.max(fear, 0.45);
+  const va = (fear * 0.55 * (0.8 + 0.2 * Math.sin(t * (4 + fear * 6)))).toFixed(2);
+  if (va !== UI.va) { UI.va = va; $('vign').style.opacity = va; }
+  const fl = THREE.MathUtils.clamp(1 - (d - 2) / 8, 0, 1);
+  const noise = (Math.sin(t * 31) + Math.sin(t * 17.7)) * 0.5;
+  flash.intensity = flashOn ? flashBase * (fl > 0 && noise < -0.3 ? 1 - fl * 0.95 : 1) : 0;
+  const sw = Math.round(P.stamina / P.staminaMax * 100);
+  if (sw !== UI.sw) { UI.sw = sw; $('stam').firstElementChild.style.transform = `scaleX(${sw / 100})`; $('stam').classList.toggle('low', P.stamina < 1); }
+  if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('msg').style.opacity = 0; }
+}
+
+// minimap (no enemy shown): static canvas drawn only when it changes + CSS-moved arrow
+const mctx = $('map').getContext('2d');
+function drawMapBase() {
+  const c = mctx, s = 20, W = mapData.W, H = mapData.H; c.clearRect(0, 0, 420, 168);
+  const colorOf = z => z === 'C' ? 'rgba(200,200,200,.35)' : z === 'S' ? 'rgba(160,160,200,.35)' : 'rgba(150,110,80,.32)';
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const z = zone[y][x]; if (z === '.') continue; c.fillStyle = colorOf(z); c.fillRect(x * s, y * s + 4, s - 1, s - 1); }
+  c.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.45)'; c.fillRect(21 * s - 4, 7 * s + 4, 6, s - 1);
+}
+function drawMap() {
+  if (!showMap || state !== 'play') return;
+  const px = P.pos.x / 3 * 10, pz = P.pos.z / 3 * 10 + 2;   // canvas is shown at half size (210x84)
+  const tr = `translate(${px.toFixed(0)}px,${pz.toFixed(0)}px) rotate(${(-P.yaw).toFixed(2)}rad)`;
+  if (tr !== UI.tr) { UI.tr = tr; $('arrow').style.transform = tr; }
+}
+
+// ------------------------------------------------------------------ loop
+const clock = new THREE.Clock(); const TM = {}, DBG = {};
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const _t0 = performance.now();
+  if (state === 'play') { updatePlayer(dt); const _t1 = performance.now(); updateEnemy(dt); const _t2 = performance.now(); updateWorld(dt, t); const _t3 = performance.now(); drawMap(); TM.p = _t1 - _t0; TM.e = _t2 - _t1; TM.w = _t3 - _t2; TM.m = performance.now() - _t3; }
+  else if (state === 'scare') updateScare(dt);
+  else if (state === 'title') {
+    // slow idle camera at the start position looking down the corridor
+    if (spots.Spot_PlayerStart) { camera.position.set(spots.Spot_PlayerStart.x, 1.6, spots.Spot_PlayerStart.z); camera.rotation.set(0, -Math.PI / 2 + Math.sin(t * 0.3) * 0.15, 0, 'YXZ'); }
+    if (mixer) setAnim(0, dt);
+  }
+  const _r = performance.now(); renderer.render(scene, camera); TM.r = performance.now() - _r; TM.calls = renderer.info.render.calls; TM.prog = renderer.info.programs.length;
+}
+resize();
+window.__dk = { get ofudas() { return ofudas; }, enemy: null, step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play') { updatePlayer(dt); updateEnemy(dt); updateWorld(dt, clock.elapsedTime); } else if (state === 'scare') updateScare(dt); } }, get collected() { return collected; }, DBG, TM, scene, renderer, camera, flash, lamps, P, E, get state() { return state; }, spots, startGame, keys, stick };
+</script>
+</body>
+</html>
