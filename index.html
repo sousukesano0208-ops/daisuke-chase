@@ -1324,13 +1324,14 @@ async function initAudio() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   if (actx) { try { actx.resume(); } catch (e) {} return; }
   actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
-  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['near', 'assets/sfx/near.mp3']]) {
+  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['near', 'assets/sfx/near.mp3'], ['home', 'assets/sfx/home.mp3']]) {
     try { const r = await fetch(url); if (!r.ok) continue; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
   }
   for (const e of enemies) attachSteps(e);
   for (const a of avatars.values()) attachSteps(a);
   startAmbience();
   startNear();
+  updateHomeBgm();
 }
 // looping hallway ambience + an occasional giggle from somewhere in the dark
 let ambSrc = null, giggleT = 25 + Math.random() * 20;
@@ -1340,6 +1341,25 @@ function startAmbience() {
   ambSrc.loopStart = 0.05; ambSrc.loopEnd = Math.max(0.5, sfx.amb.duration - 0.06);
   const g = actx.createGain(); g.gain.value = 0.45; ambSrc.connect(g); g.connect(master); ambSrc.start();
 }
+// home-screen BGM (also the track that plays while the teachers are frozen)
+let homeSrc = null, homeGain = null;
+const HOME_PANELS = ['title', 'login', 'account', 'notice', 'gacha', 'achPanel', 'shop', 'lobby'];
+function updateHomeBgm() {
+  if (!actx || !sfx.home) return;
+  const onHome = state === 'title' && HOME_PANELS.some(id => !$(id).classList.contains('hidden'));
+  if (onHome && !homeSrc) {
+    homeSrc = actx.createBufferSource(); homeSrc.buffer = sfx.home; homeSrc.loop = true;
+    homeGain = actx.createGain(); homeGain.gain.value = 0; homeSrc.connect(homeGain); homeGain.connect(actx.destination); homeSrc.start();
+    homeGain.gain.setTargetAtTime(0.7, actx.currentTime, 0.4);
+  } else if (!onHome && homeSrc) {
+    const s = homeSrc, g = homeGain; homeSrc = null; homeGain = null;
+    g.gain.setTargetAtTime(0, actx.currentTime, 0.25); setTimeout(() => { try { s.stop(); } catch (e) {} }, 1500);
+  }
+}
+// browsers only allow sound after the first tap/click/key, so start the audio then
+function firstGesture() { if (!actx) { initAudio().then(() => { if (state === 'title') setMasterVolume(0); updateHomeBgm(); }); } else { try { actx.resume(); } catch (e) {} } }
+addEventListener('pointerdown', firstGesture, true); addEventListener('keydown', firstGesture, true); addEventListener('touchstart', firstGesture, { capture: true, passive: true });
+setInterval(updateHomeBgm, 400);
 // "it's getting closer": a loop that gets louder the nearer the closest teacher is
 let nearSrc = null, nearGain = null;
 function startNear() {
@@ -1388,7 +1408,7 @@ function updateEnemyAudio(e) {
 function audioMusic(on) {
   if (!actx || !sfx.music) return;
   const t = actx.currentTime;
-  if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
+  if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.home || sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
   else if (musicSrc) { const s = musicSrc; musicGain.gain.setTargetAtTime(0, t, 0.4); setTimeout(() => { try { s.stop(); } catch (e) {} }, 2000); musicSrc = null; }
 }
 // the teacher's voice when you get caught (two recordings, taking turns); routed past the master volume so it plays over the end screen
@@ -2452,7 +2472,7 @@ function loop() {
 resize();
 window.__dk = { get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
   step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); computeTargets(); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
-  nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
+  homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
 </html>
