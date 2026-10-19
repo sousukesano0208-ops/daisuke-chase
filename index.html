@@ -1324,9 +1324,10 @@ async function initAudio() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   if (actx) { try { actx.resume(); } catch (e) {} return; }
   actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
-  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['near', 'assets/sfx/near.mp3'], ['home', 'assets/sfx/home.mp3']]) {
-    try { const r = await fetch(url); if (!r.ok) continue; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
-  }
+  // load everything in parallel (the caught voice is first, so it is ready as early as possible)
+  await Promise.all([['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['near', 'assets/sfx/near.mp3'], ['home', 'assets/sfx/home.mp3']].map(async ([k, url]) => {
+    try { const r = await fetch(url); if (!r.ok) return; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
+  }));
   for (const e of enemies) attachSteps(e);
   for (const a of avatars.values()) attachSteps(a);
   startAmbience();
@@ -1413,12 +1414,17 @@ function audioMusic(on) {
 }
 // the teacher's voice when you get caught (two recordings, taking turns); routed past the master volume so it plays over the end screen
 let voiceIdx = Math.floor(Math.random() * 2);
-function playVoice() {
-  if (!actx) return; const ks = ['voice1', 'voice2'].filter(k => sfx[k]); if (!ks.length) return;
+let voicePlays = 0;
+function playVoice(duck) {
+  if (!actx) return; try { actx.resume(); } catch (e) {}
+  const ks = ['voice1', 'voice2'].filter(k => sfx[k]); if (!ks.length) return;
+  const t = actx.currentTime;
+  // everything else (approach sound, footsteps, ambience) drops right down so the voice is clearly heard
+  if (duck && master) { master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(0.06, t + 0.08); }
   const src = actx.createBufferSource(); src.buffer = sfx[ks[voiceIdx++ % ks.length]];
-  const g = actx.createGain(); g.gain.value = 1.0; src.connect(g); g.connect(actx.destination); src.start();
+  const g = actx.createGain(); g.gain.value = 1.25; src.connect(g); g.connect(actx.destination); src.start(t + 0.05); voicePlays++;
 }
-function setMasterVolume(v) { if (master) master.gain.setTargetAtTime(v, actx.currentTime, 0.05); }
+function setMasterVolume(v) { if (master) { const t = actx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(v, t, 0.05); } }
 
 // ================================================================== input
 const keys = new Set();
@@ -1808,7 +1814,7 @@ function caught(e) {
   if (NET && UI.camAct) { act('cams', { on: 0 }); UI.camAct = false; }
   if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook();
     P.yaw = Math.atan2(-(e.pos.x - P.pos.x), -(e.pos.z - P.pos.z)); camera.position.set(P.pos.x, P.eye, P.pos.z); camera.rotation.set(0, P.yaw, 0, 'YXZ'); }
-  state = 'scare'; scareT = 0; scarer = e; playVoice(); unlockPointer(); audioMusic(false);
+  state = 'scare'; scareT = 0; scarer = e; playVoice(true); unlockPointer(); audioMusic(false);
   const f = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
   e.pos.set(P.pos.x + f.x * 0.8, 0, P.pos.z + f.z * 0.8); e.yaw = Math.atan2(-f.x, -f.z); e.group.rotation.y = e.yaw;
   flashOn = true; showPlayUI(false);
@@ -1822,7 +1828,7 @@ function updateScare(dt) {
   flash.intensity = 34; setAnim(scarer, 4.6, dt);
   $('flash').style.opacity = (Math.floor(scareT * 12) % 2 ? 0.45 : 0.15);
   if (scareT > 1.4 && NET && NET.started) {
-    $('flash').style.opacity = 0; state = 'play'; P.out = true; enterCams(true); message('つかまった… 監視カメラで観戦中', 4); return;
+    $('flash').style.opacity = 0; state = 'play'; P.out = true; if (master) { const t = actx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(1, t + 2.6, 0.4); } enterCams(true); message('つかまった… 監視カメラで観戦中', 4); return;
   }
   if (scareT > 1.4) {
     state = 'end'; $('flash').style.opacity = 0; setMasterVolume(0); $('earned').textContent = '';
@@ -2470,7 +2476,7 @@ function loop() {
   }
 }
 resize();
-window.__dk = { get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+window.__dk = { get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
   step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); computeTargets(); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
