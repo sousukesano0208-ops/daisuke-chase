@@ -28,4 +28,4 @@
 ## 中身
 - 3D描画：[three.js](https://threejs.org/) r160（`lib/` に同梱）。校舎はプログラムで生成
 - 大介先生のモデル：Blenderで制作（`assets/daisuke.glb.b64.txt`、glbをbase64テキストで格納）
-- 効果音：制作者が用意した音源（`assets/sfx/`）
+- 効果音・環境音：制作者が用意した音源（`assets/sfx/`）
