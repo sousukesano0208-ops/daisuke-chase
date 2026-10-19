@@ -1324,12 +1324,13 @@ async function initAudio() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   if (actx) { try { actx.resume(); } catch (e) {} return; }
   actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
-  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3']]) {
+  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['near', 'assets/sfx/near.mp3']]) {
     try { const r = await fetch(url); if (!r.ok) continue; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
   }
   for (const e of enemies) attachSteps(e);
   for (const a of avatars.values()) attachSteps(a);
   startAmbience();
+  startNear();
 }
 // looping hallway ambience + an occasional giggle from somewhere in the dark
 let ambSrc = null, giggleT = 25 + Math.random() * 20;
@@ -1338,6 +1339,20 @@ function startAmbience() {
   ambSrc = actx.createBufferSource(); ambSrc.buffer = sfx.amb; ambSrc.loop = true;
   ambSrc.loopStart = 0.05; ambSrc.loopEnd = Math.max(0.5, sfx.amb.duration - 0.06);
   const g = actx.createGain(); g.gain.value = 0.45; ambSrc.connect(g); g.connect(master); ambSrc.start();
+}
+// "it's getting closer": a loop that gets louder the nearer the closest teacher is
+let nearSrc = null, nearGain = null;
+function startNear() {
+  if (!actx || !sfx.near || nearSrc) return;
+  nearSrc = actx.createBufferSource(); nearSrc.buffer = sfx.near; nearSrc.loop = true; nearSrc.loopEnd = Math.min(5.0, sfx.near.duration);
+  nearGain = actx.createGain(); nearGain.gain.value = 0; nearSrc.connect(nearGain); nearGain.connect(master); nearSrc.start();
+}
+function updateNear(dmin, chasing) {
+  if (!nearGain) return;
+  let g = 0;
+  if ((state === 'play' || state === 'cams') && !P.out && dmin < 26) g = Math.pow(clamp(1 - (dmin - 2) / 24, 0, 1), 1.4) * 1.1;
+  if (chasing) g = Math.max(g, 0.25);
+  nearGain.gain.setTargetAtTime(g, actx.currentTime, 0.25);
 }
 function updateGiggle(dt) {
   if (!actx || !sfx.giggle) return;
@@ -1881,6 +1896,7 @@ function updateWorld(dt, t) {
   for (const e of enemies) updateEnemyAudio(e);
   for (const a of avatars.values()) if (a.kind === 'student') updateEnemyAudio(a);
   updateRadar(dt);
+  updateNear(hunter ? 1e9 : dmin, !hunter && enemies.some(e => e.active && e.state === 'chase' && !e.remote));
   if (state === 'play' || state === 'cams') updateGiggle(dt);
   if (NET) { UI.cntT = (UI.cntT || 0) - dt; if (UI.cntT <= 0) { UI.cntT = 0.5; updateCount(); } }
 }
@@ -2436,7 +2452,7 @@ function loop() {
 resize();
 window.__dk = { get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
   step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); computeTargets(); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
-  useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
+  nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
 </html>
