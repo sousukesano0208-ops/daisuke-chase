@@ -219,7 +219,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <p class="keys" id="howto"></p>
   <div id="loading">読み込み中… 0%</div>
   <button id="start" class="btn hidden" type="button">ひとりで遊ぶ</button>
-  <button id="online" class="btn sub hidden" type="button">オンライン対戦（2〜4人）</button>
+  <button id="online" class="btn sub hidden" type="button">オンライン対戦（2〜5人）</button>
   <div class="row hidden" id="navRow">
     <button id="shopBtn" class="btn sub" type="button">購買部（ショップ）</button>
     <button id="gachaBtn" class="btn sub" type="button">ガチャ</button>
@@ -233,7 +233,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="lobby" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,48px)">オンライン対戦</h1>
-  <p class="keys">1人が<b>大介先生</b>になって、ほかの人（最大3人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。全員つかまえたら大介先生の勝ち。</p>
+  <p class="keys">1人が<b>大介先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。全員つかまえたら大介先生の勝ち。</p>
   <div id="lobbyHome">
     <div class="row"><label>名前 <input id="pname" type="text" maxlength="10" autocomplete="off"></label></div>
     <button id="mkRoom" class="btn" type="button">部屋を作る</button>
@@ -1342,7 +1342,7 @@ function startAmbience() {
   ambSrc.loopStart = 0.05; ambSrc.loopEnd = Math.max(0.5, sfx.amb.duration - 0.06);
   const g = actx.createGain(); g.gain.value = 0.45; ambSrc.connect(g); g.connect(master); ambSrc.start();
 }
-// home-screen BGM (also the track that plays while the teachers are frozen)
+// home-screen BGM
 let homeSrc = null, homeGain = null;
 const HOME_PANELS = ['title', 'login', 'account', 'notice', 'gacha', 'achPanel', 'shop', 'lobby'];
 function updateHomeBgm() {
@@ -1409,7 +1409,7 @@ function updateEnemyAudio(e) {
 function audioMusic(on) {
   if (!actx || !sfx.music) return;
   const t = actx.currentTime;
-  if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.home || sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
+  if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
   else if (musicSrc) { const s = musicSrc; musicGain.gain.setTargetAtTime(0, t, 0.4); setTimeout(() => { try { s.stop(); } catch (e) {} }, 2000); musicSrc = null; }
 }
 // the teacher's voice when you get caught (two recordings, taking turns); routed past the master volume so it plays over the end screen
@@ -1977,9 +1977,9 @@ const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const GH_URL = 'https://sousukesano0208-ops.github.io/daisuke-chase/';
 const ONLINE_OK = !/claude/.test(location.hostname);
 const USE_LOCAL = /[?&]net=local/.test(location.search);   // same-browser test transport
-const SURV_SPAWNS = [[10.5, 3.0], [13.5, 3.0], [10.5, 6.0], [13.5, 6.0]];
+const SURV_SPAWNS = [[10.5, 3.0], [13.5, 3.0], [10.5, 6.0], [13.5, 6.0], [12.0, 4.5]];
 const HUNTER_SPAWN = [61.5, 34.5];
-const SURV_COLORS = [0xe0483a, 0x3a8ee0, 0xe0c23a, 0x55c26a];
+const SURV_COLORS = [0xe0483a, 0x3a8ee0, 0xe0c23a, 0x55c26a, 0xb05ad8];
 
 class LocalConn { constructor(peer, peerId) { this.p = peer; this.peer = peerId; this.h = {}; this.open = false; }
   on(e, f) { (this.h[e] ||= []).push(f); } _emit(e, ...a) { (this.h[e] || []).forEach(f => f(...a)); }
@@ -2117,7 +2117,7 @@ function renderRoster() {
     $('cfgAI').value = String(cfg.ai); $('cfgTeacher').checked = !!cfg.teacher;
     const hasEnemy = !!NET.hunterId || cfg.ai > 0 || cfg.teacher;
     const ok = NET.players.size >= 2 && hasEnemy; $('startOnline').classList.toggle('hidden', !ok);
-    netStatus(NET.players.size < 2 ? 'あと1人以上の参加を待っています（最大4人）' : !hasEnemy ? '大介先生（プレイヤー）かAIの先生を1人以上にしてください' : '');
+    netStatus(NET.players.size < 2 ? 'あと1人以上の参加を待っています（最大5人）' : !hasEnemy ? '大介先生（プレイヤー）かAIの先生を1人以上にしてください' : '');
   }
 }
 function broadcastRoster() {
@@ -2134,7 +2134,7 @@ function hostRecv(conn, d) {
   const id = conn.peer;
   if (d.t === 'hello') {
     if (NET.started) { conn.send({ t: 'full', why: 'ゲーム中です。終わるまで待ってください' }); return; }
-    if (NET.players.size >= 4) { conn.send({ t: 'full', why: '満員です（最大4人）' }); return; }
+    if (NET.players.size >= 5) { conn.send({ t: 'full', why: '満員です（最大5人）' }); return; }
     NET.conns.set(id, conn); NET.players.set(id, { id, name: String(d.name || 'プレイヤー').slice(0, 10), role: 'survivor' }); broadcastRoster();
   } else if (d.t === 'u') {
     const pl = NET.players.get(id); if (!pl || !NET.started) return;
