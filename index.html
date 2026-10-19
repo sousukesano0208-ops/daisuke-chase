@@ -6,86 +6,154 @@
 <title>大介先生から逃げろ</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>
-:root{--red:#d3261f;--fg:#efe7e2;--dim:rgba(239,231,226,.65);--bg:#000;color-scheme:dark}
+:root{--red:#d3261f;--fg:#efe7e2;--dim:rgba(239,231,226,.66);--bg:#000;--panel:rgba(8,6,6,.78);--cam:#9fe39a;color-scheme:dark}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);overflow:hidden;
   font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",system-ui,sans-serif;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none}
 canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) contrast(1.3)}
 .layer{position:fixed;inset:0;pointer-events:none}
+.hidden{display:none!important}
+#vign{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(130,0,0,1) 100%);opacity:0;will-change:opacity}
+#flash{background:#c00;opacity:0}
 #hud{padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left))}
-#count{font-size:22px;font-weight:700;text-shadow:0 2px 6px #000;letter-spacing:.04em}
-#hint{font-size:15px;color:var(--dim);margin-top:4px;text-shadow:0 2px 4px #000}
-#msg{position:fixed;left:0;right:0;bottom:calc(120px + env(safe-area-inset-bottom));text-align:center;font-size:22px;
+#count{font-size:21px;font-weight:700;text-shadow:0 2px 6px #000;letter-spacing:.04em}
+#hint{font-size:14px;color:var(--dim);margin-top:4px;text-shadow:0 2px 4px #000}
+.bat{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--dim);text-shadow:0 1px 3px #000}
+.bat .bar{width:110px;height:8px;border:1px solid rgba(255,255,255,.45);border-radius:2px;overflow:hidden;background:rgba(0,0,0,.5)}
+.bat .bar i{display:block;height:100%;background:#7fd36b;transform-origin:left center;will-change:transform}
+.bat.low .bar i{background:#e0483a}
+#doorState{font-size:12px;color:#ffb347;margin-top:4px;text-shadow:0 1px 3px #000}
+#msg{position:fixed;left:0;right:0;bottom:calc(132px + env(safe-area-inset-bottom));text-align:center;font-size:21px;
   text-shadow:0 2px 8px #000;opacity:0;transition:opacity .4s;padding:0 20px}
+#prompt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(52px + env(safe-area-inset-bottom));padding:8px 16px;border-radius:8px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);font-size:16px;white-space:nowrap}
+#prompt .pbar{height:4px;margin-top:6px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden}
+#prompt .pbar i{display:block;height:100%;background:#7fd36b;transform-origin:left center}
 #stam{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom));width:220px;height:6px;
   background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden}
 #stam>i{display:block;height:100%;width:100%;background:#e9e3d0;border-radius:3px;transform-origin:left center;will-change:transform}
 #stam.low>i{background:#c44}
+#pose{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));font-size:14px;padding:5px 10px;border-radius:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2)}
+#pose.hid{border-color:#7fd36b;color:#a6f19a}
+#pose.blown{border-color:#e0483a;color:#ff9c90}
 #mapwrap{position:fixed;right:calc(14px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));
-  width:210px;height:84px;opacity:.85;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden}
-#map{width:210px;height:84px;display:block}
+  width:192px;height:104px;opacity:.88;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden}
+#map{width:192px;height:104px;display:block}
 #arrow{position:absolute;left:-5px;top:-6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:12px solid #fff;transform-origin:5px 6px;will-change:transform}
-#vign{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(130,0,0,1) 100%);opacity:0;will-change:opacity}
-#flash{background:#c00;opacity:0}
 #cross{position:fixed;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(255,255,255,.35)}
 /* panels */
 .panel{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
-  background:rgba(0,0,0,.72);pointer-events:auto;text-align:center;padding:24px}
-.panel h1{font-size:clamp(34px,7vw,72px);color:var(--red);margin:0 0 14px;letter-spacing:.08em;
-  text-shadow:0 0 24px rgba(200,0,0,.55)}
-.panel p{max-width:640px;line-height:1.75;margin:6px auto;color:var(--fg);font-size:16px}
-.panel .keys{color:var(--dim);font-size:14px;margin-top:14px}
-.btn{pointer-events:auto;margin-top:18px;padding:14px 34px;font-size:20px;font-weight:700;color:#fff;
+  background:rgba(0,0,0,.74);pointer-events:auto;text-align:center;padding:24px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left));overflow-y:auto}
+.panel h1{font-size:clamp(32px,7vw,70px);color:var(--red);margin:0 0 12px;letter-spacing:.08em;text-shadow:0 0 24px rgba(200,0,0,.55);text-wrap:balance}
+.panel p{max-width:640px;line-height:1.75;margin:6px auto;font-size:15px}
+.panel .keys{color:var(--dim);font-size:13px;margin-top:10px}
+.btn{pointer-events:auto;margin-top:16px;padding:13px 34px;font-size:20px;font-weight:700;color:#fff;
   background:#7d0d0a;border:1px solid #c5332b;border-radius:12px;cursor:pointer;font-family:inherit;letter-spacing:.06em}
+.btn.sub{background:transparent;border-color:rgba(255,255,255,.35);font-size:15px;padding:9px 20px;margin-top:10px}
 .btn:active{transform:scale(.97)}
+.btn:focus-visible,.seg button:focus-visible,.cbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.seg button{font-family:inherit;font-size:15px;padding:9px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:var(--fg);cursor:pointer;min-width:92px}
+.seg button small{display:block;font-size:11px;color:var(--dim);margin-top:2px}
+.seg button.on{background:#7d0d0a;border-color:#e55}
 .row{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px;color:var(--dim);font-size:14px}
-.row input[type=range]{width:160px}
-#loading{font-size:16px;color:var(--dim)}
-.hidden{display:none!important}
-/* touch controls */
-#touch{pointer-events:none}
-#stickBase{position:fixed;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;
-  border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.05);display:none}
-#stickKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
-  background:rgba(255,255,255,.28)}
-#stickHint{position:fixed;left:calc(40px + env(safe-area-inset-left));bottom:calc(60px + env(safe-area-inset-bottom));
-  width:110px;height:110px;border-radius:50%;border:2px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
-  font-size:13px;color:rgba(255,255,255,.35)}
-.tbtn{position:fixed;pointer-events:auto;width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.28);touch-action:none}
+.row input[type=range]{width:150px}
+#loading{font-size:15px;color:var(--dim);margin-top:14px}
+/* touch */
+#stickBase{position:fixed;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(255,255,255,.05);display:none}
+#stickKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.28)}
+#stickHint{position:fixed;left:calc(40px + env(safe-area-inset-left));bottom:calc(70px + env(safe-area-inset-bottom));width:110px;height:110px;border-radius:50%;border:2px dashed rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(255,255,255,.35)}
+.tbtn{position:fixed;pointer-events:auto;width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.28);touch-action:none;text-align:center;line-height:1.1}
 .tbtn.on{background:rgba(200,30,20,.55);border-color:#e55}
-#bRun{right:calc(34px + env(safe-area-inset-right));bottom:calc(58px + env(safe-area-inset-bottom))}
-#bLight{right:calc(128px + env(safe-area-inset-right));bottom:calc(28px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:13px}
-#bPause{right:calc(14px + env(safe-area-inset-right));top:calc(108px + env(safe-area-inset-top));width:46px;height:46px;font-size:18px}
+.tbtn.ready{background:rgba(90,190,80,.45);border-color:#8f8}
+#bRun{right:calc(28px + env(safe-area-inset-right));bottom:calc(64px + env(safe-area-inset-bottom))}
+#bCrouch{right:calc(112px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom))}
+#bUse{right:calc(112px + env(safe-area-inset-right));bottom:calc(118px + env(safe-area-inset-bottom))}
+#bLight{right:calc(28px + env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:58px;height:58px;font-size:12px}
+#bPause{right:calc(14px + env(safe-area-inset-right));top:calc(128px + env(safe-area-inset-top));width:44px;height:44px;font-size:17px}
+/* cameras */
+#camui{position:fixed;inset:0;pointer-events:none;color:var(--cam);font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+#camui .scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 2px,rgba(0,0,0,0) 2px 4px);mix-blend-mode:multiply}
+#camui .noise{position:absolute;inset:0;background:rgba(200,255,200,.07);animation:nz .18s steps(2) infinite}
+#camui.sw .noise{background:rgba(220,255,220,.55)}
+@keyframes nz{50%{opacity:.35}}
+#camTop{position:absolute;left:calc(18px + env(safe-area-inset-left));top:calc(14px + env(safe-area-inset-top));font-size:18px;text-shadow:0 0 6px #000}
+#camTop .rec{color:#ff5a4a;margin-right:10px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+#camInfo{position:absolute;right:calc(18px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));text-align:right;font-size:14px;text-shadow:0 0 6px #000;line-height:1.6}
+#camPanel{position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));pointer-events:auto;
+  background:rgba(0,12,0,.6);border:1px solid rgba(159,227,154,.5);border-radius:8px;padding:8px}
+#camMap{position:relative;width:288px;height:156px}
+#camMap canvas{width:288px;height:156px;display:block;opacity:.8}
+.cbtn{font-family:inherit;color:var(--cam);background:rgba(0,0,0,.65);border:1px solid rgba(159,227,154,.6);border-radius:4px;cursor:pointer}
+#camMap .cbtn{position:absolute;transform:translate(-50%,-50%);font-size:10px;padding:2px 4px}
+#camMap .cbtn.on{background:#9fe39a;color:#041}
+#camBtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+#camBtns .cbtn{font-size:13px;padding:8px 10px;flex:1;white-space:nowrap}
+#camBtns .cbtn.door{flex:2.2}
+#camBtns .cbtn.door{color:#ffb347;border-color:#ffb347}
 </style>
 </head>
 <body>
+
 <canvas id="gl"></canvas>
 <div id="vign" class="layer"></div>
 <div id="flash" class="layer"></div>
 <div id="hud" class="layer hidden">
-  <div id="count">封印札 0 / 3</div>
+  <div id="count">教科書 0 / 4</div>
   <div id="hint"></div>
+  <div class="bat" id="bat"><span>バッテリー</span><span class="bar"><i></i></span><span id="batPct">100%</span></div>
+  <div id="doorState" class="hidden">監視室のドア：閉</div>
 </div>
-<div id="mapwrap" class="hidden"><canvas id="map" width="420" height="168"></canvas><div id="arrow"></div></div>
+<div id="mapwrap" class="hidden"><canvas id="map" width="384" height="208"></canvas><div id="arrow"></div></div>
 <div id="cross" class="hidden"></div>
 <div id="msg"></div>
+<div id="prompt" class="hidden"><span id="promptText"></span><div class="pbar hidden"><i></i></div></div>
+<div id="pose" class="hidden">しゃがみ中</div>
 <div id="stam" class="hidden"><i></i></div>
 
 <div id="touch" class="layer hidden">
   <div id="stickHint">移動</div>
   <div id="stickBase"><div id="stickKnob"></div></div>
   <div id="bRun" class="tbtn">ダッシュ</div>
+  <div id="bCrouch" class="tbtn">しゃがむ</div>
+  <div id="bUse" class="tbtn">使う</div>
   <div id="bLight" class="tbtn on">ライト</div>
   <div id="bPause" class="tbtn">Ⅱ</div>
 </div>
 
+<div id="camui" class="hidden">
+  <div class="scan"></div><div class="noise"></div>
+  <div id="camTop"><span class="rec">● REC</span><span id="camName">CAM1</span></div>
+  <div id="camInfo"><div id="camBat">バッテリー 100%</div><div id="camDoor">ドア：開</div></div>
+  <div id="camPanel">
+    <div id="camMap"><canvas id="camMapC" width="576" height="312"></canvas></div>
+    <div id="camBtns">
+      <button class="cbtn" id="camPrev" type="button">◀</button>
+      <button class="cbtn" id="camNext" type="button">▶</button>
+      <button class="cbtn door" id="camDoorBtn" type="button">ドアを閉める</button>
+      <button class="cbtn" id="camClose" type="button">戻る</button>
+    </div>
+  </div>
+</div>
+
 <div id="title" class="panel">
   <h1>大介先生から逃げろ</h1>
-  <p>夜の校舎に閉じ込められた。<br>教室のどこかにある「封印札」を<b>3枚</b>集めて、<b>玄関の非常口</b>から脱出しろ。<br>赤い目の大介先生に見つかったら――走れ。</p>
+  <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
+  教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目の大介先生に見つかったら――走れ。</p>
+  <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。<b>監視室</b>のカメラで先生の居場所を確認できるが、バッテリーを使う。<br>
+  バッテリーは<b>発電室</b>で充電。<b>放送室</b>のオルゴールを回すと先生は止まる――ただし、そのあと放送室に向かってくる。</p>
+  <div class="seg" id="diffSeg" role="radiogroup" aria-label="難易度">
+    <button type="button" data-d="easy">かんたん<small>教科書3冊</small></button>
+    <button type="button" data-d="normal">ふつう<small>教科書4冊</small></button>
+    <button type="button" data-d="hard">むずかしい<small>教科書5冊</small></button>
+    <button type="button" data-d="super">スーパー<small>大介先生が2人</small></button>
+  </div>
   <p class="keys" id="howto"></p>
   <div id="loading">読み込み中… 0%</div>
-  <button id="start" class="btn hidden">はじめる</button>
+  <button id="start" class="btn hidden" type="button">はじめる</button>
   <div class="row">
     <label>視点の感度 <input id="sens" type="range" min="0.3" max="2.5" step="0.1" value="1"></label>
     <label><input id="hq" type="checkbox"> 高画質（影あり）</label>
@@ -93,13 +161,15 @@ canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
 </div>
 <div id="pause" class="panel hidden">
   <h1 style="font-size:40px">一時停止</h1>
-  <button id="resume" class="btn">つづける</button>
+  <button id="resume" class="btn" type="button">つづける</button>
+  <button id="toTitle1" class="btn sub" type="button">タイトルへ</button>
   <div class="row"><label>視点の感度 <input id="sens2" type="range" min="0.3" max="2.5" step="0.1" value="1"></label></div>
 </div>
 <div id="end" class="panel hidden">
   <h1 id="endTitle">つかまった…</h1>
   <p id="endText"></p>
-  <button id="retry" class="btn">もう一度</button>
+  <button id="retry" class="btn" type="button">もう一度</button>
+  <button id="toTitle2" class="btn sub" type="button">難易度を変える</button>
 </div>
 
 <script type="importmap">
@@ -113,18 +183,33 @@ const $ = (id) => document.getElementById(id);
 const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
                 set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const V3 = THREE.Vector3;
+const clamp = THREE.MathUtils.clamp;
 
-// ------------------------------------------------------------------ settings
-let sens = parseFloat(store.get('dk_sens', IS_TOUCH ? '1.0' : '1.0'));
+// ================================================================== difficulty
+const DIFFS = {
+  easy:   { label: 'かんたん',   books: 3, patrol: 1.5, search: 2.4, chase: 3.7, sight: 18, hear: 8,  start: 20, freeze: 16, drainCam: 0.7, drainDoor: 1.2, hunt: 0.10, enemies: 1, findHidden: 0 },
+  normal: { label: 'ふつう',     books: 4, patrol: 1.7, search: 2.7, chase: 4.25, sight: 24, hear: 11, start: 14, freeze: 12, drainCam: 1.0, drainDoor: 1.8, hunt: 0.25, enemies: 1, findHidden: 0 },
+  hard:   { label: 'むずかしい', books: 5, patrol: 1.9, search: 3.0, chase: 4.8, sight: 30, hear: 14, start: 9,  freeze: 9,  drainCam: 1.3, drainDoor: 2.4, hunt: 0.40, enemies: 1, findHidden: 1.0 },
+  super:  { label: 'スーパー',   books: 5, patrol: 1.9, search: 3.0, chase: 4.8, sight: 30, hear: 14, start: 7,  freeze: 8,  drainCam: 1.3, drainDoor: 2.4, hunt: 0.40, enemies: 2, findHidden: 1.0 },
+};
+let diffKey = store.get('dk2_diff', 'normal'); if (!DIFFS[diffKey]) diffKey = 'normal';
+let D = DIFFS[diffKey];
+function setDiff(k) { diffKey = k; D = DIFFS[k]; store.set('dk2_diff', k); for (const b of $('diffSeg').children) { b.classList.toggle('on', b.dataset.d === k); b.setAttribute('aria-checked', b.dataset.d === k); b.setAttribute('role', 'radio'); } }
+for (const b of $('diffSeg').children) b.addEventListener('click', () => setDiff(b.dataset.d));
+setDiff(diffKey);
+
+// ================================================================== settings
+let sens = parseFloat(store.get('dk_sens', '1.0'));
 let hq = store.get('dk_hq', IS_TOUCH ? '0' : '1') === '1';
 $('sens').value = $('sens2').value = sens; $('hq').checked = hq;
 for (const id of ['sens', 'sens2']) $(id).addEventListener('input', e => { sens = parseFloat(e.target.value); $('sens').value = $('sens2').value = sens; store.set('dk_sens', sens); });
 $('hq').addEventListener('change', e => { hq = e.target.checked; store.set('dk_hq', hq ? '1' : '0'); applyQuality(); });
 $('howto').innerHTML = IS_TOUCH
-  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「ダッシュ」で全力疾走・「ライト」で懐中電灯'
-  : 'WASD・矢印：移動　Shift：走る　マウス：見回す　F：ライト　M：地図　Esc：一時停止';
+  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる・「使う」でカメラやオルゴール（発電機は長押し）'
+  : 'WASD：移動　Shift：走る　C：しゃがむ　E：使う（発電機は長押し）　F：ライト　M：地図　Esc：一時停止';
 
-// ------------------------------------------------------------------ renderer / scene
+// ================================================================== renderer
 const canvas = $('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !IS_TOUCH, powerPreference: 'high-performance' });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -132,131 +217,402 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0x000000, 0.075);
-const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 80);
+const FOG_NORMAL = 0.072, FOG_CAM = 0.028;
+scene.fog = new THREE.FogExp2(0x000000, FOG_NORMAL);
+const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 90);
 scene.add(camera);
-scene.add(new THREE.AmbientLight(0x5a6878, 0.22));
+const secCam = new THREE.PerspectiveCamera(72, 1, 0.05, 90);
+const ambient = new THREE.AmbientLight(0x5a6878, 0.22); scene.add(ambient);
 const hemi = new THREE.HemisphereLight(0x2a3240, 0x050505, 0.25); scene.add(hemi);
-
-// flashlight
+const moon = new THREE.DirectionalLight(0x6a7ca8, 0.10); moon.position.set(20, 30, -20); scene.add(moon);
 const flash = new THREE.SpotLight(0xfff0dc, 30, 26, THREE.MathUtils.degToRad(30), 0.55, 1.4);
 flash.position.set(0.15, -0.15, 0.05);
 camera.add(flash); camera.add(flash.target); flash.target.position.set(0, 0, -1);
-let flashOn = true, flashBase = 30;
+let flashOn = true; const flashBase = 30;
 
 function applyQuality() {
   renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : (hq ? 2 : 1.25)));
-  renderer.shadowMap.enabled = hq;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  flash.castShadow = hq;
-  flash.shadow.mapSize.set(1024, 1024);
-  flash.shadow.bias = -0.0008;
-  scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  renderer.shadowMap.enabled = hq; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  flash.castShadow = hq; flash.shadow.mapSize.set(1024, 1024); flash.shadow.bias = -0.0008;
+  scene.traverse(o => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.needsUpdate = true); });
   resize();
 }
 function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h; camera.fov = w < h ? 82 : 70; camera.updateProjectionMatrix();
+  for (const c of [camera, secCam]) { c.aspect = w / h; c.updateProjectionMatrix(); }
+  camera.fov = w < h ? 82 : 70; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
 
-// ------------------------------------------------------------------ loading
-const manager = new THREE.LoadingManager();
-
-const texLoader = new THREE.TextureLoader(manager);
-const gltfLoader = new GLTFLoader(manager);
-function tex(name, srgb = true) {
-  const t = texLoader.load('assets/tex/' + name);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.flipY = false; t.anisotropy = 4;
-  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
+// ================================================================== textures
+const texLoader = new THREE.TextureLoader();
+function tex(name) { const t = texLoader.load('assets/tex/' + name); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.colorSpace = THREE.SRGBColorSpace; return t; }
 const T = { terrazzo: tex('terrazzo.jpg'), woodfloor: tex('woodfloor.jpg'), plaster: tex('plaster.jpg'), ceiling: tex('ceiling.jpg'),
-  wood: tex('wood.jpg'), metal: tex('metal.jpg'), door: tex('door.jpg'), blackboard: tex('blackboard.jpg'), exit: tex('exit.png') };
-const ofudaTex = texLoader.load('assets/tex/ofuda.png'); ofudaTex.colorSpace = THREE.SRGBColorSpace;
+  wood: tex('wood.jpg'), metal: tex('metal.jpg'), door: tex('door.jpg'), exit: tex('exit.png') };
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+const JFONT = '"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo","Noto Sans JP",sans-serif';
+const CHALK = '"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif';
+function boardTex(lines) {
+  return canvasTex(1024, 256, (g, w, h) => {
+    g.fillStyle = '#1f3a2a'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.035})`; g.fillRect(Math.random() * w, Math.random() * h, 30 * Math.random(), 2); }
+    g.fillStyle = 'rgba(235,240,230,.82)'; g.textBaseline = 'top';
+    lines.forEach(([txt, size, x, y]) => { g.font = `${size}px ${CHALK}`; g.fillText(txt, x, y); });
+  });
+}
+const BOARDS = [
+  boardTex([['明日 数学 小テスト（教科書を持ってくること）', 44, 40, 30], ['範囲：p.48〜p.73', 36, 60, 110], ['日直', 30, 880, 190]]),
+  boardTex([['にげて', 92, 60, 40], ['大介先生が来る', 52, 70, 160]]),
+  boardTex([['10月19日（月）', 40, 40, 30], ['忘れ物をした者は職員室まで', 44, 40, 120]]),
+];
+const SUBJECTS = [['数学Ⅰ', '#2b5fae'], ['現代の国語', '#b0332a'], ['英語コミュニケーションⅠ', '#2f8a4c'], ['化学基礎', '#d07a1e'], ['歴史総合', '#6a3f9b']];
+function bookCover(name, col) {
+  return canvasTex(256, 352, (g, w, h) => {
+    g.fillStyle = col; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(18, 40, w - 36, 6); g.fillRect(18, h - 70, w - 36, 4);
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let fs = 44; g.font = `bold ${fs}px ${JFONT}`; while (g.measureText(name).width > w - 36 && fs > 18) { fs -= 2; g.font = `bold ${fs}px ${JFONT}`; }
+    g.fillText(name, w / 2, h / 2 - 10); g.font = `20px ${JFONT}`; g.fillText('高等学校', w / 2, h - 40);
+  });
+}
+const camScreenTex = canvasTex(256, 160, (g, w, h) => {
+  g.fillStyle = '#0b1a10'; g.fillRect(0, 0, w, h);
+  for (let y = 0; y < h; y += 3) { g.fillStyle = `rgba(120,220,140,${0.05 + Math.random() * 0.08})`; g.fillRect(0, y, w, 1); }
+  g.strokeStyle = 'rgba(140,240,150,.55)'; g.lineWidth = 3; g.strokeRect(10, 10, w - 20, h - 20);
+  g.fillStyle = 'rgba(160,250,160,.9)'; g.font = `bold 26px monospace`; g.fillText('CAM', 22, 44); g.fillStyle = '#ff5040'; g.fillText('●REC', w - 104, 44);
+});
+const onAirTex = canvasTex(256, 96, (g, w, h) => { g.fillStyle = '#300'; g.fillRect(0, 0, w, h); g.fillStyle = '#ff3a2a'; g.font = `bold 58px ${JFONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('ON AIR', w / 2, h / 2 + 3); });
 
+// ================================================================== materials
 const M = (o) => new THREE.MeshStandardMaterial(o);
 const MATS = {
-  Floor_Corridor: M({ map: T.terrazzo, roughness: 0.45 }), Stairs: M({ map: T.terrazzo, roughness: 0.5 }),
-  Floor_Room: M({ map: T.woodfloor, roughness: 0.6 }), Ceiling: M({ map: T.ceiling, roughness: 0.9 }),
-  Wall: M({ map: T.plaster, roughness: 0.85 }), Door: M({ map: T.door, roughness: 0.7 }),
-  Blackboard: M({ map: T.blackboard, roughness: 0.9 }), Wood: M({ map: T.wood, roughness: 0.6 }),
-  Metal: M({ map: T.metal, roughness: 0.4, metalness: 0.4 }), Locker: M({ map: T.metal, color: 0xbfccc6, roughness: 0.5, metalness: 0.3 }),
-  Frame: M({ map: T.metal, color: 0xdde1e6, roughness: 0.35, metalness: 0.5 }),
-  Glass: M({ color: 0x3a4a58, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.25, depthWrite: false }),
-  ExitDoor: M({ color: 0x4a5a64, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false }),
-  Lamp: M({ color: 0xdddddd, emissive: 0x404448, roughness: 0.5 }),
-  Sign: M({ map: T.exit, emissive: 0xffffff, emissiveMap: T.exit, emissiveIntensity: 1.3 }),
+  floorC: M({ map: T.terrazzo, roughness: 0.45 }),
+  floorR: M({ map: T.woodfloor, roughness: 0.6 }),
+  floorM: M({ map: T.terrazzo, color: 0x8a9088, roughness: 0.6 }),
+  ceil: M({ map: T.ceiling, roughness: 0.9 }),
+  wall: M({ map: T.plaster, roughness: 0.85 }),
+  base: M({ color: 0x2a2724, roughness: 0.8 }),
+  wood: M({ map: T.wood, roughness: 0.6 }),
+  metal: M({ map: T.metal, roughness: 0.4, metalness: 0.4 }),
+  dark: M({ color: 0x1b1d20, roughness: 0.5, metalness: 0.3 }),
+  locker: M({ map: T.metal, color: 0x9fb2ad, roughness: 0.5, metalness: 0.3 }),
+  frame: M({ map: T.metal, color: 0xd9dde2, roughness: 0.35, metalness: 0.5 }),
+  door: M({ map: T.door, roughness: 0.7 }),
+  gen: M({ map: T.metal, color: 0x6f7550, roughness: 0.5, metalness: 0.5 }),
+  red: M({ color: 0xa3201a, roughness: 0.5 }),
+  paper: M({ color: 0xe8e4d8, roughness: 0.9 }),
+  win: M({ color: 0x0d1830, emissive: 0x0a1428, roughness: 0.08, metalness: 0.3 }),
+  lamp: M({ color: 0xdddddd, emissive: 0x9aa4b0, roughness: 0.5 }),
+  lampOff: M({ color: 0x8c8c8c, emissive: 0x111111, roughness: 0.5 }),
+  board0: M({ map: BOARDS[0], roughness: 0.95 }), board1: M({ map: BOARDS[1], roughness: 0.95 }), board2: M({ map: BOARDS[2], roughness: 0.95 }),
+  screen: M({ map: camScreenTex, emissive: 0xffffff, emissiveMap: camScreenTex, emissiveIntensity: 0.9 }),
+  led: M({ color: 0x40ff60, emissive: 0x40ff60, emissiveIntensity: 1.2 }),
+  ledR: M({ color: 0xff3020, emissive: 0xff3020, emissiveIntensity: 1.2 }),
+  sign: M({ map: T.exit, emissive: 0xffffff, emissiveMap: T.exit, emissiveIntensity: 1.3 }),
 };
 
-let level, mapData, boxes, daisukeGltf;
-// models are shipped as base64 text (the host only serves standard web file types)
-const progress = {};
-function showProgress() { const v = Object.values(progress); $('loading').textContent = `読み込み中… ${Math.round(v.reduce((a, b) => a + b, 0) / Math.max(1, v.length) * 100)}%`; }
-async function loadGlb(url) {
-  const r = await fetch(url); if (!r.ok) throw new Error(url + ' ' + r.status);
-  const total = +r.headers.get('content-length') || 0; progress[url] = 0;
-  let text;
-  if (r.body && total) {
-    const reader = r.body.getReader(), parts = []; let got = 0;
-    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; progress[url] = got / total; showProgress(); }
-    text = await new Blob(parts).text();
-  } else text = await r.text();
-  progress[url] = 1; showProgress();
-  const bin = atob(text.trim()); const buf = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  return new Promise((res, rej) => gltfLoader.parse(buf.buffer, './assets/', res, rej));
+// ================================================================== geometry builder
+const GB = {};
+function gb(k) { return GB[k] || (GB[k] = { p: [], n: [], u: [] }); }
+function quad(k, v, n, uv) { const g = gb(k); for (const i of [0, 1, 2, 0, 2, 3]) { g.p.push(...v[i]); g.n.push(...n); g.u.push(...uv[i]); } }
+function wuv(p, n, ts) { if (Math.abs(n[1]) > 0.5) return [p[0] / ts, p[2] / ts]; if (Math.abs(n[0]) > 0.5) return [p[2] / ts, p[1] / ts]; return [p[0] / ts, p[1] / ts]; }
+function faces(x0, y0, z0, x1, y1, z1) {
+  return {
+    px: [[1, 0, 0], [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]]],
+    nx: [[-1, 0, 0], [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]]],
+    py: [[0, 1, 0], [[x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0]]],
+    ny: [[0, -1, 0], [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]]],
+    pz: [[0, 0, 1], [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]]],
+    nz: [[0, 0, -1], [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]]],
+  };
 }
-const pending = [
-  fetch('assets/map.json').then(r => r.json()).then(j => mapData = j),
-  fetch('assets/collision.json').then(r => r.json()).then(j => boxes = j),
-  loadGlb('assets/level.glb.b64.txt').then(g => { level = g.scene; }),
-  loadGlb('assets/daisuke.glb.b64.txt').then(g => { daisukeGltf = g; }),
-];
-Promise.all(pending).then(init).catch(e => { $('loading').textContent = '読み込みに失敗しました：' + e; console.error(e); });
+function box(k, x0, y0, z0, x1, y1, z1, ts = 1, skip = '') {
+  if (x0 > x1) [x0, x1] = [x1, x0]; if (y0 > y1) [y0, y1] = [y1, y0]; if (z0 > z1) [z0, z1] = [z1, z0];
+  const F = faces(x0, y0, z0, x1, y1, z1);
+  for (const name in F) { if (skip.includes(name)) continue; const [n, v] = F[name]; quad(k, v, n, v.map(p => wuv(p, n, ts))); }
+}
+function face(k, name, x0, y0, z0, x1, y1, z1, r = [0, 0, 1, 1]) {
+  const [n, v] = faces(x0, y0, z0, x1, y1, z1)[name];
+  quad(k, v, n, [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]]);
+}
+function buildMeshes(group) {
+  for (const k in GB) {
+    const g = GB[k]; if (!g.p.length) continue;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(g.n, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(g.u, 2));
+    geo.computeBoundingSphere();
+    const m = new THREE.Mesh(geo, MATS[k] || MATS.wall);
+    m.receiveShadow = true; m.castShadow = ['wood', 'metal', 'locker', 'dark', 'gen'].includes(k);
+    group.add(m);
+  }
+}
 
-// ------------------------------------------------------------------ world
-const CELL = 3;
+// ================================================================== level layout
+const CELL = 3, W = 24, H = 13, CEIL = 3.0;
+const ROOM_COLS = [2, 5, 8, 13, 16, 19], ROOM_ROWS = [0, 5, 10];
+const ROOM_NAMES = [['2-A', '2-B', '2-C', '職員室', '2-D', '放送室'], ['1-A', '1-B', '1-C', '監視室', '1-D', '1-E'], ['発電室', '3-A', '3-B', '3-C', '3-D', '3-E']];
+const typeOf = n => n === '職員室' ? 'staff' : n === '放送室' ? 'broadcast' : n === '監視室' ? 'monitor' : n === '発電室' ? 'generator' : 'class';
+const ZONE = Array.from({ length: H }, () => Array(W).fill('C'));
+const rooms = [];
+let zid = 0;
+ROOM_ROWS.forEach((y0, ri) => ROOM_COLS.forEach((x0, ci) => {
+  const name = ROOM_NAMES[ri][ci], id = String.fromCharCode(97 + zid++);
+  const r = { id, name, type: typeOf(name), x0, y0, ri, ox: x0 * CELL, oz: y0 * CELL, doors: [] };
+  for (let y = y0; y < y0 + 3; y++) for (let x = x0; x < x0 + 3; x++) ZONE[y][x] = id;
+  const one = r.type === 'monitor' || r.type === 'broadcast';
+  const cols = one ? [x0 + 1] : [x0, x0 + 2];
+  if (ri === 0) cols.forEach(cx => r.doors.push({ line: 3, cx, room: [cx, 2], cor: [cx, 3], side: 1 }));
+  if (ri === 1) { cols.forEach(cx => r.doors.push({ line: 5, cx, room: [cx, 5], cor: [cx, 4], side: -1 }));
+                  if (!one) cols.forEach(cx => r.doors.push({ line: 8, cx, room: [cx, 7], cor: [cx, 8], side: 1 })); }
+  if (ri === 2) cols.forEach(cx => r.doors.push({ line: 10, cx, room: [cx, 10], cor: [cx, 9], side: -1 }));
+  rooms.push(r);
+}));
+const ROOM = Object.fromEntries(rooms.map(r => [r.type === 'class' ? r.name : r.type, r]));
+const allDoors = rooms.flatMap(r => r.doors.map(d => Object.assign(d, { r })));
+const monDoor = ROOM.monitor.doors[0];
+const zoneAt = (cx, cy) => (cx < 0 || cy < 0 || cx >= W || cy >= H) ? null : ZONE[cy][cx];
+
+// collision boxes: [x0,z0,x1,z1,type]  W=wall F=furniture(cover) D=monitor door X=exit door
+const boxes = [];
+const covers = [];
+function addCol(x0, z0, x1, z1, t) { boxes.push([Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1), t]); }
+const lightCands = [];   // {pos, color, intensity, dist, flicker, special}
 const spots = {};
-let exitDoorMesh, exitBoxIdx = [];
-const grid = new Map();   // spatial hash of collision boxes
-function gkey(ix, iz) { return ix * 1000 + iz; }
-function addToGrid(i, b) {
-  for (let ix = Math.floor(b[0] / 2); ix <= Math.floor(b[2] / 2); ix++)
-    for (let iz = Math.floor(b[1] / 2); iz <= Math.floor(b[3] / 2); iz++) {
-      const k = gkey(ix, iz); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i);
+const camsDef = [];
+const interact = [];
+const deskTops = {};     // room name -> [{x,z}]
+
+function buildLevel() {
+  const level = new THREE.Group();
+  // ---- floors & ceilings
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const z = ZONE[cy][cx], x0 = cx * CELL, z0 = cy * CELL;
+    const r = rooms.find(q => q.id === z);
+    const fk = z === 'C' ? 'floorC' : (r && (r.type === 'generator' || r.type === 'monitor') ? 'floorM' : 'floorR');
+    face(fk, 'py', x0, -0.01, z0, x0 + CELL, 0, z0 + CELL, [x0 / 2, z0 / 2, (x0 + CELL) / 2, (z0 + CELL) / 2]);
+    face('ceil', 'ny', x0, CEIL, z0, x0 + CELL, CEIL + 0.01, z0 + CELL, [x0 / 3, z0 / 3, (x0 + CELL) / 3, (z0 + CELL) / 3]);
+    if (z === 'C' && (cx + cy) % 2 === 0) {
+      box('lamp', x0 + 0.9, CEIL - 0.06, z0 + 1.38, x0 + 2.1, CEIL, z0 + 1.62);
+      if ((cx + cy) % 4 === 0) lightCands.push({ pos: new V3(x0 + 1.5, CEIL - 0.4, z0 + 1.5), color: 0xbcd0ff, intensity: 4.5, dist: 9, flicker: Math.random() < 0.35 });
     }
+  }
+  // ---- walls
+  const gapsH = {}, gapsV = {};
+  for (const d of allDoors) (gapsH[d.line] ||= []).push([d.cx * CELL + 0.8, d.cx * CELL + 2.2, d]);
+  (gapsH[H] ||= []).push([67.5, 70.5, 'exit']);
+  function wallLine(horiz, k) {
+    const ivs = [];
+    const N = horiz ? W : H;
+    for (let c = 0; c < N; c++) {
+      const a = horiz ? zoneAt(c, k - 1) : zoneAt(k - 1, c), b = horiz ? zoneAt(c, k) : zoneAt(k, c);
+      if (a === b) continue;
+      const last = ivs[ivs.length - 1];
+      if (last && Math.abs(last[1] - c * CELL) < 1e-6) last[1] = (c + 1) * CELL; else ivs.push([c * CELL, (c + 1) * CELL]);
+    }
+    const gaps = (horiz ? gapsH[k] : gapsV[k]) || [];
+    let solid = ivs;
+    for (const [g0, g1] of gaps) { const nx = []; for (const [s, e] of solid) { if (g1 <= s || g0 >= e) { nx.push([s, e]); continue; } if (g0 > s) nx.push([s, g0]); if (g1 < e) nx.push([g1, e]); } solid = nx; }
+    const L = k * CELL;
+    for (const [s, e] of solid) {
+      if (horiz) { box('wall', s, 0, L - 0.1, e, CEIL, L + 0.1, 3); box('base', s, 0, L - 0.12, e, 0.1, L + 0.12, 1, 'ny'); addCol(s, L - 0.1, e, L + 0.1, 'W'); }
+      else { box('wall', L - 0.1, 0, s, L + 0.1, CEIL, e, 3); box('base', L - 0.12, 0, s, L + 0.12, 0.1, e, 1, 'ny'); addCol(L - 0.1, s, L + 0.1, e, 'W'); }
+    }
+    for (const [g0, g1, d] of gaps) {
+      const top = d === 'exit' ? 2.6 : 2.2;
+      box('wall', g0, top, L - 0.1, g1, CEIL, L + 0.1, 3);
+      box('frame', g0 - 0.06, 0, L - 0.13, g0, top, L + 0.13); box('frame', g1, 0, L - 0.13, g1 + 0.06, top, L + 0.13);
+      box('frame', g0 - 0.06, top, L - 0.13, g1 + 0.06, top + 0.06, L + 0.13);
+    }
+  }
+  for (let k = 0; k <= H; k++) wallLine(true, k);
+  for (let k = 0; k <= W; k++) wallLine(false, k);
+
+  // ---- outer windows
+  function windowH(x0, L, dir) { // dir=+1: window on wall line z=L facing +z
+    const z = L + dir * 0.11;
+    face('win', dir > 0 ? 'pz' : 'nz', x0 + 0.3, 0.9, z, x0 + 2.7, 2.5, z);
+    for (const [a, b, c, d] of [[0.25, 0.85, 2.75, 0.9], [0.25, 2.5, 2.75, 2.56], [1.47, 0.9, 1.53, 2.5]]) box('frame', x0 + a, b, z - 0.03, x0 + c, d, z + 0.03);
+  }
+  function windowV(z0, L, dir) {
+    const x = L + dir * 0.11;
+    face('win', dir > 0 ? 'px' : 'nx', x, 0.9, z0 + 0.3, x, 2.5, z0 + 2.7);
+    for (const [a, b, c, d] of [[0.25, 0.85, 2.75, 0.9], [0.25, 2.5, 2.75, 2.56], [1.47, 0.9, 1.53, 2.5]]) box('frame', x - 0.03, b, z0 + a, x + 0.03, d, z0 + c);
+  }
+  for (let cx = 0; cx < W; cx++) { windowH(cx * CELL, 0, 1); if (cx !== 22 && cx !== 23) windowH(cx * CELL, H * CELL, -1); }
+  for (let cy = 3; cy <= 9; cy++) { windowV(cy * CELL, 0, 1); windowV(cy * CELL, W * CELL, -1); }
+
+  // ---- hall lockers & shoe boxes
+  function lockerBankV(x, dir, z0, z1, h = 1.8) { // along wall at x, protruding dir
+    const xa = x, xb = x + dir * 0.45;
+    for (let z = z0; z < z1 - 0.01; z += 0.9) {
+      box('locker', xa, 0, z + 0.01, xb, h, z + 0.89);
+      box('dark', xb, h * 0.55, z + 0.4, xb + dir * 0.02, h * 0.62, z + 0.5);
+    }
+    addCol(xa, z0, xb, z1, 'F'); covers.push([Math.min(xa, xb), z0, Math.max(xa, xb), z1]);
+  }
+  lockerBankV(0.1, 1, 0.6, 8.7); lockerBankV(0.1, 1, 30.3, 38.4);
+  lockerBankV(71.9, -1, 0.6, 8.7); lockerBankV(33.1, 1, 0.6, 8.7); lockerBankV(33.1, 1, 30.3, 38.4);
+  lockerBankV(66.1, 1, 30.6, 37.8, 1.6);   // 下駄箱 near the entrance
+
+  // ---- doors (open sliding panels), plates
+  const plateCanvas = document.createElement('canvas'); plateCanvas.width = 256; plateCanvas.height = 64 * rooms.length;
+  const pg = plateCanvas.getContext('2d');
+  rooms.forEach((r, i) => {
+    pg.fillStyle = '#f2efe6'; pg.fillRect(0, i * 64, 256, 64); pg.strokeStyle = '#333'; pg.lineWidth = 4; pg.strokeRect(2, i * 64 + 2, 252, 60);
+    pg.fillStyle = '#1b1b1b'; pg.font = `bold 40px ${JFONT}`; pg.textAlign = 'center'; pg.textBaseline = 'middle'; pg.fillText(r.name, 128, i * 64 + 34);
+  });
+  const plateTex = new THREE.CanvasTexture(plateCanvas); plateTex.colorSpace = THREE.SRGBColorSpace;
+  MATS.plate = M({ map: plateTex, roughness: 0.7, emissive: 0x222222, emissiveMap: plateTex });
+  rooms.forEach((r, i) => {
+    const vr0 = 1 - (i + 1) / rooms.length, vr1 = 1 - i / rooms.length;
+    r.doors.forEach((d, j) => {
+      const L = d.line * CELL, gc = d.cx * CELL + 1.5, s = d.side;
+      if (r.type !== 'monitor') {   // open sliding door on corridor side
+        const z = L + s * 0.16;
+        box('door', gc + 0.62, 0.02, z - 0.02, gc + 1.55, 2.12, z + 0.02);
+        box('win', gc + 0.82, 1.25, z - 0.03, gc + 1.35, 1.85, z + 0.03);
+      }
+      if (j === 0) {
+        const za = L + s * 0.1, zb = L + s * 0.62, x = gc - 0.75;
+        face('plate', 'px', x + 0.01, 2.42, Math.min(za, zb), x + 0.01, 2.74, Math.max(za, zb), [0, vr0, 1, vr1]);
+        face('plate', 'nx', x - 0.01, 2.42, Math.min(za, zb), x - 0.01, 2.74, Math.max(za, zb), [0, vr0, 1, vr1]);
+      }
+    });
+  });
+
+  // ---- rooms
+  for (const r of rooms) furnish(r);
+
+  // ---- exit (玄関)
+  face('sign', 'nz', 68.3, 2.66, 38.86, 69.7, 2.94, 38.86);
+  spots.exit = new V3(69, 0, 38.2);
+  lightCands.push({ pos: new V3(69, 2.4, 37.6), color: 0x33ff55, intensity: 5, dist: 8, special: true });
+  addCol(67.5, 38.88, 70.5, 39.1, 'X');
+
+  buildMeshes(level);
+  return level;
 }
+
+function furnish(r) {
+  const { ox, oz, type, name } = r;
+  const B = (k, u0, y0, v0, u1, y1, v1, ts = 1) => box(k, ox + u0, y0, oz + v0, ox + u1, y1, oz + v1, ts);
+  const F = (u0, v0, u1, v1, cover = true) => { addCol(ox + u0, oz + v0, ox + u1, oz + v1, 'F'); if (cover) covers.push([ox + u0, oz + v0, ox + u1, oz + v1]); };
+  const lampsOff = () => { for (const [u, v] of [[3, 3], [3, 6], [6, 3], [6, 6]]) B('lampOff', u - 0.6, CEIL - 0.06, v - 0.12, u + 0.6, CEIL, v + 0.12); };
+  const blackboard = (variant) => {
+    face('board' + variant, 'px', ox + 0.14, 0.95, oz + 2.0, ox + 0.14, 2.15, oz + 7.0);
+    B('wood', 0.1, 0.88, 1.9, 0.13, 2.22, 7.1); B('metal', 0.1, 0.9, 2.0, 0.24, 0.94, 7.0);
+  };
+  const studentDesk = (c, vv, chairBack) => {
+    B('wood', c - 0.225, 0.70, vv - 0.3, c + 0.225, 0.73, vv + 0.3);
+    B('metal', c - 0.2, 0.58, vv - 0.27, c + 0.15, 0.6, vv + 0.27);
+    for (const [a, b] of [[-0.2, -0.27], [-0.2, 0.25], [0.18, -0.27], [0.18, 0.25]]) B('metal', c + a, 0, vv + b, c + a + 0.03, 0.70, vv + b + 0.03);
+    const cu = c + 0.38 + chairBack;
+    B('wood', cu - 0.18, 0.42, vv - 0.19, cu + 0.18, 0.45, vv + 0.19);
+    B('wood', cu + 0.16, 0.5, vv - 0.19, cu + 0.19, 0.84, vv + 0.19);
+    for (const [a, b] of [[-0.16, -0.17], [-0.16, 0.15], [0.14, -0.17], [0.14, 0.15]]) B('metal', cu + a, 0, vv + b, cu + a + 0.025, 0.42, vv + b + 0.025);
+    F(c - 0.25, vv - 0.3, Math.min(c + 0.62 + chairBack, c + 0.75), vv + 0.3);
+  };
+  lampsOff();
+  if (type === 'class') {
+    blackboard(Math.floor(Math.random() * 3));
+    B('wood', 0.55, 0.72, 3.9, 1.15, 0.77, 5.1); B('metal', 0.6, 0.02, 3.95, 1.1, 0.72, 5.05); F(0.55, 3.9, 1.15, 5.1);
+    deskTops[name] = [];
+    for (const c of [2.3, 3.3, 5.3, 6.3]) for (const vv of [2.6, 3.4, 5.6, 6.4]) {
+      studentDesk(c, vv, Math.random() < 0.25 ? 0.12 : 0);
+      deskTops[name].push({ x: ox + c, z: oz + vv });
+    }
+    for (let v = 0.8; v < 8.2; v += 0.925) B('locker', 8.45, 0, v, 8.9, 1.1, v + 0.9);
+    F(8.45, 0.8, 8.9, 8.2);
+  } else if (type === 'staff') {
+    blackboard(2);
+    for (const [cu, cv] of [[3, 3], [3, 6], [6, 3], [6, 6]]) {
+      B('wood', cu - 0.7, 0.72, cv - 0.6, cu + 0.7, 0.76, cv + 0.6); B('metal', cu - 0.65, 0.02, cv - 0.55, cu + 0.65, 0.72, cv + 0.55);
+      for (const [a, b] of [[-0.45, -0.3], [0.25, 0.1], [-0.2, 0.2]]) B('paper', cu + a, 0.76, cv + b, cu + a + 0.22, 0.79 + Math.random() * 0.06, cv + b + 0.3);
+      B('dark', cu - 0.1, 0.76, cv - 0.5, cu + 0.3, 1.05, cv - 0.47);
+      F(cu - 0.7, cv - 0.6, cu + 0.7, cv + 0.6);
+    }
+    for (let v = 0.8; v < 8.2; v += 0.925) B('locker', 8.45, 0, v, 8.9, 1.9, v + 0.9);
+    F(8.45, 0.8, 8.9, 8.2);
+  } else if (type === 'monitor') {
+    // desk with CCTV monitors along the south wall (v=9)
+    B('dark', 1.5, 0.72, 8.1, 7.5, 0.77, 8.88); B('metal', 1.55, 0.02, 8.15, 7.45, 0.72, 8.85); F(1.5, 8.1, 7.5, 8.88);
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) {
+      const u0 = 1.6 + i * 0.97, y0 = 0.95 + j * 0.62;
+      B('dark', u0 - 0.04, y0 - 0.04, 8.5, u0 + 0.89, y0 + 0.6, 8.62);
+      face('screen', 'nz', ox + u0, y0, oz + 8.49, ox + u0 + 0.85, y0 + 0.52, oz + 8.49);
+    }
+    B('dark', 8.3, 0, 1.2, 8.9, 2.0, 2.6); F(8.3, 1.2, 8.9, 2.6, false);   // server rack
+    for (let y = 0.3; y < 1.9; y += 0.25) B(Math.random() < 0.5 ? 'led' : 'ledR', 8.28, y, 1.4, 8.3, y + 0.03, 1.45);
+    lightCands.push({ pos: new V3(ox + 4.5, 2.0, oz + 7.2), color: 0x5a8cff, intensity: 3.5, dist: 8, special: true });
+    spots.monitorDesk = new V3(ox + 4.5, 0, oz + 7.5);
+    interact.push({ id: 'cams', pos: new V3(ox + 4.5, 0, oz + 7.4), r: 1.6 });
+    const gc = monDoor.cx * CELL + 1.5;
+    interact.push({ id: 'door', pos: new V3(gc - 1.3, 0, monDoor.line * CELL + 0.9), r: 1.5 });
+    spots.monDoor = new V3(gc, 0, monDoor.line * CELL);
+  } else if (type === 'generator') {
+    B('gen', 2.35, 0, 5.35, 3.65, 1.5, 6.65); B('metal', 2.6, 1.5, 5.6, 3.4, 1.8, 6.4);
+    B('dark', 2.3, 0.6, 5.6, 2.35, 1.2, 6.4); B('ledR', 2.28, 1.0, 5.75, 2.3, 1.08, 5.85); B('led', 2.28, 1.0, 5.95, 2.3, 1.08, 6.05);
+    B('metal', 2.9, 1.8, 5.9, 3.1, 2.4, 6.1); B('metal', 2.9, 2.25, 6.1, 3.1, 2.4, 8.9);
+    F(2.35, 5.35, 3.65, 6.65);
+    for (let v = 1.0; v < 8.0; v += 1.2) { B('metal', 8.4, 0, v, 8.9, 1.8, v + 1.1);
+      for (let y = 0.35; y < 1.7; y += 0.45) { B('dark', 8.45, y, v + 0.1, 8.75, y + 0.22, v + 0.45); B('dark', 8.45, y, v + 0.6, 8.75, y + 0.22, v + 0.95); } }
+    F(8.4, 1.0, 8.9, 8.2);
+    lightCands.push({ pos: new V3(ox + 3.0, 2.3, oz + 4.6), color: 0xff8a2a, intensity: 4, dist: 8, special: true, flicker: true });
+    interact.push({ id: 'gen', pos: new V3(ox + 3.0, 0, oz + 6.0), r: 1.95 });
+  } else if (type === 'broadcast') {
+    B('dark', 1.5, 0.72, 0.12, 7.5, 0.78, 0.85); B('metal', 1.55, 0.02, 0.15, 7.45, 0.72, 0.8); F(1.5, 0.12, 7.5, 0.85);
+    B('dark', 2.0, 0.78, 0.25, 4.0, 0.86, 0.75);
+    for (let i = 0; i < 14; i++) B(i % 3 ? 'led' : 'ledR', 2.1 + i * 0.13, 0.86, 0.35, 2.16 + i * 0.13, 0.87, 0.4);
+    B('metal', 5.6, 0.78, 0.45, 5.63, 1.2, 0.48); B('dark', 5.56, 1.2, 0.42, 5.67, 1.3, 0.51);
+    for (let u = 0.6; u < 8.6; u += 1.0) B('dark', u, 1.0, 8.86, u + 0.8, 2.6, 8.9);  // sound panels
+    face('onair', 'nz', ox + 3.9, 2.45, oz + 8.86, ox + 5.1, 2.75, oz + 8.86);
+    lightCands.push({ pos: new V3(ox + 4.5, 2.3, oz + 7.8), color: 0xff2a2a, intensity: 1.2, dist: 6, special: true, onair: true });
+    spots.musicbox = new V3(ox + 4.5, 0.78, oz + 0.5);
+    spots.broadcast = new V3(ox + 4.5, 0, oz + 4.5);
+    interact.push({ id: 'music', pos: new V3(ox + 4.5, 0, oz + 0.6), r: 2.0 });
+  }
+}
+MATS.onair = M({ map: onAirTex, emissive: 0xffffff, emissiveMap: onAirTex, emissiveIntensity: 0.25 });
+
+// cameras (CCTV)
+camsDef.push(
+  { name: 'CAM1 西ホール',   pos: [1.0, 2.75, 1.0],    look: [4.0, 0.6, 20] },
+  { name: 'CAM2 北廊下・西', pos: [2.0, 2.75, 9.6],    look: [40, 0.8, 13] },
+  { name: 'CAM3 北廊下・東', pos: [65.5, 2.75, 14.6],  look: [36, 0.8, 11] },
+  { name: 'CAM4 監視室前',   pos: [37.6, 2.75, 9.4],   look: [44, 0.8, 15] },
+  { name: 'CAM5 南廊下',     pos: [2.0, 2.75, 24.6],   look: [40, 0.8, 27] },
+  { name: 'CAM6 中央ホール', pos: [33.4, 2.75, 38.6],  look: [36, 0.8, 20] },
+  { name: 'CAM7 玄関',       pos: [71.5, 2.75, 15.4],  look: [68, 0.5, 38] },
+  { name: 'CAM8 放送室',     pos: [65.6, 2.75, 8.6],   look: [60, 0.5, 2] },
+  { name: 'CAM9 発電室',     pos: [14.6, 2.75, 30.4],  look: [9, 0.5, 36] },
+);
+
+// ================================================================== collision helpers
+const grid = new Map();
+const gkey = (ix, iz) => ix * 1000 + iz;
+function indexBoxes() { grid.clear(); boxes.forEach((b, i) => { for (let ix = Math.floor(b[0] / 2); ix <= Math.floor(b[2] / 2); ix++) for (let iz = Math.floor(b[1] / 2); iz <= Math.floor(b[3] / 2); iz++) { const k = gkey(ix, iz); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i); } }); }
 function nearBoxes(x, z, r) {
   const out = new Set();
-  for (let ix = Math.floor((x - r) / 2); ix <= Math.floor((x + r) / 2); ix++)
-    for (let iz = Math.floor((z - r) / 2); iz <= Math.floor((z + r) / 2); iz++) {
-      const l = grid.get(gkey(ix, iz)); if (l) for (const i of l) out.add(i);
-    }
+  for (let ix = Math.floor((x - r) / 2); ix <= Math.floor((x + r) / 2); ix++) for (let iz = Math.floor((z - r) / 2); iz <= Math.floor((z + r) / 2); iz++) { const l = grid.get(gkey(ix, iz)); if (l) for (const i of l) out.add(i); }
   return out;
 }
-let exitOpen = false;
-function solid(b) { return !(b[4] === 'X' && exitOpen); }
-
-function collide(p, r, includeFurniture = true) {
-  for (let iter = 0; iter < 3; iter++) {
-    for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
-      const b = boxes[i];
-      if (!solid(b) || (!includeFurniture && b[4] === 'F')) continue;
-      const cx = Math.max(b[0], Math.min(p.x, b[2])), cz = Math.max(b[1], Math.min(p.z, b[3]));
-      let dx = p.x - cx, dz = p.z - cz; const d2 = dx * dx + dz * dz;
-      if (d2 < r * r) {
-        if (d2 > 1e-9) { const d = Math.sqrt(d2); p.x += dx / d * (r - d); p.z += dz / d * (r - d); }
-        else { // center inside box: push out along smallest axis
-          const pl = p.x - b[0], pr = b[2] - p.x, pt = p.z - b[1], pb = b[3] - p.z; const m = Math.min(pl, pr, pt, pb);
-          if (m === pl) p.x = b[0] - r; else if (m === pr) p.x = b[2] + r; else if (m === pt) p.z = b[1] - r; else p.z = b[3] + r;
-        }
-      }
+let exitOpen = false, doorClosed = false;
+const solid = (b) => b[4] === 'D' ? doorClosed : b[4] === 'X' ? !exitOpen : true;
+function collide(p, r) {
+  for (let iter = 0; iter < 3; iter++) for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
+    const b = boxes[i]; if (!solid(b)) continue;
+    const cx = Math.max(b[0], Math.min(p.x, b[2])), cz = Math.max(b[1], Math.min(p.z, b[3]));
+    const dx = p.x - cx, dz = p.z - cz, d2 = dx * dx + dz * dz;
+    if (d2 < r * r) {
+      if (d2 > 1e-9) { const d = Math.sqrt(d2); p.x += dx / d * (r - d); p.z += dz / d * (r - d); }
+      else { const pl = p.x - b[0], pr = b[2] - p.x, pt = p.z - b[1], pb = b[3] - p.z, m = Math.min(pl, pr, pt, pb);
+        if (m === pl) p.x = b[0] - r; else if (m === pr) p.x = b[2] + r; else if (m === pt) p.z = b[1] - r; else p.z = b[3] + r; }
     }
   }
 }
-// line of sight (2D) against walls
 function segBox(x0, z0, x1, z1, b) {
   let t0 = 0, t1 = 1; const dx = x1 - x0, dz = z1 - z0;
   for (const [p, q] of [[-dx, x0 - b[0]], [dx, b[2] - x0], [-dz, z0 - b[1]], [dz, b[3] - z0]]) {
@@ -266,144 +622,263 @@ function segBox(x0, z0, x1, z1, b) {
   return true;
 }
 function lineClear(a, b) {
-  const len = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(len / 1.5) + 1;
-  const cand = new Set();
+  const len = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(len / 1.5) + 1, cand = new Set();
   for (let k = 0; k <= n; k++) { const t = k / n; for (const i of nearBoxes(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t, 0.5)) cand.add(i); }
   for (const i of cand) { const bx = boxes[i]; if (bx[4] === 'F' || !solid(bx)) continue; if (segBox(a.x, a.z, b.x, b.z, bx)) return false; }
   return true;
 }
-// stairs (x 30..33, z 0..9) rise to 3m toward z=0
-function floorY(x, z) {
-  if (x > 30.05 && x < 32.95 && z < 9 && z > -0.5) return Math.min(3, Math.max(0, (9 - z) / 0.4 * (3 / 18)));
-  return 0;
+function rayDist(p, yaw, maxD) {   // distance to the nearest wall/furniture straight ahead (2D)
+  const dx = -Math.sin(yaw) * maxD, dz = -Math.cos(yaw) * maxD; let best = maxD;
+  for (const i of nearBoxes(p.x + dx / 2, p.z + dz / 2, maxD / 2 + 0.5)) {
+    const b = boxes[i]; if (!solid(b)) continue;
+    let t0 = 0, t1 = 1, ok = true;
+    for (const [pp, q] of [[-dx, p.x - b[0]], [dx, b[2] - p.x], [-dz, p.z - b[1]], [dz, b[3] - p.z]]) {
+      if (Math.abs(pp) < 1e-9) { if (q < 0) { ok = false; break; } } else { const t = q / pp; if (pp < 0) { if (t > t1) { ok = false; break; } if (t > t0) t0 = t; } else { if (t < t0) { ok = false; break; } if (t < t1) t1 = t; } }
+    }
+    if (ok) best = Math.min(best, t0 * maxD);
+  }
+  return best;
+}
+function nearCover(p, r) {
+  for (const c of covers) { const cx = Math.max(c[0], Math.min(p.x, c[2])), cz = Math.max(c[1], Math.min(p.z, c[3])); if (Math.hypot(p.x - cx, p.z - cz) < r) return true; }
+  return false;
 }
 
-// map / pathfinding
-let zone, links;
-function inside(x, y) { return x >= 0 && y >= 0 && x < mapData.W && y < mapData.H && zone[y][x] !== '.'; }
-function passable(x, y, nx, ny) { if (!inside(x, y) || !inside(nx, ny)) return false; return zone[y][x] === zone[ny][nx] || links.has(`${x},${y},${nx},${ny}`); }
-const cellCenter = (c) => new THREE.Vector3(c[0] * CELL + 1.5, 0, c[1] * CELL + 1.5);
-const toCell = (p) => [Math.max(0, Math.min(mapData.W - 1, Math.floor(p.x / CELL))), Math.max(0, Math.min(mapData.H - 1, Math.floor(p.z / CELL)))];
+// ================================================================== pathfinding
+const links = new Set();
+function rebuildLinks() {
+  links.clear();
+  for (const d of allDoors) { if (d === monDoor && doorClosed) continue; links.add(`${d.room[0]},${d.room[1]},${d.cor[0]},${d.cor[1]}`); links.add(`${d.cor[0]},${d.cor[1]},${d.room[0]},${d.room[1]}`); }
+}
+const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+const passable = (x, y, nx, ny) => inside(nx, ny) && (ZONE[y][x] === ZONE[ny][nx] || links.has(`${x},${y},${nx},${ny}`));
+const cellCenter = (c) => new V3(c[0] * CELL + 1.5, 0, c[1] * CELL + 1.5);
+const toCell = (p) => [clamp(Math.floor(p.x / CELL), 0, W - 1), clamp(Math.floor(p.z / CELL), 0, H - 1)];
 function bfs(a, b) {
-  const key = (c) => c[0] + ',' + c[1]; const prev = new Map([[key(a), null]]); const q = [a];
-  while (q.length) { const c = q.shift(); if (c[0] === b[0] && c[1] === b[1]) break;
+  const key = c => c[0] * 100 + c[1]; const prev = new Map([[key(a), null]]); const q = [a];
+  for (let qi = 0; qi < q.length; qi++) { const c = q[qi]; if (c[0] === b[0] && c[1] === b[1]) break;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const n = [c[0] + dx, c[1] + dy];
       if (!prev.has(key(n)) && passable(c[0], c[1], n[0], n[1])) { prev.set(key(n), c); q.push(n); } } }
   if (!prev.has(key(b))) return null;
   const path = []; for (let c = b; c && key(c) !== key(a); c = prev.get(key(c))) path.push(c); return path.reverse();
 }
 
-// ------------------------------------------------------------------ init
-let enemy, mixer, actions = {}, eyeLight, ofudas = [], lamps = [];
-function init() {
-  zone = mapData.rows; links = new Set();
-  for (const d of [...mapData.doors, ...mapData.opens]) { links.add(d.join(',')); links.add([d[2], d[3], d[0], d[1]].join(',')); }
-  boxes.forEach((b, i) => { addToGrid(i, b); if (b[4] === 'X') exitBoxIdx.push(i); });
+// ================================================================== loading
+const progress = {};
+function showProgress() { const v = Object.values(progress); $('loading').textContent = `読み込み中… ${Math.round(v.reduce((a, b) => a + b, 0) / Math.max(1, v.length) * 100)}%`; }
+async function loadBytes(url) {
+  const r = await fetch(url); if (!r.ok) throw new Error(url + ' ' + r.status);
+  const total = +r.headers.get('content-length') || 0; progress[url] = 0; let text;
+  if (r.body && total) { const rd = r.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; progress[url] = Math.min(1, got / total); showProgress(); }
+    text = await new Blob(parts).text(); } else text = await r.text();
+  progress[url] = 1; showProgress();
+  const bin = atob(text.trim()); const buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return buf;
+}
+const gltfLoader = new GLTFLoader();
+const parseGlb = (buf) => new Promise((res, rej) => gltfLoader.parse(buf.slice().buffer, './assets/', res, rej));
+let gltfs = [];
+loadBytes('assets/daisuke.glb.b64.txt').then(async buf => { gltfs = [await parseGlb(buf), await parseGlb(buf)]; init(); })
+  .catch(e => { $('loading').textContent = '読み込みに失敗しました：' + e; console.error(e); });
 
-  level.traverse(o => {
-    if (o.isMesh) {
-      const key = o.name.split('.')[0];
-      o.material = MATS[key] || MATS.Wall;
-      o.receiveShadow = true; o.castShadow = ['Wood', 'Metal', 'Locker', 'Door'].includes(key);
-      if (key === 'ExitDoor') exitDoorMesh = o;
-    } else if (o.name.startsWith('Spot_') || o.name.startsWith('Marker_')) {
-      spots[o.name] = o.getWorldPosition(new THREE.Vector3());
-    }
-  });
-  scene.add(level);
-
-  // flickering corridor lamps (limited number for mobile)
-  const lampSpots = Object.keys(spots).filter(k => k.startsWith('Spot_Light_')).sort(() => Math.random() - 0.5).slice(0, IS_TOUCH ? 5 : 8);
-  for (const k of lampSpots) {
-    const l = new THREE.PointLight(0xc2d6ff, 5, 8, 1.6); l.position.copy(spots[k]); scene.add(l);
-    lamps.push({ l, seed: Math.random() * 100, base: 5 });
-  }
-  const green = new THREE.PointLight(0x33ff55, 6, 7, 1.5); green.position.copy(spots.Spot_Exit).add(new THREE.Vector3(-0.4, 1.6, 0)); scene.add(green);
-
-  // enemy
-  enemy = new THREE.Group();
-  const model = daisukeGltf.scene; enemy.add(model);
-  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (o.material) { o.material.roughness = 0.8; } } });
-  mixer = new THREE.AnimationMixer(model);
-  for (const c of daisukeGltf.animations) actions[c.name] = mixer.clipAction(c);
+// ================================================================== init
+let level, enemies = [], books = [], musicBox, monPanel, monLed, exitPanels = [], pool = [];
+function glowTex() {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,200,160,.7)'); gr.addColorStop(1, 'rgba(255,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const GLOW = glowTex();
+function makeEnemy(gltf, idx) {
+  const group = new THREE.Group(); const model = gltf.scene; group.add(model);
+  model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (o.material) o.material.roughness = 0.8; } });
+  const mixer = new THREE.AnimationMixer(model), actions = {};
+  for (const c of gltf.animations) actions[c.name] = mixer.clipAction(c);
   actions.Run.play(); actions.Sprint.play(); actions.Sprint.setEffectiveWeight(0);
   let head = null; model.traverse(o => { if (o.isBone && o.name === 'head') head = o; });
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2010 });
-  const eyeGeo = new THREE.SphereGeometry(0.011, 10, 8);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2010 }), eyeGeo = new THREE.SphereGeometry(0.011, 10, 8);
   for (const sx of [-0.034, 0.034]) {
-    const e = new THREE.Mesh(eyeGeo, eyeMat);
-    // head bone sits at (0,1.53,0) in bind pose; eyes at (sx,1.555,0.10)
-    e.position.set(sx, 0.025, 0.1); (head || enemy).add(e);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: 0xff2a1a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    const e = new THREE.Mesh(eyeGeo, eyeMat); e.position.set(sx, 0.025, 0.1); (head || group).add(e);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xff2a1a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
     glow.scale.set(0.09, 0.09, 1); e.add(glow);
   }
-  eyeLight = new THREE.PointLight(0xff1a08, 2.5, 2.6, 1.5); eyeLight.position.set(0, 0.03, 0.25); (head || enemy).add(eyeLight);
-  scene.add(enemy); window.__dk.enemy = enemy;
-
+  const eyeLight = new THREE.PointLight(0xff1a08, 2.5, 2.6, 1.5); eyeLight.position.set(0, 0.03, 0.25); (head || group).add(eyeLight);
+  return { idx, group, mixer, actions, eyeLight, pos: group.position, state: 'wait', timer: 0, route: [], lastKnown: new V3(), lost: 0, sense: 0, repath: 0, sees: false, raw: false, yaw: 0, speed: 0, alert: false, lurk: 0, snd: null, active: false };
+}
+function init() {
+  level = buildLevel(); scene.add(level);
+  indexBoxes(); rebuildLinks();
+  // monitor door (closable)
+  const L = monDoor.line * CELL, gc = monDoor.cx * CELL + 1.5;
+  monPanel = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.12, 0.05), MATS.door); monPanel.position.set(gc + 1.5, 1.08, L + 0.16); monPanel.castShadow = true; scene.add(monPanel);
+  monPanel.userData.open = gc + 1.5; monPanel.userData.closed = gc;
+  addCol(gc - 0.72, L - 0.12, gc + 0.72, L + 0.2, 'D');
+  const sw = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.32, 0.05), MATS.dark); sw.position.set(gc - 1.3, 1.3, L + 0.13); scene.add(sw);
+  monLed = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.02), MATS.led); monLed.position.set(gc - 1.3, 1.36, L + 0.165); scene.add(monLed);
+  // exit glass doors
+  const gm = new THREE.MeshStandardMaterial({ color: 0x4a5a64, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false });
+  for (const [x, ox] of [[68.25, 66.75], [69.75, 71.25]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.55, 0.05), gm); p.position.set(x, 1.28, 38.98); p.userData = { closed: x, open: ox }; scene.add(p); exitPanels.push(p); }
+  indexBoxes();
+  // music box
+  musicBox = new THREE.Group();
+  const mbBody = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.14), MATS.wood); mbBody.position.y = 0.055; musicBox.add(mbBody);
+  const crank = new THREE.Group(); crank.position.set(0.11, 0.06, 0);
+  const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.012, 0.012), MATS.metal); c1.position.x = 0.015; crank.add(c1);
+  const c2 = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.06, 0.012), MATS.metal); c2.position.set(0.03, 0.025, 0); crank.add(c2);
+  musicBox.add(crank); musicBox.userData.crank = crank; musicBox.position.copy(spots.musicbox); scene.add(musicBox);
+  // light pool
+  const K = IS_TOUCH ? 5 : 7;
+  for (let i = 0; i < K; i++) { const l = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(l); pool.push({ l, cand: null }); }
+  // enemies
+  enemies = gltfs.map((g, i) => makeEnemy(g, i));
   applyQuality();
   $('loading').classList.add('hidden'); $('start').classList.remove('hidden');
+  drawMapBase(); buildCamMap();
   resetGame();
   requestAnimationFrame(loop);
 }
-function glowTex() {
-  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
-  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,120,100,.8)'); gr.addColorStop(1, 'rgba(255,0,0,0)');
-  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
 
-// ------------------------------------------------------------------ game state
-const P = { pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, stamina: 4.5, staminaMax: 4.5, sprinting: false, bob: 0, y: 0 };
-const E = { state: 'wait', timer: 0, route: [], lastKnown: new THREE.Vector3(), lost: 0, sense: 0, repath: 0, sees: false, bonus: 0, speed: 0, yaw: 0, y: 0 };
-let state = 'title', collected = 0, msgT = 0, showMap = true;
-const NEEDED = 3;
+// ================================================================== game state
+const P = { pos: new V3(), vel: new V3(), yaw: 0, pitch: 0, stamina: 4.5, staminaMax: 4.5, sprinting: false, bob: 0, crouch: false, eye: 1.6,
+  hidden: false, hideBlown: false, unseenT: 0, noise: 0, battery: 100, charging: false };
+let state = 'title', collected = 0, msgT = 0, showMap = true, freezeT = 0, musicCd = 0, bonus = 0, playT = 0, camIdx = 0, camSwT = 0;
+let curInteract = null, useHeld = false;
+const START = { pos: new V3(12.3, 0, 4.5), yaw: Math.PI / 2 };
+const ENEMY_SPAWN = [new V3(61.5, 0, 34.5), new V3(43.5, 0, 4.5)];
 
 function resetGame() {
-  collected = 0; exitOpen = false; if (exitDoorMesh) exitDoorMesh.visible = true;
-  for (const o of ofudas) scene.remove(o.g); ofudas = [];
-  P.pos.copy(spots.Spot_PlayerStart); P.vel.set(0, 0, 0); P.yaw = -Math.PI / 2; P.pitch = 0; P.stamina = P.staminaMax; P.y = 0;
-  enemy.position.copy(spots.Spot_Enemy); E.yaw = Math.PI / 2; E.state = 'wait'; E.timer = 12; E.route = []; E.bonus = 0; E.sees = false; E.y = 0;
-  // ofuda
-  const keys = Object.keys(spots).filter(k => k.startsWith('Spot_Ofuda_')).sort(() => Math.random() - 0.5).slice(0, NEEDED);
-  const mat = new THREE.MeshBasicMaterial({ map: ofudaTex, side: THREE.DoubleSide, color: 0xd8d0c8 });
-  for (const k of keys) {
-    const g = new THREE.Group(); g.position.copy(spots[k]).add(new THREE.Vector3(0, 0.35, 0));
-    const q = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.54), mat); g.add(q);
-    const l = new THREE.PointLight(0xff3020, 3, 3, 1.6); g.add(l);
-    scene.add(g); ofudas.push({ g, base: g.position.y });
-  }
-  updateCount(); drawMapBase(); flashOn = true; $('bLight').classList.add('on');
+  collected = 0; bonus = 0; freezeT = 0; musicCd = 0; playT = 0;
+  exitOpen = false; for (const p of exitPanels) p.position.x = p.userData.closed;
+  setDoor(false, true);
+  for (const b of books) scene.remove(b.g); books = [];
+  Object.assign(P, { stamina: P.staminaMax, crouch: false, eye: 1.6, hidden: false, hideBlown: false, battery: 100, pitch: 0, yaw: START.yaw });
+  P.pos.copy(START.pos); P.vel.set(0, 0, 0);
+  enemies.forEach((e, i) => {
+    e.active = i < D.enemies;
+    if (e.active) scene.add(e.group); else scene.remove(e.group);
+    e.pos.copy(ENEMY_SPAWN[i]); e.yaw = i === 0 ? Math.PI : 0; e.state = 'wait'; e.timer = D.start + i * 6; e.route = []; e.sees = e.raw = false; e.alert = false; e.lurk = 0;
+  });
+  // textbooks: pick classrooms (not the start room) and a desk in each
+  const classes = rooms.filter(r => r.type === 'class' && r.name !== '2-A').map(r => r.name).sort(() => Math.random() - 0.5).slice(0, D.books);
+  const subs = SUBJECTS.slice().sort(() => Math.random() - 0.5);
+  classes.forEach((rn, i) => {
+    const d = deskTops[rn][Math.floor(Math.random() * deskTops[rn].length)];
+    const [sname, col] = subs[i % subs.length];
+    const g = new THREE.Group(); g.position.set(d.x, 0.735, d.z);
+    const side = new THREE.MeshStandardMaterial({ color: 0xf1ece0, roughness: 0.9 }), cover = new THREE.MeshStandardMaterial({ map: bookCover(sname, col), roughness: 0.6, emissive: 0x222222 });
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.025, 0.21), [side, side, cover, side, side, side]); m.position.y = 0.013; m.rotation.y = Math.random() * 0.6 - 0.3; g.add(m);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xfff1b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    s.scale.set(0.7, 0.7, 1); s.position.y = 0.12; g.add(s);
+    scene.add(g); books.push({ g, name: sname, room: rn, s });
+  });
+  updateCount(); flashOn = true; $('bLight').classList.add('on');
+  $('bCrouch').classList.remove('on');
 }
 function updateCount() {
-  $('count').textContent = `封印札 ${collected} / ${NEEDED}`;
-  $('hint').textContent = exitOpen ? '玄関（右下の非常口）へ急げ！' : '教室の教卓を探せ';
+  $('count').textContent = `教科書 ${collected} / ${books.length + collected}`;
+  $('hint').textContent = exitOpen ? '玄関（東側ホールの南）へ急げ！' : '教室の机の上を探せ';
 }
 function message(s, t = 3) { const m = $('msg'); m.textContent = s; m.style.opacity = 1; msgT = t; }
 
-// ------------------------------------------------------------------ input
+// ================================================================== doors / battery / music
+function setDoor(closed, silent) {
+  if (closed && !silent) {
+    const dc = spots.monDoor; if (enemies.some(e => e.active && Math.hypot(e.pos.x - dc.x, e.pos.z - dc.z) < 1.1)) { message('ドアの前に何かいる…閉められない', 2); return; }
+  }
+  doorClosed = closed; rebuildLinks();
+  monLed.material = closed ? MATS.ledR : MATS.led;
+  $('doorState').classList.toggle('hidden', !closed);
+  $('camDoor').textContent = closed ? 'ドア：閉（バッテリー消費中）' : 'ドア：開';
+  $('camDoorBtn').textContent = closed ? 'ドアを開ける' : 'ドアを閉める';
+  for (const e of enemies) if (e.active && e.state !== 'wait') { if (e.state === 'chase') e.repath = 0; else if (e.state === 'search') routeTo(e, e.lastKnown); else newPatrol(e); }
+  if (!silent) message(closed ? 'ドアを閉めた。これで先生は入ってこない…が、バッテリーを使う' : 'ドアを開けた', 2.5);
+}
+function playMusic() {
+  if (musicCd > 0) { message(`オルゴールのゼンマイがまだ戻らない…（あと${Math.ceil(musicCd)}秒）`, 2); return; }
+  freezeT = D.freeze; musicCd = D.freeze + 40;
+  for (const e of enemies) if (e.active) e.route = [];
+  message(`オルゴールが校内放送で流れる…大介先生の動きが止まった（${D.freeze}秒）`, 4);
+  audioMusic(true);
+}
+function endFreeze() {
+  audioMusic(false);
+  for (const e of enemies) if (e.active && e.state !== 'wait') { e.lastKnown.copy(spots.broadcast); e.state = 'search'; e.alert = true; routeTo(e, spots.broadcast); }
+  message('音が止んだ――先生たちが放送室へ向かってくる！', 3.5);
+}
+
+// ================================================================== audio (sound files supplied by the user)
+let actx = null, master = null; const sfx = {}; let musicSrc = null, musicGain = null;
+async function initAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  if (actx) { try { actx.resume(); } catch (e) {} return; }
+  actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
+  for (const [k, url] of [['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3']]) {
+    try { const r = await fetch(url); if (!r.ok) continue; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
+  }
+  for (const e of enemies) attachSteps(e);
+}
+function attachSteps(e) {
+  if (!actx || !sfx.steps || e.snd) return;
+  const src = actx.createBufferSource(); src.buffer = sfx.steps; src.loop = true; src.loopStart = 0.05; src.loopEnd = Math.min(1.62, sfx.steps.duration);
+  const g = actx.createGain(); g.gain.value = 0; const p = actx.createStereoPanner ? actx.createStereoPanner() : null;
+  src.connect(g); if (p) { g.connect(p); p.connect(master); } else g.connect(master);
+  src.start(0, 0.05 + Math.random() * 1.4); e.snd = { src, g, p };
+}
+function updateEnemyAudio(e) {
+  if (!e.snd) return;
+  const t = actx.currentTime;
+  let gain = 0, rate = 1;
+  if (e.active && e.moving && freezeT <= 0 && (state === 'play' || state === 'cams')) {
+    const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z);
+    const fast = e.speed > 3.4;
+    gain = (fast ? 1.0 : 0.55) * Math.pow(clamp(1 - d / 30, 0, 1), 1.6) * (e.raw || d < 6 ? 1 : 0.6);
+    rate = fast ? 1.0 : 0.72;
+    if (e.snd.p) { const dx = (e.pos.x - P.pos.x) / (d || 1), dz = (e.pos.z - P.pos.z) / (d || 1); e.snd.p.pan.setTargetAtTime(clamp(dx * Math.cos(P.yaw) - dz * Math.sin(P.yaw), -1, 1) * 0.8, t, 0.05); }
+  }
+  e.snd.g.gain.setTargetAtTime(gain, t, 0.08); e.snd.src.playbackRate.setTargetAtTime(rate, t, 0.1);
+}
+function audioMusic(on) {
+  if (!actx || !sfx.music) return;
+  const t = actx.currentTime;
+  if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
+  else if (musicSrc) { const s = musicSrc; musicGain.gain.setTargetAtTime(0, t, 0.4); setTimeout(() => { try { s.stop(); } catch (e) {} }, 2000); musicSrc = null; }
+}
+function setMasterVolume(v) { if (master) master.gain.setTargetAtTime(v, actx.currentTime, 0.05); }
+
+// ================================================================== input
 const keys = new Set();
 addEventListener('keydown', e => {
+  if (e.repeat && keys.has(e.code)) return;
   keys.add(e.code);
   if (state === 'play') {
     if (e.code === 'KeyF') toggleLight();
+    if (e.code === 'KeyC' || e.code === 'ControlLeft') toggleCrouch();
+    if (e.code === 'KeyE') doInteract();
     if (e.code === 'KeyM') { showMap = !showMap; $('mapwrap').classList.toggle('hidden', !showMap); }
     if (e.code === 'Escape') pause();
-  } else if (state === 'title' && (e.code === 'Enter' || e.code === 'Space') && !$('start').classList.contains('hidden')) startGame();
+  } else if (state === 'cams') {
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') switchCam(camIdx + 1);
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') switchCam(camIdx - 1);
+    if (/^Digit[1-9]$/.test(e.code)) switchCam(+e.code.slice(5) - 1);
+    if (e.code === 'KeyQ') setDoor(!doorClosed);
+    if (e.code === 'Escape' || e.code === 'KeyE' || e.code === 'KeyS' || e.code === 'Space') exitCams();
+  } else if (state === 'title' && (e.code === 'Enter') && !$('start').classList.contains('hidden')) startGame();
   else if (state === 'end' && (e.code === 'Enter' || e.code === 'KeyR')) retry();
 });
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
 function toggleLight() { flashOn = !flashOn; $('bLight').classList.toggle('on', flashOn); }
+function toggleCrouch() { P.crouch = !P.crouch; if (P.crouch) { runToggle = false; $('bRun').classList.remove('on'); } $('bCrouch').classList.toggle('on', P.crouch); }
 
-// mouse look: pointer lock when allowed, otherwise drag-to-look (e.g. inside an embedded frame)
 let lookDX = 0, lookDY = 0, locked = false, noLock = false, mouseDown = false;
 function lockPointer() {
   if (IS_TOUCH || noLock || !canvas.requestPointerLock) return;
-  try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => { noLock = true; message('マウスをドラッグして見回せます', 3); }); }
-  catch (e) { noLock = true; }
+  try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => { noLock = true; message('マウスをドラッグして見回せます', 3); }); } catch (e) { noLock = true; }
 }
 document.addEventListener('mousemove', e => {
   if (state !== 'play') return;
-  if (Math.abs(e.movementX) > 300 || Math.abs(e.movementY) > 300) return; // ignore lock jump
+  if (Math.abs(e.movementX) > 300 || Math.abs(e.movementY) > 300) return;
   if (locked || mouseDown) { lookDX += e.movementX; lookDY += e.movementY; }
 });
 canvas.addEventListener('mousedown', e => { if (e.button === 0) { mouseDown = true; if (state === 'play' && !locked) lockPointer(); } });
@@ -412,14 +887,10 @@ document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === canvas) { locked = true; lookDX = lookDY = 0; }
   else if (locked) { locked = false; if (state === 'play') pause(); }
 });
-document.addEventListener('pointerlockerror', () => { noLock = true; message('マウスをドラッグして見回せます', 3); });
-function goFullscreen() {
-  if (!IS_TOUCH) return;
-  const el = document.documentElement;
-  try { const r = (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el); if (r && r.catch) r.catch(() => {}); } catch (e) {}
-}
+document.addEventListener('pointerlockerror', () => { noLock = true; });
+function unlockPointer() { locked = false; if (document.pointerLockElement) document.exitPointerLock(); }
+function goFullscreen() { if (!IS_TOUCH) return; const el = document.documentElement; try { const r = (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
 
-// touch: left = joystick, right = look
 const stick = { id: null, ox: 0, oy: 0, x: 0, y: 0 }, look = { id: null, lx: 0, ly: 0 };
 let runToggle = false;
 function onTouchStart(e) {
@@ -437,221 +908,363 @@ function onTouchMove(e) {
   for (const t of e.changedTouches) {
     if (t.identifier === stick.id) {
       let dx = t.clientX - stick.ox, dy = t.clientY - stick.oy; const d = Math.hypot(dx, dy), R = 60;
-      if (d > R) { dx *= R / d; dy *= R / d; }
-      stick.x = dx / R; stick.y = dy / R;
+      if (d > R) { dx *= R / d; dy *= R / d; } stick.x = dx / R; stick.y = dy / R;
       $('stickKnob').style.transform = `translate(${dx}px,${dy}px)`;
-    } else if (t.identifier === look.id) {
-      lookDX += (t.clientX - look.lx) * 1.6; lookDY += (t.clientY - look.ly) * 1.6; look.lx = t.clientX; look.ly = t.clientY;
-    }
+    } else if (t.identifier === look.id) { lookDX += (t.clientX - look.lx) * 1.6; lookDY += (t.clientY - look.ly) * 1.6; look.lx = t.clientX; look.ly = t.clientY; }
   }
-  e.preventDefault();
+  if (state === 'play') e.preventDefault();
 }
-function onTouchEnd(e) {
-  for (const t of e.changedTouches) {
-    if (t.identifier === stick.id) { stick.id = null; stick.x = stick.y = 0; $('stickBase').style.display = 'none'; $('stickKnob').style.transform = ''; $('stickHint').style.opacity = 1; }
-    if (t.identifier === look.id) look.id = null;
-  }
-}
+function endStick() { stick.id = null; stick.x = stick.y = 0; $('stickBase').style.display = 'none'; $('stickKnob').style.transform = ''; $('stickHint').style.opacity = 1; }
+function onTouchEnd(e) { for (const t of e.changedTouches) { if (t.identifier === stick.id) endStick(); if (t.identifier === look.id) look.id = null; } }
 document.addEventListener('touchstart', onTouchStart, { passive: false });
 document.addEventListener('touchmove', onTouchMove, { passive: false });
 document.addEventListener('touchend', onTouchEnd); document.addEventListener('touchcancel', onTouchEnd);
-function tapBtn(id, fn) { $(id).addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(); }, { passive: false }); $(id).addEventListener('click', fn); }
-tapBtn('bRun', () => { runToggle = !runToggle; $('bRun').classList.toggle('on', runToggle); });
+let lastTouch = 0;
+function tapBtn(id, fn) { $(id).addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); fn(); }, { passive: false }); $(id).addEventListener('click', () => { if (performance.now() - lastTouch > 800) fn(); }); }
+tapBtn('bRun', () => { if (P.crouch) toggleCrouch(); runToggle = !runToggle; $('bRun').classList.toggle('on', runToggle); });
+tapBtn('bCrouch', toggleCrouch);
 tapBtn('bLight', toggleLight);
 tapBtn('bPause', () => pause());
+$('bUse').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); useHeld = true; doInteract(); }, { passive: false });
+$('bUse').addEventListener('touchend', () => { useHeld = false; }); $('bUse').addEventListener('touchcancel', () => { useHeld = false; });
+$('bUse').addEventListener('mousedown', () => { if (performance.now() - lastTouch < 800) return; useHeld = true; doInteract(); }); addEventListener('mouseup', () => { useHeld = false; });
 
 $('start').addEventListener('click', startGame);
 $('resume').addEventListener('click', resume);
 $('retry').addEventListener('click', retry);
+for (const id of ['toTitle1', 'toTitle2']) $(id).addEventListener('click', toTitle);
+$('camPrev').addEventListener('click', () => switchCam(camIdx - 1));
+$('camNext').addEventListener('click', () => switchCam(camIdx + 1));
+$('camDoorBtn').addEventListener('click', () => setDoor(!doorClosed));
+$('camClose').addEventListener('click', exitCams);
+
 function showPlayUI(on) {
-  $('hud').classList.toggle('hidden', !on); $('stam').classList.toggle('hidden', !on);
+  $('hud').classList.toggle('hidden', !on); $('stam').classList.toggle('hidden', !on); $('pose').classList.toggle('hidden', !on);
   $('mapwrap').classList.toggle('hidden', !on || !showMap); $('cross').classList.toggle('hidden', !on || IS_TOUCH);
   $('touch').classList.toggle('hidden', !on || !IS_TOUCH);
+  if (!on) $('prompt').classList.add('hidden');
 }
 function startGame() {
+  resetGame();
   $('title').classList.add('hidden'); state = 'play'; showPlayUI(true);
-  goFullscreen(); lockPointer();
-  message('…誰かいる。懐中電灯を頼りに、封印札を探せ。', 4);
+  goFullscreen(); lockPointer(); initAudio(); setMasterVolume(1);
+  message('…静かだ。教科書を探そう。', 3.5);
 }
-function pause() { if (state !== 'play') return; state = 'pause'; $('pause').classList.remove('hidden'); showPlayUI(false); locked = false; if (document.pointerLockElement) document.exitPointerLock(); }
-function resume() { $('pause').classList.add('hidden'); state = 'play'; showPlayUI(true); lockPointer(); lookDX = lookDY = 0; }
-function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); message('もう一度…', 2); }
+function pause() { if (state !== 'play') return; state = 'pause'; $('pause').classList.remove('hidden'); showPlayUI(false); unlockPointer(); setMasterVolume(0); }
+function resume() { $('pause').classList.add('hidden'); state = 'play'; showPlayUI(true); lockPointer(); lookDX = lookDY = 0; setMasterVolume(1); }
+function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); setMasterVolume(1); message('もう一度…', 2); }
+function toTitle() { for (const id of ['pause', 'end']) $(id).classList.add('hidden'); $('flash').style.opacity = 0; audioMusic(false); setMasterVolume(0); resetGame(); state = 'title'; showPlayUI(false); $('title').classList.remove('hidden'); }
 
-// ------------------------------------------------------------------ update
-const tmp = new THREE.Vector3();
+// ================================================================== interaction
+function interactLabel(it) {
+  switch (it.id) {
+    case 'cams': return P.battery > 0 ? '監視カメラを見る' : '監視カメラ（バッテリー切れ）';
+    case 'door': return doorClosed ? '監視室のドアを開ける' : '監視室のドアを閉める';
+    case 'gen': return P.battery >= 100 ? 'バッテリーは満タン' : '発電機を回して充電（長押し）';
+    case 'music': return musicCd > 0 ? `オルゴール（あと${Math.ceil(musicCd)}秒）` : 'オルゴールを回して校内放送で流す';
+  }
+}
+function doInteract() {
+  const it = curInteract; if (!it || state !== 'play') return;
+  if (it.id === 'cams') enterCams();
+  else if (it.id === 'door') setDoor(!doorClosed);
+  else if (it.id === 'music') playMusic();
+}
+function enterCams() {
+  if (P.battery <= 0) { message('バッテリーがない。発電室で充電しよう', 2.5); return; }
+  state = 'cams'; unlockPointer(); showPlayUI(false);
+  $('camui').classList.remove('hidden'); canvas.classList.add('cam');
+  ambient.intensity = 0.85; hemi.intensity = 0.5; scene.fog.density = FOG_CAM; flash.visible = false;
+  switchCam(camIdx);
+}
+function exitCams() {
+  if (state !== 'cams') return;
+  $('camui').classList.add('hidden'); canvas.classList.remove('cam');
+  ambient.intensity = 0.22; hemi.intensity = 0.25; scene.fog.density = FOG_NORMAL; flash.visible = true;
+  state = 'play'; showPlayUI(true); lockPointer(); lookDX = lookDY = 0;
+}
+function switchCam(i) {
+  camIdx = (i + camsDef.length) % camsDef.length; const c = camsDef[camIdx];
+  secCam.position.set(...c.pos); secCam.lookAt(...c.look); secCam.userData.base = secCam.quaternion.clone();
+  $('camName').textContent = c.name; camSwT = 0.25; $('camui').classList.add('sw');
+  for (const b of $('camMap').querySelectorAll('.cbtn')) b.classList.toggle('on', +b.dataset.i === camIdx);
+}
+
+// ================================================================== update: player
 function updatePlayer(dt) {
-  // look
   const k = 0.0022 * sens;
-  P.yaw -= lookDX * k; P.pitch = THREE.MathUtils.clamp(P.pitch - lookDY * k, -1.3, 1.3); lookDX = lookDY = 0;
-  if (keys.has('KeyQ')) P.yaw += 2.2 * dt; if (keys.has('KeyE')) P.yaw -= 2.2 * dt;
-  // move input (x: right, y: forward)
+  P.yaw -= lookDX * k; P.pitch = clamp(P.pitch - lookDY * k, -1.3, 1.3); lookDX = lookDY = 0;
   let ix = 0, iy = 0;
   if (keys.has('KeyW') || keys.has('ArrowUp')) iy += 1; if (keys.has('KeyS') || keys.has('ArrowDown')) iy -= 1;
   if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1; if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1;
   let mag = Math.hypot(ix, iy); if (mag > 1) { ix /= mag; iy /= mag; mag = 1; }
-  let stickPush = 0;
-  if (stick.id !== null) { ix = stick.x; iy = -stick.y; stickPush = Math.hypot(ix, iy); mag = Math.min(1, stickPush); }
-  const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || stickPush > 0.92) && mag > 0.1;
+  let push = 0; if (stick.id !== null) { ix = stick.x; iy = -stick.y; push = Math.hypot(ix, iy); mag = Math.min(1, push); }
+  const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || push > 0.92) && mag > 0.1;
+  if (wantRun && P.crouch) toggleCrouch();
   P.sprinting = wantRun && P.stamina > 0.05;
   P.stamina = P.sprinting ? Math.max(0, P.stamina - dt) : Math.min(P.staminaMax, P.stamina + dt * (mag > 0.1 ? 0.55 : 1.0));
   if (P.stamina <= 0.05 && runToggle) { runToggle = false; $('bRun').classList.remove('on'); }
-  const speed = (P.sprinting ? 5.6 : 3.0) * (stick.id !== null ? Math.max(0.35, mag) : 1);
+  const speed = (P.sprinting ? 5.6 : P.crouch ? 1.4 : 3.0) * (stick.id !== null ? Math.max(0.35, mag) : 1);
   const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw);
-  const tvx = (fx * iy + rx * ix) * speed, tvz = (fz * iy + rz * ix) * speed;
-  const a = 1 - Math.exp(-14 * dt);
+  const tvx = (fx * iy + rx * ix) * speed, tvz = (fz * iy + rz * ix) * speed, a = 1 - Math.exp(-14 * dt);
   P.vel.x += (tvx - P.vel.x) * a; P.vel.z += (tvz - P.vel.z) * a;
   P.pos.x += P.vel.x * dt; P.pos.z += P.vel.z * dt;
   collide(P.pos, 0.3);
-  P.y += (floorY(P.pos.x, P.pos.z) - P.y) * Math.min(1, dt * 12);
-  const hv = Math.hypot(P.vel.x, P.vel.z); P.bob += dt * hv * 2.2;
-  const bob = Math.sin(P.bob) * 0.035 * Math.min(1, hv / 3);
-  camera.position.set(P.pos.x, P.y + 1.6 + bob, P.pos.z);
+  const hv = Math.hypot(P.vel.x, P.vel.z);
+  // crouch / hiding
+  P.eye += ((P.crouch ? 0.95 : 1.6) - P.eye) * Math.min(1, dt * 10);
+  const wasHidden = P.hidden;
+  P.hidden = P.crouch && nearCover(P.pos, 1.1);
+  if (P.hidden && !wasHidden) P.hideBlown = enemies.some(e => e.active && e.sees);
+  if (!P.hidden) P.hideBlown = false;
+  const anyRaw = enemies.some(e => e.active && e.raw);
+  P.unseenT = anyRaw ? 0 : P.unseenT + dt; if (P.unseenT > 1.5) P.hideBlown = false;
+  // noise radius heard by enemies
+  P.noise = P.sprinting ? D.hear : (hv > 0.5 && !P.crouch ? D.hear * 0.35 : 0);
+  // interaction
+  curInteract = null; let best = 1e9;
+  for (const it of interact) { const d = Math.hypot(P.pos.x - it.pos.x, P.pos.z - it.pos.z); if (d < it.r && d < best) { best = d; curInteract = it; } }
+  P.charging = !!(curInteract && curInteract.id === 'gen' && (keys.has('KeyE') || useHeld) && P.battery < 100);
+  if (P.charging) { P.battery = Math.min(100, P.battery + 9 * dt); P.noise = Math.max(P.noise, 18); }
+  // camera
+  P.bob += dt * hv * (P.crouch ? 1.4 : 2.2);
+  const bob = Math.sin(P.bob) * (P.crouch ? 0.02 : 0.035) * Math.min(1, hv / 3);
+  camera.position.set(P.pos.x, P.eye + bob, P.pos.z);
   camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob * 0.5) * 0.008 * Math.min(1, hv / 3), 'YXZ');
 }
 
-function routeTo(target) {
-  const p = bfs(toCell(enemy.position), toCell(target)); if (!p) return false;
-  E.route = p.map(cellCenter); if (E.state === 'chase' || E.state === 'search') E.route.push(target.clone()); return true;
-}
-function newPatrol() {
-  for (let i = 0; i < 10; i++) { const x = Math.floor(Math.random() * mapData.W), y = Math.floor(Math.random() * mapData.H); if (inside(x, y) && routeTo(cellCenter([x, y]))) return; }
-}
-function distP() { return Math.hypot(enemy.position.x - P.pos.x, enemy.position.z - P.pos.z); }
-function updateEnemy(dt) {
-  if (E.state === 'wait') { E.timer -= dt; setAnim(0, dt); if (E.timer <= 0) { E.state = 'patrol'; newPatrol(); } return; }
-  E.sense -= dt;
-  if (E.sense <= 0) {
-    E.sense = 0.15;
-    const d = distP(); const dirx = Math.sin(E.yaw), dirz = Math.cos(E.yaw);
-    const tx = (P.pos.x - enemy.position.x) / d, tz = (P.pos.z - enemy.position.z) / d;
-    const inCone = dirx * tx + dirz * tz > Math.cos(THREE.MathUtils.degToRad(75)) || d < 4;
-    const lit = flashOn && d < 14;
-    E.sees = d < (flashOn ? 30 : 22) && (inCone || lit) && lineClear(enemy.position, P.pos);
-    const heard = P.sprinting && d < 11;
-    if (E.sees) { E.lastKnown.copy(P.pos); E.lost = 0; if (E.state !== 'chase') { E.state = 'chase'; E.repath = 0; message('見つかった――走れ！', 2); } }
-    else if (heard && E.state !== 'chase') { E.lastKnown.copy(P.pos); E.state = 'search'; routeTo(E.lastKnown); }
+// ================================================================== update: enemies
+function routeTo(e, target) {
+  const p = bfs(toCell(e.pos), toCell(target));
+  if (!p) {   // unreachable (monitor room door shut): wait outside the door, then give up
+    const out = bfs(toCell(e.pos), monDoor.cor);
+    e.route = out ? out.map(cellCenter) : []; e.lurk = 6 + Math.random() * 3; return false;
   }
-  let speed = 1.7;
-  if (E.state === 'patrol') { if (!E.route.length) newPatrol(); }
-  else if (E.state === 'chase') {
-    speed = 4.25 + E.bonus; E.repath -= dt;
-    if (E.sees && distP() < 7) E.route = [P.pos.clone()];
-    else if (E.repath <= 0) { E.repath = 0.35; routeTo(E.lastKnown); }
-    if (!E.sees) { E.lost += dt; if (E.lost > 6) { E.state = 'search'; routeTo(E.lastKnown); } }
-  } else if (E.state === 'search') { speed = 2.7 + E.bonus * 0.5; if (!E.route.length) { E.state = 'patrol'; newPatrol(); } }
-  // move
-  if (E.route.length) {
-    const t = E.route[0]; const dx = t.x - enemy.position.x, dz = t.z - enemy.position.z, d = Math.hypot(dx, dz);
-    if (d < 0.25) E.route.shift();
-    else {
-      const s = Math.min(speed * dt, d); enemy.position.x += dx / d * s; enemy.position.z += dz / d * s;
-      const ty = Math.atan2(dx, dz); let dy = ty - E.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); E.yaw += dy * Math.min(1, dt * 8);
-      setAnim(speed, dt);
-    }
-  } else setAnim(0, dt);
-  E.y += (floorY(enemy.position.x, enemy.position.z) - E.y) * Math.min(1, dt * 10);
-  enemy.position.y = E.y; enemy.rotation.y = E.yaw;
-  if (distP() < 1.1 && Math.abs(E.y - P.y) < 1.2) caught();
+  e.route = p.map(cellCenter); if (e.state === 'chase' || e.state === 'search') e.route.push(target.clone()); return true;
 }
-function setAnim(speed, dt) {
+function newPatrol(e) {
+  for (let i = 0; i < 12; i++) {
+    let x, y;
+    if (Math.random() < D.hunt) { const pc = toCell(P.pos); x = clamp(pc[0] + Math.round((Math.random() - 0.5) * 8), 0, W - 1); y = clamp(pc[1] + Math.round((Math.random() - 0.5) * 8), 0, H - 1); }
+    else { x = Math.floor(Math.random() * W); y = Math.floor(Math.random() * H); }
+    const p = bfs(toCell(e.pos), [x, y]); if (p && p.length) { e.route = p.map(cellCenter); return; }
+  }
+  e.route = [];
+}
+const distP = (e) => Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z);
+function sense(e) {
+  const d = distP(e) || 0.001, fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
+  const tx = (P.pos.x - e.pos.x) / d, tz = (P.pos.z - e.pos.z) / d;
+  const inCone = fx * tx + fz * tz > Math.cos(THREE.MathUtils.degToRad(70)) || d < 3.5;
+  const beam = flashOn && state === 'play' && d < 14 && (-Math.sin(P.yaw) * -tx + -Math.cos(P.yaw) * -tz) > 0.85;
+  const range = D.sight * (P.crouch ? 0.5 : 1) * (flashOn ? 1 : 0.7);
+  e.raw = d < range && (inCone || beam) && lineClear(e.pos, P.pos);
+  let visible = e.raw && (!P.hidden || P.hideBlown);
+  if (!visible && P.hidden && D.findHidden && e.state === 'search' && d < D.findHidden && e.raw) { P.hideBlown = true; visible = true; }
+  e.sees = visible;
+  const heard = P.noise > 0 && d < P.noise;
+  if (visible) { e.lastKnown.copy(P.pos); e.lost = 0; e.lurk = 0; if (e.state !== 'chase') { e.state = 'chase'; e.repath = 0; message(D.enemies > 1 ? '見つかった――走れ！' : '見つかった――走れ！', 2); } }
+  else if (heard && e.state !== 'chase') { e.lastKnown.copy(P.pos); e.state = 'search'; routeTo(e, e.lastKnown); }
+}
+function updateEnemy(e, dt) {
+  if (!e.active) return;
+  e.moving = false;
+  if (e.state === 'wait') { e.timer -= dt; setAnim(e, 0, dt); if (e.timer <= 0) { e.state = 'patrol'; newPatrol(e); } return; }
+  if (freezeT > 0) { setAnim(e, 0, dt); return; }
+  e.sense -= dt; if (e.sense <= 0) { e.sense = 0.15; sense(e); }
+  let speed = D.patrol;
+  if (e.lurk > 0) { e.lurk -= dt; if (e.lurk <= 0 && e.state !== 'chase') { e.state = 'patrol'; newPatrol(e); } }
+  if (e.state === 'patrol') { if (!e.route.length && e.lurk <= 0) newPatrol(e); }
+  else if (e.state === 'chase') {
+    speed = D.chase + bonus; e.repath -= dt;
+    if (e.sees && distP(e) < 7) e.route = [P.pos.clone()];
+    else if (e.repath <= 0) { e.repath = 0.35; routeTo(e, e.lastKnown); }
+    if (!e.sees) { e.lost += dt; if (e.lost > 5) { e.state = 'search'; routeTo(e, e.lastKnown); } }
+  } else if (e.state === 'search') {
+    speed = e.alert ? D.chase * 0.9 + bonus : D.search + bonus * 0.5;
+    if (!e.route.length && e.lurk <= 0) { e.state = 'patrol'; e.alert = false; newPatrol(e); }
+  }
+  e.speed = speed;
+  if (e.route.length) {
+    const t = e.route[0], dx = t.x - e.pos.x, dz = t.z - e.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.25) e.route.shift();
+    else {
+      const s = Math.min(speed * dt, d); e.pos.x += dx / d * s; e.pos.z += dz / d * s;
+      let dy = Math.atan2(dx, dz) - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * 8);
+      e.moving = true; setAnim(e, speed, dt);
+    }
+  } else setAnim(e, 0, dt);
+  // keep the two teachers from overlapping
+  for (const o of enemies) if (o !== e && o.active) { const dx = e.pos.x - o.pos.x, dz = e.pos.z - o.pos.z, d = Math.hypot(dx, dz); if (d < 0.7 && d > 1e-3) { e.pos.x += dx / d * (0.7 - d) * 0.5; e.pos.z += dz / d * (0.7 - d) * 0.5; } }
+  e.group.rotation.y = e.yaw; e.pos.y = 0;
+  if (distP(e) < 1.1 && (!P.hidden || P.hideBlown)) caught(e);
+}
+function setAnim(e, speed, dt) {
   const sprint = speed > 3.5;
-  actions.Run.setEffectiveWeight(sprint ? 0 : 1); actions.Sprint.setEffectiveWeight(sprint ? 1 : 0);
-  mixer.timeScale = speed < 0.05 ? 0 : THREE.MathUtils.clamp(speed / (sprint ? 4.6 : 3.0), 0.45, 1.5);
-  mixer.update(dt);
+  e.actions.Run.setEffectiveWeight(sprint ? 0 : 1); e.actions.Sprint.setEffectiveWeight(sprint ? 1 : 0);
+  e.mixer.timeScale = speed < 0.05 ? 0 : clamp(speed / (sprint ? 4.6 : 3.0), 0.45, 1.5);
+  e.mixer.update(dt);
 }
 
-let scareT = 0;
-function caught() {
-  state = 'scare'; scareT = 0; locked = false; if (document.pointerLockElement) document.exitPointerLock();
-  const f = new THREE.Vector3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
-  enemy.position.set(P.pos.x + f.x * 0.8, P.y, P.pos.z + f.z * 0.8);
-  E.yaw = Math.atan2(-f.x, -f.z); enemy.rotation.y = E.yaw;
-  flashOn = true;
-  showPlayUI(false);
+// ================================================================== scare / win
+let scareT = 0, scarer = null;
+function caught(e) {
+  if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); ambient.intensity = 0.22; hemi.intensity = 0.25; scene.fog.density = FOG_NORMAL; flash.visible = true;
+    P.yaw = Math.atan2(-(e.pos.x - P.pos.x), -(e.pos.z - P.pos.z)); camera.position.set(P.pos.x, P.eye, P.pos.z); camera.rotation.set(0, P.yaw, 0, 'YXZ'); }
+  state = 'scare'; scareT = 0; scarer = e; unlockPointer(); audioMusic(false);
+  const f = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
+  e.pos.set(P.pos.x + f.x * 0.8, 0, P.pos.z + f.z * 0.8); e.yaw = Math.atan2(-f.x, -f.z); e.group.rotation.y = e.yaw;
+  flashOn = true; showPlayUI(false);
 }
 function updateScare(dt) {
   scareT += dt;
-  const face = enemy.position.clone().add(new THREE.Vector3(0, 1.52, 0));
-  const m = new THREE.Matrix4().lookAt(camera.position, face, new THREE.Vector3(0, 1, 0));
-  const q = new THREE.Quaternion().setFromRotationMatrix(m);
-  camera.quaternion.slerp(q, Math.min(1, dt * 10));
+  const face = scarer.pos.clone().add(new V3(0, 1.52, 0));
+  const m = new THREE.Matrix4().lookAt(camera.position, face, new V3(0, 1, 0));
+  camera.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(m), Math.min(1, dt * 10));
   camera.position.x += (Math.random() - 0.5) * 0.03; camera.position.y += (Math.random() - 0.5) * 0.03;
-  flash.intensity = 34;
-  setAnim(4.6, dt);
+  flash.intensity = 34; setAnim(scarer, 4.6, dt);
   $('flash').style.opacity = (Math.floor(scareT * 12) % 2 ? 0.45 : 0.15);
   if (scareT > 1.4) {
-    state = 'end'; $('flash').style.opacity = 0.0;
+    state = 'end'; $('flash').style.opacity = 0; setMasterVolume(0);
     $('endTitle').textContent = 'つかまった…'; $('endTitle').style.color = '';
-    $('endText').textContent = `集めた封印札：${collected} / ${NEEDED}`;
+    $('endText').innerHTML = `難易度：${D.label}<br>回収した教科書：${collected} / ${books.length + collected}　生き延びた時間：${fmtTime(playT)}`;
     $('end').classList.remove('hidden');
   }
 }
+const fmtTime = (s) => `${Math.floor(s / 60)}分${String(Math.floor(s % 60)).padStart(2, '0')}秒`;
 function win() {
-  state = 'end'; showPlayUI(false); locked = false; if (document.pointerLockElement) document.exitPointerLock();
+  state = 'end'; showPlayUI(false); unlockPointer(); setMasterVolume(0);
   $('endTitle').textContent = '脱出成功！'; $('endTitle').style.color = '#7de08a';
-  $('endText').innerHTML = '大介先生から逃げ切った。<br>…でも、明日も学校で会うことになる。';
+  $('endText').innerHTML = `難易度：${D.label}　タイム：${fmtTime(playT)}<br>教科書はぜんぶ取り返した。…でも明日も、学校で大介先生に会う。`;
   $('end').classList.remove('hidden');
 }
 
+// ================================================================== world update
 const UI = {};
+let poolT = 0;
+function updatePool(view, t, dt) {
+  poolT -= dt;
+  if (poolT <= 0) {
+    poolT = 0.3;
+    const sorted = lightCands.map(c => [c, c.pos.distanceToSquared(view) - (c.special ? 30 : 0)]).sort((a, b) => a[1] - b[1]);
+    pool.forEach((p, i) => { const c = sorted[i] && sorted[i][0]; p.cand = c; if (c) { p.l.position.copy(c.pos); p.l.color.setHex(c.color); p.l.distance = c.dist; } });
+  }
+  for (const p of pool) {
+    const c = p.cand; if (!c) { p.l.intensity = 0; continue; }
+    let I = c.intensity;
+    if (c.onair) I = freezeT > 0 ? 5 : 0.8;
+    if (c.flicker) { const n = (Math.sin(t * 7.3 + c.pos.x) + Math.sin(t * 13.1 + c.pos.z * 2)) * 0.5; I = n < -0.55 ? 0.1 : I * (0.85 + 0.15 * n); }
+    p.l.intensity = I;
+  }
+}
 function updateWorld(dt, t) {
-  // ofuda
-  for (let i = ofudas.length - 1; i >= 0; i--) {
-    const o = ofudas[i]; o.g.rotation.y += dt * 1.2; o.g.position.y = o.base + Math.sin(t * 2 + i) * 0.06;
-    if (o.g.position.distanceTo(new THREE.Vector3(P.pos.x, P.y + 1.0, P.pos.z)) < 1.7) {
-      scene.remove(o.g); ofudas.splice(i, 1); collected++; E.bonus += 0.35;
-      if (collected >= NEEDED) { exitOpen = true; if (exitDoorMesh) exitDoorMesh.visible = false; E.bonus += 0.4; drawMapBase(); message('すべて集めた！ 玄関の非常口が開いた――急げ！', 5); }
-      else message(`封印札を手に入れた（${collected}/${NEEDED}）…どこかで足音が速くなった`, 3);
+  playT += dt;
+  // textbooks
+  for (let i = books.length - 1; i >= 0; i--) {
+    const b = books[i]; b.s.material.opacity = 0.55 + 0.35 * Math.sin(t * 3 + i);
+    if (Math.hypot(P.pos.x - b.g.position.x, P.pos.z - b.g.position.z) < 1.4) {
+      scene.remove(b.g); books.splice(i, 1); collected++; bonus += 0.12;
+      if (!books.length) { exitOpen = true; message('教科書がぜんぶそろった！ 玄関へ――急げ！', 5); }
+      else message(`教科書「${b.name}」を回収（${collected}/${collected + books.length}）`, 3);
       updateCount();
     }
   }
-  if (exitOpen && Math.hypot(P.pos.x - spots.Spot_Exit.x, P.pos.z - spots.Spot_Exit.z) < 1.8) win();
-  // lamps flicker
-  for (const L of lamps) { const n = (Math.sin(t * 7.3 + L.seed) + Math.sin(t * 13.1 + L.seed * 2)) * 0.5; L.l.intensity = n < -0.55 ? 0.1 : L.base * (0.85 + 0.15 * n); }
-  // fear
-  const d = distP(); let fear = THREE.MathUtils.clamp(1 - (d - 2) / 14, 0, 1); if (E.state === 'chase') fear = Math.max(fear, 0.45);
+  for (const p of exitPanels) p.position.x += ((exitOpen ? p.userData.open : p.userData.closed) - p.position.x) * Math.min(1, dt * 3);
+  if (exitOpen && P.pos.z > 38.2 && P.pos.x > 67.5 && P.pos.x < 70.5) win();
+  // monitor door panel
+  monPanel.position.x += ((doorClosed ? monPanel.userData.closed : monPanel.userData.open) - monPanel.position.x) * Math.min(1, dt * 8);
+  // battery
+  const drain = (state === 'cams' ? D.drainCam : 0) + (doorClosed ? D.drainDoor : 0);
+  if (drain > 0) {
+    P.battery = Math.max(0, P.battery - drain * dt);
+    if (P.battery <= 0) { if (state === 'cams') exitCams(); if (doorClosed) setDoor(false, true); message('バッテリー切れ！ ドアが開いた――', 3); }
+  }
+  // music box
+  if (freezeT > 0) { freezeT -= dt; musicBox.userData.crank.rotation.x += dt * 6; if (freezeT <= 0) endFreeze(); }
+  if (musicCd > 0) musicCd = Math.max(0, musicCd - dt);
+  MATS.onair.emissiveIntensity = freezeT > 0 ? 1.6 : 0.25;
+  // fear / flashlight flicker
+  let dmin = 1e9; for (const e of enemies) if (e.active) dmin = Math.min(dmin, distP(e));
+  let fear = clamp(1 - (dmin - 2) / 14, 0, 1); if (enemies.some(e => e.active && e.state === 'chase')) fear = Math.max(fear, 0.45);
   const va = (fear * 0.55 * (0.8 + 0.2 * Math.sin(t * (4 + fear * 6)))).toFixed(2);
-  if (va !== UI.va) { UI.va = va; $('vign').style.opacity = va; }
-  const fl = THREE.MathUtils.clamp(1 - (d - 2) / 8, 0, 1);
-  const noise = (Math.sin(t * 31) + Math.sin(t * 17.7)) * 0.5;
-  flash.intensity = flashOn ? flashBase * (fl > 0 && noise < -0.3 ? 1 - fl * 0.95 : 1) : 0;
+  if (va !== UI.va) { UI.va = va; $('vign').style.opacity = state === 'cams' ? 0 : va; }
+  const fl = clamp(1 - (dmin - 2) / 8, 0, 1), noise = (Math.sin(t * 31) + Math.sin(t * 17.7)) * 0.5;
+  const near = clamp(Math.pow(rayDist(P.pos, P.yaw, 4) / 3.2, 1.3), 0.3, 1) * (P.pitch < -0.5 ? 0.6 : 1);
+  UI.near = (UI.near ?? 1) + (near - (UI.near ?? 1)) * Math.min(1, dt * 8);
+  flash.intensity = flashOn ? flashBase * UI.near * (fl > 0 && noise < -0.3 ? 1 - fl * 0.95 : 1) : 0;
+  // HUD
   const sw = Math.round(P.stamina / P.staminaMax * 100);
   if (sw !== UI.sw) { UI.sw = sw; $('stam').firstElementChild.style.transform = `scaleX(${sw / 100})`; $('stam').classList.toggle('low', P.stamina < 1); }
+  const bp = Math.ceil(P.battery);
+  if (bp !== UI.bp) { UI.bp = bp; $('bat').querySelector('i').style.transform = `scaleX(${bp / 100})`; $('batPct').textContent = bp + '%'; $('bat').classList.toggle('low', bp < 25); $('camBat').textContent = `バッテリー ${bp}%`; }
+  const pose = !P.crouch ? '' : P.hideBlown ? '見られている！' : P.hidden ? '隠れている' : 'しゃがみ中';
+  if (pose !== UI.pose) { UI.pose = pose; const el = $('pose'); el.textContent = pose; el.style.visibility = pose ? 'visible' : 'hidden'; el.classList.toggle('hid', pose === '隠れている'); el.classList.toggle('blown', pose === '見られている！'); }
+  const pt = state === 'play' && curInteract ? (IS_TOUCH ? '「使う」' : '[E] ') + interactLabel(curInteract) : '';
+  if (pt !== UI.pt) { UI.pt = pt; $('prompt').classList.toggle('hidden', !pt); $('promptText').textContent = pt; $('bUse').classList.toggle('ready', !!pt); }
+  const showBar = P.charging || (curInteract && curInteract.id === 'gen');
+  $('prompt').querySelector('.pbar').classList.toggle('hidden', !showBar);
+  if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${P.battery / 100})`;
   if (msgT > 0) { msgT -= dt; if (msgT <= 0) $('msg').style.opacity = 0; }
+  for (const e of enemies) updateEnemyAudio(e);
 }
 
-// minimap (no enemy shown): static canvas drawn only when it changes + CSS-moved arrow
-const mctx = $('map').getContext('2d');
-function drawMapBase() {
-  const c = mctx, s = 20, W = mapData.W, H = mapData.H; c.clearRect(0, 0, 420, 168);
-  const colorOf = z => z === 'C' ? 'rgba(200,200,200,.35)' : z === 'S' ? 'rgba(160,160,200,.35)' : 'rgba(150,110,80,.32)';
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const z = zone[y][x]; if (z === '.') continue; c.fillStyle = colorOf(z); c.fillRect(x * s, y * s + 4, s - 1, s - 1); }
-  c.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.45)'; c.fillRect(21 * s - 4, 7 * s + 4, 6, s - 1);
+// ================================================================== maps
+const MAPS = 8;  // px per cell on the minimap canvas (drawn at 2x)
+function drawZones(g, s, labels) {
+  const colorOf = (z) => { if (z === 'C') return 'rgba(200,200,200,.38)'; const r = rooms.find(q => q.id === z);
+    return r.type === 'monitor' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : 'rgba(150,110,80,.35)'; };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = colorOf(ZONE[y][x]); g.fillRect(x * s, y * s, s - 1, s - 1); }
+  if (labels) { g.fillStyle = 'rgba(255,255,255,.9)'; g.font = `bold ${Math.round(s * 1.3)}px ${JFONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const r of rooms) if (r.type !== 'class') g.fillText({ monitor: '監', generator: '発', broadcast: '放', staff: '職' }[r.type], (r.x0 + 1.5) * s, (r.y0 + 1.5) * s); }
+  g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4);
 }
-function drawMap() {
+function drawMapBase() { const g = $('map').getContext('2d'); g.clearRect(0, 0, 384, 208); drawZones(g, 16, true); }
+function buildCamMap() {
+  const c = $('camMapC'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); drawZones(g, 24, true);
+  const box = $('camMap');
+  camsDef.forEach((cd, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'cbtn'; b.dataset.i = i; b.textContent = String(i + 1);
+    b.style.left = (cd.pos[0] / (W * CELL) * 288) + 'px'; b.style.top = (cd.pos[2] / (H * CELL) * 156) + 'px';
+    b.addEventListener('click', () => switchCam(i)); box.appendChild(b);
+  });
+}
+function drawMapArrow() {
   if (!showMap || state !== 'play') return;
-  const px = P.pos.x / 3 * 10, pz = P.pos.z / 3 * 10 + 2;   // canvas is shown at half size (210x84)
+  const px = P.pos.x / CELL * MAPS, pz = P.pos.z / CELL * MAPS;
   const tr = `translate(${px.toFixed(0)}px,${pz.toFixed(0)}px) rotate(${(-P.yaw).toFixed(2)}rad)`;
   if (tr !== UI.tr) { UI.tr = tr; $('arrow').style.transform = tr; }
+  if (exitOpen !== UI.exitDrawn) { UI.exitDrawn = exitOpen; drawMapBase(); }
 }
 
-// ------------------------------------------------------------------ loop
-const clock = new THREE.Clock(); const TM = {}, DBG = {};
+// ================================================================== loop
+const clock = new THREE.Clock();
 function loop() {
   requestAnimationFrame(loop);
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  const _t0 = performance.now();
-  if (state === 'play') { updatePlayer(dt); const _t1 = performance.now(); updateEnemy(dt); const _t2 = performance.now(); updateWorld(dt, t); const _t3 = performance.now(); drawMap(); TM.p = _t1 - _t0; TM.e = _t2 - _t1; TM.w = _t3 - _t2; TM.m = performance.now() - _t3; }
-  else if (state === 'scare') updateScare(dt);
+  if (state === 'play' || state === 'cams') {
+    if (state === 'play') updatePlayer(dt); else { lookDX = lookDY = 0; P.noise = 0; }
+    for (const e of enemies) updateEnemy(e, dt);
+    if (state === 'play' || state === 'cams') updateWorld(dt, t);
+    drawMapArrow();
+  } else if (state === 'scare') updateScare(dt);
   else if (state === 'title') {
-    // slow idle camera at the start position looking down the corridor
-    if (spots.Spot_PlayerStart) { camera.position.set(spots.Spot_PlayerStart.x, 1.6, spots.Spot_PlayerStart.z); camera.rotation.set(0, -Math.PI / 2 + Math.sin(t * 0.3) * 0.15, 0, 'YXZ'); }
-    if (mixer) setAnim(0, dt);
+    camera.position.set(4.5, 1.6, 10.5); camera.rotation.set(0, -Math.PI / 2 + Math.sin(t * 0.25) * 0.25, 0, 'YXZ');
+    for (const e of enemies) if (e.active) setAnim(e, 0, dt);
   }
-  const _r = performance.now(); renderer.render(scene, camera); TM.r = performance.now() - _r; TM.calls = renderer.info.render.calls; TM.prog = renderer.info.programs.length;
+  if (state === 'cams') {
+    camSwT -= dt; if (camSwT <= 0 && UI.sw2 !== false) { $('camui').classList.remove('sw'); }
+    const q = secCam.userData.base; if (q) { secCam.quaternion.copy(q); secCam.rotateY(Math.sin(t * 0.4) * 0.12); }
+    updatePool(secCam.position, t, dt);
+    renderer.render(scene, secCam);
+  } else {
+    updatePool(camera.position, t, dt);
+    renderer.render(scene, camera);
+  }
 }
 resize();
-window.__dk = { get ofudas() { return ofudas; }, enemy: null, step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play') { updatePlayer(dt); updateEnemy(dt); updateWorld(dt, clock.elapsedTime); } else if (state === 'scare') updateScare(dt); } }, get collected() { return collected; }, DBG, TM, scene, renderer, camera, flash, lamps, P, E, get state() { return state; }, spots, startGame, keys, stick };
+window.__dk = { get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play') updatePlayer(dt); for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); } else if (state === 'scare') updateScare(dt); } },
+  doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorClosed() { return doorClosed; }, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
 </html>
