@@ -1324,7 +1324,7 @@ async function initAudio() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   if (actx) { try { actx.resume(); } catch (e) {} return; }
   actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
-  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3']]) {
+  for (const [k, url] of [['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3']]) {
     try { const r = await fetch(url); if (!r.ok) continue; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
   }
   for (const e of enemies) attachSteps(e);
@@ -1375,6 +1375,13 @@ function audioMusic(on) {
   const t = actx.currentTime;
   if (on) { audioMusic(false); musicSrc = actx.createBufferSource(); musicSrc.buffer = sfx.music; musicSrc.loop = true; musicGain = actx.createGain(); musicGain.gain.value = 0.85; musicSrc.connect(musicGain); musicGain.connect(master); musicSrc.start(); }
   else if (musicSrc) { const s = musicSrc; musicGain.gain.setTargetAtTime(0, t, 0.4); setTimeout(() => { try { s.stop(); } catch (e) {} }, 2000); musicSrc = null; }
+}
+// the teacher's voice when you get caught (two recordings, taking turns); routed past the master volume so it plays over the end screen
+let voiceIdx = Math.floor(Math.random() * 2);
+function playVoice() {
+  if (!actx) return; const ks = ['voice1', 'voice2'].filter(k => sfx[k]); if (!ks.length) return;
+  const src = actx.createBufferSource(); src.buffer = sfx[ks[voiceIdx++ % ks.length]];
+  const g = actx.createGain(); g.gain.value = 1.0; src.connect(g); g.connect(actx.destination); src.start();
 }
 function setMasterVolume(v) { if (master) master.gain.setTargetAtTime(v, actx.currentTime, 0.05); }
 
@@ -1766,7 +1773,7 @@ function caught(e) {
   if (NET && UI.camAct) { act('cams', { on: 0 }); UI.camAct = false; }
   if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook();
     P.yaw = Math.atan2(-(e.pos.x - P.pos.x), -(e.pos.z - P.pos.z)); camera.position.set(P.pos.x, P.eye, P.pos.z); camera.rotation.set(0, P.yaw, 0, 'YXZ'); }
-  state = 'scare'; scareT = 0; scarer = e; unlockPointer(); audioMusic(false);
+  state = 'scare'; scareT = 0; scarer = e; playVoice(); unlockPointer(); audioMusic(false);
   const f = new V3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
   e.pos.set(P.pos.x + f.x * 0.8, 0, P.pos.z + f.z * 0.8); e.yaw = Math.atan2(-f.x, -f.z); e.group.rotation.y = e.yaw;
   flashOn = true; showPlayUI(false);
@@ -2224,7 +2231,7 @@ function onEvent(ev) {
     case 'caught': { const pl = NET.players.get(ev.id); if (pl) pl.alive = false;
       const a = avatars.get(ev.id); if (a && a.g) a.g.visible = false;
       if (ev.id === me) { $('pause').classList.add('hidden'); caught(enemies[ev.by ?? 2]); STATS.caught = (STATS.caught | 0) + 1; if (STATS.caught >= 10) unlock('caught10'); saveShop(); }
-      else message(hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3);
+      else { message(hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3); if (hunter && (ev.by ?? 2) === 2) playVoice(); }
       updateCount(); break; }
     case 'book': { const i = books.findIndex(b => b.id === ev.id); if (i < 0) break; const b = books[i]; scene.remove(b.g); books.splice(i, 1); collectBook(b, ev.by === me ? null : ev.name); break; }
     case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}がシェルターの${ev.i ? '南' : '北'}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
