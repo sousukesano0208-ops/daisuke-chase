@@ -64,6 +64,10 @@ canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) co
 #invisHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top));font-size:15px;padding:4px 12px;border-radius:6px;background:rgba(40,80,140,.55);border:1px solid #9cc8ff;color:#d8ecff}
 #tping{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:2px solid #c9b6ff;box-shadow:0 0 8px #a68cff;background:rgba(170,140,255,.5)}
 #bTab{right:calc(196px + env(safe-area-inset-right));bottom:calc(74px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:12px}
+#bJump{right:calc(196px + env(safe-area-inset-right));bottom:calc(152px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:13px}
+#spectBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;pointer-events:auto;z-index:6;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 8px;font-size:15px;white-space:nowrap}
+#spectBar button{font-family:inherit;font-size:16px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;cursor:pointer;touch-action:none}
+#spectBar small{display:block;font-size:11px;color:var(--dim);text-align:center}
 .row{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px;color:var(--dim);font-size:14px}
 .row input[type=range]{width:150px}
 #loading{font-size:15px;color:var(--dim);margin-top:14px}
@@ -163,7 +167,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <div id="count">教科書 0 / 4</div>
   <div id="hint"></div>
   <div class="bat" id="bat"><span>バッテリー</span><span class="bar"><i></i></span><span id="batPct">100%</span></div>
-  <div id="doorState" class="hidden">シェルターのドア：閉</div>
+  <div id="doorState" class="hidden">保健室のドア：閉</div>
   <div id="items"></div>
 </div>
 <div id="mapwrap" class="hidden"><canvas id="map" width="384" height="208"></canvas><div id="ping" class="hidden"></div><div id="tping" class="hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div id="arrow"></div></div>
@@ -182,13 +186,15 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <div id="bLight" class="tbtn on">ライト</div>
   <div id="bPause" class="tbtn">Ⅱ</div>
   <div id="bTab" class="tbtn">タブ<br>レット</div>
+  <div id="bJump" class="tbtn">ジャンプ</div>
 </div>
+<div id="spectBar" class="hidden"><button id="spPrev" type="button">◀</button><div><div id="spName">観戦中</div><small>仲間の視点</small></div><button id="spNext" type="button">▶</button></div>
 
 <div id="camui" class="hidden">
   <div class="scan"></div><div class="noise"></div>
   <div id="camTop"><span class="rec">● REC</span><span id="camName">CAM1</span></div>
   <div id="spectLabel" class="hidden">観戦中</div>
-  <div id="camInfo"><div>タブレット</div><div id="camBat">バッテリー 100%</div><div id="camDoor">シェルター 北：開／南：開</div></div>
+  <div id="camInfo"><div>タブレット</div><div id="camBat">バッテリー 100%</div><div id="camDoor">保健室 北：開／南：開</div></div>
   <div id="camPanel">
     <div id="camMap"><canvas id="camMapC" width="576" height="312"></canvas></div>
     <div id="camBtns">
@@ -203,11 +209,11 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>大介先生から逃げろ</h1>
-  <div class="ver">ver.3.2</div>
+  <div class="ver">ver.3.3</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目の大介先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
-  <b>シェルター</b>のドアを閉めれば先生は入れない（バッテリー消費）。充電は<b>発電室</b>で。<b>放送室</b>のオルゴールで先生を止められる。<br>
+  <b>保健室</b>のドアを閉めれば先生は入れない（バッテリー消費）。棚の育毛剤と<b>謎の毛</b>で自分のクローンも作れる。充電は<b>発電室</b>で。<b>放送室</b>のオルゴールで先生を止められる。<br>
   教科書を1冊見つけたら<b>職員室</b>へ――30秒だけ透明になれる。ふつう以上では<b>もう一人の先生</b>も現れる。</p>
   <div class="seg" id="diffSeg" role="radiogroup" aria-label="難易度">
     <button type="button" data-d="easy">かんたん<small>教科書3冊・足おそめ</small></button>
@@ -233,7 +239,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="lobby" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,48px)">オンライン対戦</h1>
-  <p class="keys">1人が<b>大介先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。全員つかまえたら大介先生の勝ち。</p>
+  <p class="keys">1人が<b>大介先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたら大介先生の勝ち。</p>
   <div id="lobbyHome">
     <div class="row"><label>名前 <input id="pname" type="text" maxlength="10" autocomplete="off"></label></div>
     <button id="mkRoom" class="btn" type="button">部屋を作る</button>
@@ -354,8 +360,8 @@ $('sens').value = $('sens2').value = sens; $('hq').checked = hq;
 for (const id of ['sens', 'sens2']) $(id).addEventListener('input', e => { sens = parseFloat(e.target.value); $('sens').value = $('sens2').value = sens; store.set('dk_sens', sens); });
 $('hq').addEventListener('change', e => { hq = e.target.checked; store.set('dk_hq', hq ? '1' : '0'); applyQuality(); });
 $('howto').innerHTML = IS_TOUCH
-  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる・「使う」でドアやオルゴール（発電機は長押し）・「タブレット」で監視カメラ'
-  : 'WASD：移動　Shift：走る　C：しゃがむ　E：使う（発電機は長押し）　T：タブレット　F：ライト　M：地図　Esc：一時停止';
+  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる・「ジャンプ」・「使う」でドアやオルゴール（発電機は長押し）・「タブレット」で監視カメラ'
+  : 'WASD：移動　Shift：走る　Space：ジャンプ　C：しゃがむ　E：使う（発電機は長押し）　T：タブレット　F：ライト　M：地図　Esc：一時停止';
 
 // ================================================================== renderer
 const canvas = $('gl');
@@ -502,8 +508,8 @@ function buildMeshes(group) {
 // ================================================================== level layout
 const CELL = 3, W = 24, H = 13, CEIL = 3.0;
 const ROOM_COLS = [2, 5, 8, 13, 16, 19], ROOM_ROWS = [0, 5, 10];
-const ROOM_NAMES = [['2-A', '2-B', '2-C', '職員室', '2-D', '放送室'], ['1-A', '1-B', '1-C', 'シェルター', '1-D', '1-E'], ['発電室', '3-A', '3-B', '3-C', '3-D', '3-E']];
-const typeOf = n => n === '職員室' ? 'staff' : n === '放送室' ? 'broadcast' : n === 'シェルター' ? 'shelter' : n === '発電室' ? 'generator' : 'class';
+const ROOM_NAMES = [['2-A', '2-B', '2-C', '職員室', '2-D', '放送室'], ['1-A', '1-B', '1-C', '保健室', '1-D', '1-E'], ['発電室', '3-A', '3-B', '3-C', '3-D', '3-E']];
+const typeOf = n => n === '職員室' ? 'staff' : n === '放送室' ? 'broadcast' : n === '保健室' ? 'shelter' : n === '発電室' ? 'generator' : 'class';
 const ZONE = Array.from({ length: H }, () => Array(W).fill('C'));
 const rooms = [];
 let zid = 0;
@@ -688,12 +694,18 @@ function furnish(r) {
     for (let v = 0.8; v < 8.2; v += 0.925) B('locker', 8.45, 0, v, 8.9, 1.9, v + 0.9);
     F(8.45, 0.8, 8.9, 8.2);
   } else if (type === 'shelter') {
-    // benches, emergency supplies and a door switch beside each door
-    for (const [u0, u1] of [[0.15, 0.6], [8.4, 8.85]]) { B('wood', u0, 0.42, 1.4, u1, 0.47, 7.6); for (const v of [1.5, 4.4, 7.4]) B('metal', u0 + 0.05, 0, v, u1 - 0.05, 0.42, v + 0.08); F(u0, 1.4, u1, 7.6); }
+    // 保健室: beds along both walls, medicine shelves, a red-cross sign, and a door switch beside each door
+    for (const [u0, u1] of [[0.15, 1.1], [7.9, 8.85]]) for (const [v0, v1] of [[1.3, 3.3], [5.2, 7.2]]) {
+      for (const [a, b] of [[u0 + 0.03, v0 + 0.03], [u1 - 0.09, v0 + 0.03], [u0 + 0.03, v1 - 0.09], [u1 - 0.09, v1 - 0.09]]) B('metal', a, 0, b, a + 0.06, 0.36, b + 0.06);
+      B('frame', u0, 0.36, v0, u1, 0.42, v1); B('paper', u0 + 0.03, 0.42, v0 + 0.03, u1 - 0.03, 0.58, v1 - 0.03);
+      const pv = v0 < 4 ? [v0 + 0.08, v0 + 0.48] : [v1 - 0.48, v1 - 0.08]; B('paper', u0 + 0.12, 0.58, pv[0], u1 - 0.12, 0.68, pv[1]);
+      F(u0, v0, u1, v1);
+    }
+    B('paper', 6.1, 1.1, 0.12, 6.8, 1.7, 0.19); B('red', 6.38, 1.18, 0.19, 6.52, 1.62, 0.23); B('red', 6.23, 1.33, 0.19, 6.67, 1.47, 0.23);
     for (const v0 of [0.15, 8.45]) { B('metal', 0.8, 0, v0, 2.9, 1.7, v0 + 0.4); for (let y = 0.3; y < 1.6; y += 0.45) { B('dark', 0.9, y, v0 + 0.05, 1.5, y + 0.25, v0 + 0.35); B('paper', 1.6, y, v0 + 0.05, 2.1, y + 0.3, v0 + 0.35); B('win', 2.2, y, v0 + 0.08, 2.8, y + 0.32, v0 + 0.32); } F(0.8, v0, 2.9, v0 + 0.4); }
-    B('red', 6.2, 1.2, 0.12, 6.7, 1.6, 0.25);
-    lightCands.push({ pos: new V3(ox + 4.5, 2.4, oz + 4.5), color: 0xffd59a, intensity: 3.2, dist: 8, special: true });
+    lightCands.push({ pos: new V3(ox + 4.5, 2.4, oz + 4.5), color: 0xe6f1ff, intensity: 3.2, dist: 8, special: true });
     spots.shDoor = []; spots.shelter = new V3(ox + 4.5, 0, oz + 4.5);
+    spots.tonic = new V3(ox + 1.85, 1.7, oz + 0.35); interact.push({ id: 'tonic', pos: new V3(ox + 1.85, 0, oz + 1.25), r: 1.3 });
     for (const d of shDoors) {
       const gc = d.cx * CELL + 1.5, L = d.line * CELL, rs = -d.side;
       interact.push({ id: 'door', di: d.si, pos: new V3(gc - 1.3, 0, L + rs * 0.9), r: 1.5 });
@@ -730,7 +742,7 @@ camsDef.push(
   { name: 'CAM1 西ホール',   pos: [1.0, 2.75, 1.0],    look: [4.0, 0.6, 20] },
   { name: 'CAM2 北廊下・西', pos: [2.0, 2.75, 9.6],    look: [40, 0.8, 13] },
   { name: 'CAM3 北廊下・東', pos: [65.5, 2.75, 14.6],  look: [36, 0.8, 11] },
-  { name: 'CAM4 シェルター前',   pos: [36.4, 2.75, 14.6],  look: [46, 0.8, 13] },
+  { name: 'CAM4 保健室前',     pos: [36.4, 2.75, 14.6],  look: [46, 0.8, 13] },
   { name: 'CAM5 南廊下',     pos: [2.0, 2.75, 24.6],   look: [40, 0.8, 27] },
   { name: 'CAM6 中央ホール', pos: [33.4, 2.75, 38.6],  look: [36, 0.8, 20] },
   { name: 'CAM7 玄関',       pos: [71.5, 2.75, 15.4],  look: [68, 0.5, 38] },
@@ -832,7 +844,7 @@ loadBytes('assets/daisuke.glb.b64.txt').then(async buf => { gltfs = [await parse
   .catch(e => { $('loading').textContent = '読み込みに失敗しました：' + e; console.error(e); });
 
 // ================================================================== init
-let level, enemies = [], books = [], musicBox, shPanels = [], shLeds = [], exitPanels = [], pool = [];
+let level, enemies = [], books = [], musicBox, tonic, shPanels = [], shLeds = [], exitPanels = [], pool = [];
 function glowTex() {
   const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
   const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,200,160,.7)'); gr.addColorStop(1, 'rgba(255,0,0,0)');
@@ -846,14 +858,14 @@ function makeEnemy(gltf, idx) {
   for (const c of gltf.animations) actions[c.name] = mixer.clipAction(c);
   actions.Run.play(); actions.Sprint.play(); actions.Sprint.setEffectiveWeight(0);
   let head = null; model.traverse(o => { if (o.isBone && o.name === 'head') head = o; });
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2010 }), eyeGeo = new THREE.SphereGeometry(0.011, 10, 8);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff2010 }), eyeGeo = new THREE.SphereGeometry(0.011, 10, 8), glows = [];
   for (const sx of [-0.034, 0.034]) {
     const e = new THREE.Mesh(eyeGeo, eyeMat); e.position.set(sx, 0.025, 0.1); (head || group).add(e);
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xff2a1a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-    glow.scale.set(0.09, 0.09, 1); e.add(glow);
+    glow.scale.set(0.09, 0.09, 1); e.add(glow); glows.push(glow);
   }
   const eyeLight = new THREE.PointLight(0xff1a08, 2.5, 2.6, 1.5); eyeLight.position.set(0, 0.03, 0.25); (head || group).add(eyeLight);
-  return { idx, group, mixer, actions, eyeLight, pos: group.position, state: 'wait', timer: 0, route: [], lastKnown: new V3(), lost: 0, sense: 0, repath: 0, sees: false, raw: false, yaw: 0, speed: 0, alert: false, lurk: 0, snd: null, active: false };
+  return { idx, group, mixer, actions, eyeLight, eyeMat, glows, pos: group.position, state: 'wait', timer: 0, route: [], lastKnown: new V3(), lost: 0, sense: 0, repath: 0, sees: false, raw: false, yaw: 0, speed: 0, alert: false, lurk: 0, snd: null, active: false };
 }
 function init() {
   level = buildLevel(); scene.add(level);
@@ -878,6 +890,12 @@ function init() {
   const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.012, 0.012), MATS.metal); c1.position.x = 0.015; crank.add(c1);
   const c2 = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.06, 0.012), MATS.metal); c2.position.set(0.03, 0.025, 0); crank.add(c2);
   musicBox.add(crank); musicBox.userData.crank = crank; musicBox.position.copy(spots.musicbox); scene.add(musicBox);
+  // 育毛剤 on the 保健室 shelf
+  tonic = new THREE.Group();
+  const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.17, 14), new THREE.MeshStandardMaterial({ color: 0x2f9a58, emissive: 0x1d6b3a, emissiveIntensity: 0.9, roughness: 0.2, transparent: true, opacity: 0.85 })); tb.position.y = 0.085; tonic.add(tb);
+  const tcap = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.05, 10), MATS.metal); tcap.position.y = 0.195; tonic.add(tcap);
+  const tl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.003), MATS.paper); tl.position.set(0, 0.08, 0.05); tonic.add(tl);
+  tonic.position.copy(spots.tonic); scene.add(tonic);
   // light pool
   const K = IS_TOUCH ? 5 : 7;
   for (let i = 0; i < K; i++) { const l = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(l); pool.push({ l, cand: null }); }
@@ -956,7 +974,8 @@ const ITEMS = [
   { id: 'radar', name: '先生レーダー', price: 7, key: 4, desc: '30秒間、すべての先生の居場所が地図に赤い点で出る。' },
   { id: 'ghost', name: '透明スプレー', price: 8, key: 5, desc: 'その場で20秒間、透明になれる（職員室に行かなくてよい）。' },
   { id: 'pet', name: 'お助けペット（柴犬）', price: 9, key: 7, repel: true, desc: '呼ぶと勝手に大介先生のところへ走っていき、体当たりで40秒ダウンさせる。' },
-  { id: 'hair', name: '謎の毛', price: 10, key: 6, desc: '誰のものかわからない毛。効果はない。' },
+  { id: 'ally', name: 'なかまの腕章', price: 8, key: 8, desc: '近く（10m以内）の大介先生に腕章をつけると45秒間味方になる。ついてきて、ほかの先生を押さえこんでくれる。' },
+  { id: 'hair', name: '謎の毛', price: 10, key: 6, desc: '誰のものかわからない毛。そのままでは効果はない。ひとりで遊ぶとき、保健室の育毛剤と合わせると自分のクローンが作れる。' },
 ];
 const CLEAR_PTS = { easy: 3, normal: 5, hard: 7, super: 10 };
 // ---- accounts: everything is saved per player name in this browser; a transfer code moves it to another device
@@ -1041,6 +1060,9 @@ const ACHS = [
   { id: 'online_win', name: 'みんなで勝利', desc: 'オンライン対戦で勝つ', p: 5 },
   { id: 'hunter_all', name: '本物の大介先生', desc: 'オンライン対戦で大介先生になって全員つかまえる', p: 5 },
   { id: 'caught10', name: 'また会ったね', desc: '合計10回つかまる', p: 3 },
+  { id: 'clone', name: 'もう一人の自分', desc: '保健室の育毛剤と謎の毛でクローンを作る', p: 5 },
+  { id: 'ally', name: '先生と仲直り', desc: 'なかまの腕章で大介先生を味方にする', p: 3 },
+  { id: 'revive', name: '助け合い', desc: 'オンライン対戦でつかまった仲間を助け起こす', p: 3 },
 ];
 function unlock(id) {
   if (!CUR || ACH[id]) return; const a = ACHS.find(x => x.id === id); if (!a) return;
@@ -1069,7 +1091,7 @@ $('tabAch').addEventListener('click', () => { $('tabAch').classList.add('on'); $
 $('tabHist').addEventListener('click', () => { $('tabHist').classList.add('on'); $('tabAch').classList.remove('on'); $('histList').classList.remove('hidden'); $('achList').classList.add('hidden'); });
 
 // ---- gacha (1P per pull)
-const GACHA = [['battery', 'N', 30], ['drink', 'N', 30], ['buzzer', 'R', 13], ['radar', 'R', 12], ['spray', 'SR', 5], ['ghost', 'SR', 4], ['pet', 'SR', 3], ['hair', 'SSR', 3]];
+const GACHA = [['battery', 'N', 30], ['drink', 'N', 27], ['ally', 'SR', 3], ['buzzer', 'R', 13], ['radar', 'R', 12], ['spray', 'SR', 5], ['ghost', 'SR', 4], ['pet', 'SR', 3], ['hair', 'SSR', 3]];
 function pull(n) {
   const cost = n;
   if (points < cost) { toast('ポイントが足りません'); return; }
@@ -1140,7 +1162,12 @@ function useItem(id) {
       message('ビーーーッ！ 防犯ブザーを鳴らした。近くの先生がひるんだ', 3); break;
     case 'radar': P.radarT = 30; radarT2 = 0; message('先生レーダー起動――30秒間、地図に先生が映る', 2.5); break;
     case 'ghost': P.invisT = Math.max(P.invisT || 0, 20); message('透明スプレー！ 20秒間、先生には見えない', 2.5); unlock('invis'); break;
-    case 'hair': message('謎の毛を握りしめた。……何も起きない。', 2.5); break;
+    case 'hair': message(NET ? '謎の毛を握りしめた。……何も起きない。' : '謎の毛を握りしめた。……保健室の育毛剤があれば何か起きるかも', 2.5); return;
+    case 'ally': {
+      const e = allyCandidate(P.pos.x, P.pos.z);
+      if (!e) { message('近く（10m以内）に大介先生がいない', 2); return; }
+      if (NET && NET.started) act('ally', { i: enemies.indexOf(e) }); else makeAlly(e, 'me');
+      unlock('ally'); break; }
     case 'pet': {
       if (!petTarget(P.pos.x, P.pos.z)) { message('近くに先生がいない…まだ呼ばなくていい', 2); return; }
       if (NET && NET.started) act('pet', { x: P.pos.x, z: P.pos.z }); else spawnPet(P.pos.x, P.pos.z, true, true);
@@ -1179,7 +1206,7 @@ function makeDog() {
 }
 function petTarget(x, z) {
   let best = null, bd = 1e9;
-  for (const e of enemies) { if (!e.active || e.downT > 0 || e.ndown) continue; const d = Math.hypot(e.pos.x - x, e.pos.z - z) + (e.kind === 'fast' ? 1000 : 0); if (d < bd) { bd = d; best = e; } }
+  for (const e of enemies) { if (!e.active || e.downT > 0 || e.ndown || e.allyT > 0 || e.nally) continue; const d = Math.hypot(e.pos.x - x, e.pos.z - z) + (e.kind === 'fast' ? 1000 : 0); if (d < bd) { bd = d; best = e; } }
   return best;
 }
 function spawnPet(x, z, mine, auth) {
@@ -1225,11 +1252,208 @@ function updateRadar(dt) {
   dots.forEach((d, i) => { const e = list[i]; if (!e) { d.classList.add('hidden'); return; } d.classList.remove('hidden'); d.style.transform = `translate(${(e.pos.x / CELL * MAPS).toFixed(0)}px,${(e.pos.z / CELL * MAPS).toFixed(0)}px)`; });
 }
 
+// ---- クローン (offline): 保健室の育毛剤 + 謎の毛. Follows you; when a teacher closes in it runs off as a decoy
+let clone = null;
+function useTonic() {
+  if (NET) { message('育毛剤はひとりで遊ぶときだけ使える', 2.5); return; }
+  if (tonicUsed) { message('棚の育毛剤はもう空っぽだ', 2); return; }
+  if (itemCount('hair') <= 0) { message('育毛剤がある…SSRの「謎の毛」があれば何か起きそうだ（ガチャ・購買部）', 3); return; }
+  consumeItem('hair'); tonicUsed = true; if (tonic) tonic.visible = false; renderItems();
+  spawnClone(P.pos.x - Math.sin(P.yaw) * 0.9, P.pos.z - Math.cos(P.yaw) * 0.9);
+  unlock('clone'); message('謎の毛を育毛剤にひたすと――もう一人の自分が現れた！ 先生が近づくと、おとりになって走ってくれる', 4.5);
+}
+function spawnClone(x, z) {
+  removeClone();
+  const st = makeStudent(0x7be36a, 'クローン'); st.g.position.set(x, 0, z); scene.add(st.g);
+  clone = Object.assign(st, { pos: st.g.position, yaw: P.yaw, route: [], rt: 0, mode: 'follow', calmT: 0, spd: 0, said: false });
+  collide(clone.pos, 0.3);
+}
+function removeClone() { if (clone) { scene.remove(clone.g); clone = null; } }
+function cloneTarget() { return { id: 'clone', pos: clone.pos, yaw: clone.yaw, crouch: false, hidden: false, blown: false, invis: false, light: true, noise: clone.mode === 'flee' ? D.hear : 0, spray: false, local: false, decoy: true }; }
+function cloneCaught(e) {
+  if (!clone) return;
+  const c = clone; removeClone();
+  e.stunT = 4; e.route = []; e.state = 'patrol'; e.sees = false; e.noticeT = 0;
+  message('クローンがつかまって消えた！ 先生はとまどっている――今のうちに！', 3.5);
+  void c;
+}
+function cloneThreat() {
+  let best = null, bd = 1e9;
+  for (const e of enemies) {
+    if (!e.active || e.state === 'wait' || e.downT > 0 || e.stunT > 0 || e.allyT > 0) continue;
+    const d = Math.min(Math.hypot(e.pos.x - clone.pos.x, e.pos.z - clone.pos.z), Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z) + 2);
+    if ((d < 10 || (e.state === 'chase' && d < 16)) && d < bd) { bd = d; best = e; }
+  }
+  return best;
+}
+function updateClone(dt) {
+  if (!clone || NET) return;
+  const c = clone, pos = c.pos;
+  const th = freezeT > 0 ? null : cloneThreat();
+  if (th) { c.calmT = 6; if (c.mode !== 'flee') { c.mode = 'flee'; c.rt = 0; if (!c.said) { c.said = true; message('クローンがおとりになって走り出した！ 反対へ逃げろ！', 3); } } }
+  else if (c.mode === 'flee') { c.calmT -= dt; if (c.calmT <= 0) { c.mode = 'follow'; c.said = false; c.route = []; } }
+  let speed = 0;
+  c.rt -= dt;
+  if (c.mode === 'flee') {
+    speed = 4.8;
+    if (c.rt <= 0 || !c.route.length) {
+      c.rt = 2.5; const from = toCell(pos), ep = th ? th.pos : P.pos; let bestR = null, bs = -1;
+      for (let i = 0; i < 24; i++) {
+        const cell = [Math.floor(Math.random() * W), Math.floor(Math.random() * H)], cc = cellCenter(cell);
+        const sc = Math.hypot(cc.x - ep.x, cc.z - ep.z) - 0.3 * Math.hypot(cc.x - pos.x, cc.z - pos.z);
+        if (sc <= bs) continue; const r = bfs(from, cell); if (r && r.length && r.length < 22) { bs = sc; bestR = r; }
+      }
+      c.route = bestR ? bestR.map(cellCenter) : [];
+      // the clone makes a racket: teachers near it (and not right on top of you) go after the clone instead
+      for (const e of enemies) {
+        if (!e.active || e.state === 'wait' || e.downT > 0 || e.allyT > 0) continue;
+        const dc = Math.hypot(e.pos.x - pos.x, e.pos.z - pos.z), dp = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z);
+        if (dc < 22 && dp > 2.2) e.lureT = 3;
+      }
+    }
+  } else {
+    const dP = Math.hypot(P.pos.x - pos.x, P.pos.z - pos.z);
+    if (dP > 2.2) {
+      speed = dP > 6 ? 4.6 : P.sprinting ? 5.4 : 3.1;
+      if (dP < 4.5) c.route = [P.pos.clone()];
+      else if (c.rt <= 0) { c.rt = 0.6; const r = bfs(toCell(pos), toCell(P.pos)); c.route = r ? r.map(cellCenter).concat([P.pos.clone()]) : [P.pos.clone()]; }
+    } else c.route = [];
+    if (dP > 30) { pos.set(P.pos.x - Math.sin(P.yaw) * 0.9, 0, P.pos.z - Math.cos(P.yaw) * 0.9); collide(pos, 0.3); }
+  }
+  let moved = 0;
+  const t = c.route[0];
+  if (t && speed > 0) {
+    const dx = t.x - pos.x, dz = t.z - pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.3) c.route.shift();
+    else { const s = Math.min(speed * dt, d); pos.x += dx / d * s; pos.z += dz / d * s; collide(pos, 0.3); moved = s / Math.max(dt, 1e-3);
+      let dy = Math.atan2(dx, dz) - c.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); c.yaw += dy * Math.min(1, dt * 8); }
+  } else if (c.mode === 'follow') { let dy = Math.atan2(P.pos.x - pos.x, P.pos.z - pos.z) - c.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); c.yaw += dy * Math.min(1, dt * 3); }
+  c.spd = c.spd * 0.8 + moved * 0.2;
+  c.g.rotation.y = c.yaw;
+  c.phase += dt * Math.min(c.spd, 6) * 3.2; const sw = Math.sin(c.phase) * Math.min(0.75, c.spd * 0.22);
+  c.legs[0].rotation.x = sw; c.legs[1].rotation.x = -sw; c.arms[0].rotation.x = -sw * 0.8; c.arms[1].rotation.x = sw * 0.8;
+  c.cone.visible = flashOn;
+}
+
+// ---- なかまの腕章: a 大介先生 fights on your side for 45 s
+function allyCandidate(x, z) {
+  let best = null, bd = 10;
+  for (const e of enemies) {
+    if (!e.active || e.kind === 'fast' || e.downT > 0 || e.ndown || e.allyT > 0 || e.nally) continue;
+    if (e.remote && !e.netAI) continue;   // a human 大介先生 can't be won over
+    const d = Math.hypot(e.pos.x - x, e.pos.z - z); if (d < bd) { bd = d; best = e; }
+  }
+  return best;
+}
+function setAllyLook(e, on) {
+  if (!e.eyeMat) return;
+  e.eyeMat.color.setHex(on ? 0x30ff60 : 0xff2010); e.eyeLight.color.setHex(on ? 0x30ff50 : 0xff1a08);
+  for (const g of e.glows) g.material.color.setHex(on ? 0x40ff70 : 0xff2a1a);
+}
+function makeAlly(e, owner) {
+  e.allyT = 45; e.owner = owner; e.state = 'ally'; e.route = []; e.sees = false; e.stunT = 0; e.arp = 0; e.lurk = 0;
+  setAllyLook(e, true);
+  if (!NET) message('大介先生に「なかまの腕章」をつけた！ 45秒間、味方になってくれる', 3.5);
+}
+function allyOwnerPos(e) {
+  if (!NET || !NET.started || e.owner === NET.myId) return P.out ? null : P.pos;
+  const pl = NET.players.get(e.owner); if (!pl || !pl.alive || pl.escaped) return null;
+  pl.tpos = pl.tpos || new V3(); pl.tpos.set(pl.x || 0, 0, pl.z || 0); return pl.tpos;
+}
+function updateAlly(e, dt) {
+  const before = e.allyT; e.allyT -= dt;
+  if (before > 5 && e.allyT <= 5) { const m = 'あと5秒で腕章の効果が切れる――大介先生から離れろ！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3); }
+  if (e.allyT <= 0) {
+    e.allyT = 0; setAllyLook(e, false); e.state = 'patrol'; e.stunT = 4; e.route = []; newPatrol(e);
+    const m = '腕章の効果が切れた…大介先生がもとに戻る！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
+    return;
+  }
+  const C = e.cfg; let speed = 0, goal = null;
+  // 1) hold down any other teacher that comes near
+  let foe = null, fd = 16;
+  for (const o of enemies) {
+    if (o === e || !o.active || o.allyT > 0 || o.downT > 0 || o.ndown) continue;
+    if (NET && NET.started && o.remote && !o.netAI && NET.hunterStunT > 0) continue;
+    const d = Math.hypot(o.pos.x - e.pos.x, o.pos.z - e.pos.z); if (d < fd) { fd = d; foe = o; }
+  }
+  if (foe) {
+    goal = foe.pos; speed = C.chase * 1.08;
+    if (fd < 1.3) {
+      if (NET && NET.started && foe.remote && !foe.netAI) { NET.hunterStunT = 12; netEvent({ k: 'stun', t: 12, why: '味方の大介先生' }); }
+      else { foe.downT = 20; foe.route = []; foe.state = 'patrol'; foe.sees = false; }
+      const m = 'ガシッ！ 味方の大介先生がほかの先生を押さえこんだ'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
+      e.route = []; goal = null;
+    }
+  } else {
+    // 2) otherwise stay close to whoever gave him the armband
+    const op = allyOwnerPos(e);
+    if (op) { const d = Math.hypot(op.x - e.pos.x, op.z - e.pos.z); if (d > 2.6) { goal = op; speed = d > 8 ? C.chase * 0.9 : C.search; } }
+  }
+  if (goal) {
+    e.arp -= dt; const d = Math.hypot(goal.x - e.pos.x, goal.z - e.pos.z);
+    if (d < 5) e.route = [goal.clone()];
+    else if (e.arp <= 0 || !e.route.length) { e.arp = 0.5; const p = bfs(toCell(e.pos), toCell(goal)); e.route = p ? p.map(cellCenter).concat([goal.clone()]) : []; }
+  } else e.route = [];
+  e.moving = false; e.speed = speed;
+  const t = e.route[0];
+  if (t && speed > 0) {
+    const dx = t.x - e.pos.x, dz = t.z - e.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.25) e.route.shift();
+    else { const s = Math.min(speed * dt, d); e.pos.x += dx / d * s; e.pos.z += dz / d * s;
+      let dy = Math.atan2(dx, dz) - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * 8); e.moving = true; }
+  }
+  setAnim(e, e.moving ? speed : 0, dt);
+  e.group.rotation.y = e.yaw; e.pos.y = 0;
+}
+
+// ---- spectating (online): watch through a teammate's eyes instead of the security cameras
+function spectList() {
+  if (!NET || !NET.started) return [];
+  const all = [...NET.players.values()].filter(p => p.id !== NET.myId);
+  return all.filter(p => p.role === 'survivor' && p.alive && !p.escaped).concat(all.filter(p => p.role === 'hunter'));
+}
+function startSpectate() {
+  $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook();
+  state = 'play'; P.out = true; showPlayUI(false); unlockPointer();
+  const L = spectList(); SPECT.id = L.length ? L[0].id : null;
+  if (!SPECT.id) { enterCams(true); return; }
+  $('spectBar').classList.remove('hidden'); updateSpectName();
+}
+function stopSpectate() { SPECT.id = null; const b = $('spectBar'); if (b) b.classList.add('hidden'); }
+function switchSpect(d) {
+  const L = spectList(); if (!L.length) return;
+  let i = L.findIndex(p => p.id === SPECT.id); i = (i + d + L.length) % L.length; SPECT.id = L[i].id; updateSpectName();
+  const pl = L[i]; P.pos.set(pl.x || 0, 0, pl.z || 0); P.yaw = pl.yaw || 0;
+}
+function updateSpectName() {
+  const pl = NET && NET.players.get(SPECT.id); if (!pl) return;
+  $('spName').textContent = `観戦中：${pl.name}${pl.role === 'hunter' ? '（大介先生）' : ''}`;
+}
+function updateSpectate(dt) {
+  const L = spectList();
+  if (!L.length) { if (state !== 'cams') { stopSpectate(); enterCams(true); } return; }
+  if (state === 'cams') {   // someone to watch again: leave the camera fallback
+    $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook(); state = 'play'; showPlayUI(false);
+    $('spectBar').classList.remove('hidden');
+  }
+  if (!L.some(p => p.id === SPECT.id)) { SPECT.id = L[0].id; const p0 = L[0]; P.pos.set(p0.x || 0, 0, p0.z || 0); P.yaw = p0.yaw || 0; }
+  if (UI.spectFor !== SPECT.id) { UI.spectFor = SPECT.id; updateSpectName(); }
+  const pl = NET.players.get(SPECT.id), f = pl.f | 0, k = Math.min(1, dt * 12);
+  P.pos.x += ((pl.x || 0) - P.pos.x) * k; P.pos.z += ((pl.z || 0) - P.pos.z) * k;
+  let dy = (pl.yaw || 0) - P.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); P.yaw += dy * k;
+  P.pitch += ((pl.pt || 0) - P.pitch) * k;
+  const eye = pl.role === 'hunter' ? 1.72 : (f & 1) ? 0.95 : 1.6;
+  P.eye += (eye - P.eye) * k; UI.spJump = (UI.spJump || 0) + (((f & 128) ? 0.4 : 0) - (UI.spJump || 0)) * Math.min(1, dt * 10);
+  flashOn = pl.role === 'hunter' ? true : !!(f & 16);
+  camera.position.set(P.pos.x, P.eye + UI.spJump, P.pos.z); camera.rotation.set(P.pitch, P.yaw, 0, 'YXZ');
+}
+
 // ================================================================== game state
 const P = { pos: new V3(), vel: new V3(), yaw: 0, pitch: 0, stamina: 4.5, staminaMax: 4.5, sprinting: false, bob: 0, crouch: false, eye: 1.6,
   hidden: false, hideBlown: false, unseenT: 0, noise: 0, battery: 100, charging: false };
 let state = 'title', collected = 0, msgT = 0, showMap = true, freezeT = 0, musicCd = 0, bonus = 0, playT = 0, camIdx = 0, camSwT = 0;
-let curInteract = null, useHeld = false, hunterHold = 0, genBroken = false, invisUsed = 0, revT = 5, sawReveal = false;
+let curInteract = null, useHeld = false, hunterHold = 0, genBroken = false, invisUsed = 0, revT = 5, sawReveal = false, tonicUsed = false;
+const SPECT = { id: null };
 const START = { pos: new V3(12.3, 0, 4.5), yaw: Math.PI / 2 };
 const ENEMY_SPAWN = [new V3(61.5, 0, 34.5), new V3(61.5, 0, 19.5), new V3(19.5, 0, 34.5)];
 const TEACHER_SPAWN = new V3(69, 0, 4.5);
@@ -1240,13 +1464,14 @@ function resetGame() {
   resetDoors();
   for (const b of books) scene.remove(b.g); books = [];
   for (const p of pets) scene.remove(p.g); pets = []; UI.usedItem = false;
-  Object.assign(P, { stamina: P.staminaMax, crouch: false, eye: 1.6, hidden: false, hideBlown: false, battery: 100, pitch: 0, yaw: START.yaw, out: false, escReq: 0 });
+  Object.assign(P, { stamina: P.staminaMax, crouch: false, eye: 1.6, hidden: false, hideBlown: false, battery: 100, pitch: 0, yaw: START.yaw, out: false, escReq: 0, jumpY: 0, jumpV: 0, jumpReq: false, revive: 0 });
+  removeClone(); tonicUsed = false; if (tonic) tonic.visible = true; stopSpectate();
   P.pos.copy(START.pos); P.vel.set(0, 0, 0);
   const on = !!(NET && NET.started);
   genBroken = false; invisUsed = 0; revT = 5; P.invisT = 0; P.repair = 0; P.drinkT = 0; P.stunT = 0; P.radarT = 0;
   enemies.forEach((e, i) => {
     const isT = e.kind === 'fast';
-    e.remote = false; e.netAI = false; e.stunT = 0; e.downT = 0; e.ndown = false; lieDown(e, false); e.active = !on && (isT ? !!D.fast : i < enemyCount);
+    e.remote = false; e.netAI = false; e.stunT = 0; e.downT = 0; e.ndown = false; lieDown(e, false); e.allyT = 0; e.nally = false; e.group.visible = true; if (e.eyeMat) setAllyLook(e, false); e.active = !on && (isT ? !!D.fast : i < enemyCount);
     if (e.active) scene.add(e.group); else scene.remove(e.group);
     e.pos.copy(isT ? TEACHER_SPAWN : ENEMY_SPAWN[i]); e.yaw = isT ? 0 : i === 0 ? Math.PI : 0; e.state = 'wait'; e.timer = isT ? D.start + 4 : D.start + i * 6;
     e.route = []; e.sees = e.raw = false; e.alert = false; e.lurk = 0; e.moving = false; e.noticeT = 0; e.susp = false;
@@ -1296,8 +1521,8 @@ function setDoor(i, closed, silent) {
   doorsClosed[i] = closed; rebuildLinks();
   if (shLeds[i]) shLeds[i].material = closed ? MATS.ledR : MATS.led;
   const n = closedCount();
-  $('doorState').classList.toggle('hidden', !n); $('doorState').textContent = `シェルターのドア：${n === 2 ? '2枚とも' : doorsClosed[0] ? '北' : '南'} 閉（バッテリー消費中）`;
-  $('camDoor').textContent = `シェルター 北：${doorsClosed[0] ? '閉' : '開'}／南：${doorsClosed[1] ? '閉' : '開'}`;
+  $('doorState').classList.toggle('hidden', !n); $('doorState').textContent = `保健室のドア：${n === 2 ? '2枚とも' : doorsClosed[0] ? '北' : '南'} 閉（バッテリー消費中）`;
+  $('camDoor').textContent = `保健室 北：${doorsClosed[0] ? '閉' : '開'}／南：${doorsClosed[1] ? '閉' : '開'}`;
   $('camDoor0').textContent = doorsClosed[0] ? '北ドアを開ける' : '北ドアを閉める';
   $('camDoor1').textContent = doorsClosed[1] ? '南ドアを開ける' : '南ドアを閉める';
   for (const e of enemies) if (e.active && !e.remote && e.state !== 'wait') { if (e.state === 'chase') e.repath = 0; else if (e.state === 'search') routeTo(e, e.lastKnown); else if (e.state !== 'sabotage') newPatrol(e); }
@@ -1432,7 +1657,12 @@ addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') return;
   if (e.repeat && keys.has(e.code)) return;
   keys.add(e.code);
-  if (state === 'play') {
+  if (state === 'play' && P.out) {
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') switchSpect(1);
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') switchSpect(-1);
+    if (e.code === 'Escape') pause();
+  } else if (state === 'play') {
+    if (e.code === 'Space') { P.jumpReq = true; e.preventDefault(); }
     if (e.code === 'KeyF') toggleLight();
     if (e.code === 'KeyC' || e.code === 'ControlLeft') toggleCrouch();
     if (e.code === 'KeyE') doInteract();
@@ -1511,6 +1741,9 @@ tapBtn('bCrouch', toggleCrouch);
 tapBtn('bLight', toggleLight);
 tapBtn('bPause', () => pause());
 tapBtn('bTab', () => openTablet());
+tapBtn('bJump', () => { P.jumpReq = true; });
+tapBtn('spPrev', () => switchSpect(-1));
+tapBtn('spNext', () => switchSpect(1));
 $('bUse').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); useHeld = true; doInteract(); }, { passive: false });
 $('bUse').addEventListener('touchend', () => { useHeld = false; }); $('bUse').addEventListener('touchcancel', () => { useHeld = false; });
 $('bUse').addEventListener('mousedown', () => { if (performance.now() - lastTouch < 800) return; useHeld = true; doInteract(); }); addEventListener('mouseup', () => { useHeld = false; });
@@ -1544,13 +1777,13 @@ function startGame() {
 }
 function pause() {
   if (!(state === 'play' || (state === 'cams' && P.out))) return;
-  UI.pausedFrom = state; state = 'pause'; $('pause').classList.remove('hidden'); showPlayUI(false); unlockPointer();
+  UI.pausedFrom = state; state = 'pause'; $('pause').classList.remove('hidden'); showPlayUI(false); unlockPointer(); $('spectBar').classList.add('hidden');
   $('camui').classList.add('hidden');
   if (!NET) setMasterVolume(0);
 }
 function resume() {
   $('pause').classList.add('hidden'); lookDX = lookDY = 0; setMasterVolume(1);
-  if (P.out) { state = 'play'; enterCams(true); return; }
+  if (P.out) { state = 'play'; startSpectate(); return; }
   state = 'play'; showPlayUI(true); lockPointer();
 }
 function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); setMasterVolume(1); message('もう一度…', 2); }
@@ -1565,7 +1798,9 @@ function toTitle() {
 // ================================================================== interaction
 function interactLabel(it) {
   switch (it.id) {
-    case 'door': return doorsClosed[it.di] ? `シェルターの${it.di ? '南' : '北'}ドアを開ける` : `シェルターの${it.di ? '南' : '北'}ドアを閉める`;
+    case 'door': return doorsClosed[it.di] ? `保健室の${it.di ? '南' : '北'}ドアを開ける` : `保健室の${it.di ? '南' : '北'}ドアを閉める`;
+    case 'tonic': return NET ? '棚の育毛剤（ひとりで遊ぶときだけ使える）' : tonicUsed ? '育毛剤の棚（もう空っぽ）' : itemCount('hair') > 0 ? '育毛剤に謎の毛をひたして、自分のクローンを作る' : '棚の育毛剤…（SSRの「謎の毛」があれば何か起きそう）';
+    case 'revive': return `${it.name}を助け起こす（長押し）`;
     case 'gen': return genBroken ? '発電機が壊されている！（長押しで修理）' : P.battery >= 100 ? 'バッテリーは満タン' : '発電機を回して充電（長押し）';
     case 'music': return musicCd > 0 ? `オルゴール（あと${Math.ceil(musicCd)}秒）` : 'オルゴールを回して校内放送で流す';
     case 'invis': return P.invisT > 0 ? `透明化中（あと${Math.ceil(P.invisT)}秒）` : invisCharges() > 0 ? `秘密の引き出し：透明になる（30秒・残り${invisCharges()}回）` : '秘密の引き出し（教科書を1冊見つけてから）';
@@ -1585,6 +1820,7 @@ function doInteract() {
   const it = curInteract; if (!it || state !== 'play') return;
   if (it.id === 'door') toggleDoor(it.di);
   else if (it.id === 'invis') useInvis();
+  else if (it.id === 'tonic') useTonic();
   else if (it.id === 'music') { if (NET) { if (musicCd > 0) message(`オルゴールのゼンマイがまだ戻らない…（あと${Math.ceil(musicCd)}秒）`, 2); else { act('music'); unlock('music'); } } else playMusic(); }
 }
 function enterCams(spect) {
@@ -1623,6 +1859,15 @@ function updatePlayer(dt) {
   let mag = Math.hypot(ix, iy); if (mag > 1) { ix /= mag; iy /= mag; mag = 1; }
   let push = 0; if (stick.id !== null) { ix = stick.x; iy = -stick.y; push = Math.hypot(ix, iy); mag = Math.min(1, push); }
   if (hunter && (hunterHold > 0 || freezeT > 0 || P.stunT > 0)) { ix = iy = 0; mag = 0; push = 0; }
+  if (P.jumpReq) {
+    P.jumpReq = false;
+    if (P.crouch) toggleCrouch();
+    else if (P.jumpY <= 0 && !(hunter && (hunterHold > 0 || freezeT > 0 || P.stunT > 0))) P.jumpV = 4.6;
+  }
+  if (P.jumpV !== 0 || P.jumpY > 0) {
+    P.jumpV -= 14 * dt; P.jumpY += P.jumpV * dt;
+    if (P.jumpY <= 0) { P.jumpY = 0; P.jumpV = 0; P.landT = 0.3; }
+  }
   const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || push > 0.92) && mag > 0.1;
   if (wantRun && P.crouch) toggleCrouch();
   P.sprinting = wantRun && P.stamina > 0.05;
@@ -1645,9 +1890,22 @@ function updatePlayer(dt) {
   const anyRaw = enemies.some(e => e.active && e.raw && !e.remote);
   P.unseenT = anyRaw ? 0 : P.unseenT + dt; if (P.unseenT > 1.5) P.hideBlown = false;
   P.noise = P.sprinting ? D.hear : (hv > 0.5 && !P.crouch ? D.hear * 0.35 : 0);
+  if (P.landT > 0) { P.landT -= dt; P.noise = Math.max(P.noise, D.hear * 0.45); }   // landing makes a thud
   curInteract = null; let best = 1e9;
   if (!hunter) for (const it of interact) { const d = Math.hypot(P.pos.x - it.pos.x, P.pos.z - it.pos.z); if (d < it.r && d < best) { best = d; curInteract = it; } }
   const holding = keys.has('KeyE') || useHeld;
+  // online: help a caught teammate back up (hold "use" next to them)
+  if (!hunter && NET && NET.started) {
+    for (const pl of NET.players.values()) {
+      if (pl.id === NET.myId || pl.role !== 'survivor' || pl.alive || pl.escaped || pl.dx == null) continue;
+      const d = Math.hypot(P.pos.x - pl.dx, P.pos.z - pl.dz); if (d < 1.7 && d < best + 1) { best = d; curInteract = { id: 'revive', pid: pl.id, name: pl.name, pos: new V3(pl.dx, 0, pl.dz) }; }
+    }
+  }
+  if (curInteract && curInteract.id === 'revive' && holding) {
+    P.revive = (P.revive || 0) + dt; NET.revAcc = (NET.revAcc || 0) + dt;
+    if (NET.revAcc > 0.3) { act('revive', { id: curInteract.pid, dt: NET.revAcc }); NET.revAcc = 0; }
+    if (P.revive > 3.5) P.revive = 0;
+  } else P.revive = 0;
   if (curInteract && curInteract.id === 'gen' && genBroken && holding) {
     P.repair = (P.repair || 0) + dt; P.noise = Math.max(P.noise, 18);
     if (NET && NET.started && !NET.host) { NET.repairAcc = (NET.repairAcc || 0) + dt; if (NET.repairAcc > 0.3) { act('repair', { dt: NET.repairAcc }); NET.repairAcc = 0; } if (P.repair >= 4) P.repair = 0; }
@@ -1663,7 +1921,7 @@ function updatePlayer(dt) {
   }
   P.bob += dt * hv * (P.crouch ? 1.4 : 2.2);
   const bob = Math.sin(P.bob) * (P.crouch ? 0.02 : 0.035) * Math.min(1, hv / 3);
-  camera.position.set(P.pos.x, P.eye + bob, P.pos.z);
+  camera.position.set(P.pos.x, P.eye + bob + P.jumpY, P.pos.z);
   camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob * 0.5) * 0.008 * Math.min(1, hv / 3), 'YXZ');
 }
 
@@ -1691,7 +1949,7 @@ let AIT = [];
 function localTarget() { return { id: NET ? NET.myId : 'me', pos: P.pos, yaw: P.yaw, crouch: P.crouch, hidden: P.hidden, blown: P.hideBlown, invis: P.invisT > 0, light: flashOn && state === 'play', noise: P.noise, spray: itemCount('spray') > 0, local: true }; }
 function computeTargets() {
   AIT = [];
-  if (!NET || !NET.started) { if (!P.out && (state === 'play' || state === 'cams')) AIT.push(localTarget()); return; }
+  if (!NET || !NET.started) { if (!P.out && (state === 'play' || state === 'cams')) { AIT.push(localTarget()); if (clone) AIT.push(cloneTarget()); } return; }
   for (const p of NET.players.values()) {
     if (p.role !== 'survivor' || !p.alive || p.escaped) continue;
     if (p.id === NET.myId) { if (!P.out && state !== 'scare') AIT.push(localTarget()); continue; }
@@ -1711,6 +1969,7 @@ function seesTarget(e, t) {
 }
 function pushBack(e, t) { const dx = e.pos.x - t.pos.x, dz = e.pos.z - t.pos.z, d = Math.hypot(dx, dz) || 1; e.pos.x += dx / d * 1.0; e.pos.z += dz / d * 1.0; }
 function doCatch(e, t) {
+  if (t.decoy) { cloneCaught(e); return; }
   if (!NET || !NET.started) {
     if (state !== 'play' && state !== 'cams') return;
     if (t.spray) { consumeItem('spray'); unlock('spray'); e.stunT = 5; e.route = []; pushBack(e, t); message('撃退スプレー！ 先生がひるんだ――今のうちに逃げろ！', 3); return; }
@@ -1720,7 +1979,7 @@ function doCatch(e, t) {
   const now = performance.now();
   if (t.spray && !(now - (p.sprayT || 0) < 1500)) { p.sprayT = now; e.stunT = 5; e.route = []; pushBack(e, t); netEvent({ k: 'spray', id: p.id, name: p.name }); return; }
   if (now - (p.sprayT || 0) < 1500) return;
-  p.alive = false; NET.camUsers.delete(p.id); netEvent({ k: 'caught', id: p.id, name: p.name, by: enemies.indexOf(e) });
+  p.alive = false; p.dx = p.x; p.dz = p.z; p.revAcc = 0; NET.camUsers.delete(p.id); netEvent({ k: 'caught', id: p.id, name: p.name, by: enemies.indexOf(e), x: p.x, z: p.z });
 }
 function aiToBroadcast() {
   for (const e of enemies) if (e.active && !e.remote && e.state !== 'wait') { e.lastKnown.copy(spots.broadcast); e.state = 'search'; e.alert = true; routeTo(e, spots.broadcast); }
@@ -1732,9 +1991,10 @@ function sense(e) {
     const raw = seesTarget(e, t); if (t.local) rawLocal = raw;
     let vis = raw && (!t.hidden || t.blown) && !t.invis;
     if (!vis && t.local && t.hidden && D.findHidden && e.state === 'search' && distT(e, t) < D.findHidden && raw && !t.invis) { P.hideBlown = true; vis = true; }
-    if (vis) { const d = distT(e, t); if (d < bestD) { bestD = d; best = t; } }
+    if (vis) { const d = distT(e, t) - (t.decoy ? 8 : 0); if (d < bestD) { bestD = d; best = t; } }
   }
   e.raw = rawLocal;
+  if (e.lureT > 0 && clone) { const ct = AIT.find(t => t.decoy); if (ct) best = ct; }
   const visible = !!best;
   // the other teacher is slow to notice: he has to keep looking for a moment
   if (visible && e.cfg.notice && e.state !== 'chase') {
@@ -1744,7 +2004,7 @@ function sense(e) {
   e.stare = null;
   e.sees = visible; if (best) e.tgt = best.id;
   let heardT = null, hd = 1e9;
-  for (const t of AIT) { const d = distT(e, t); if (t.noise > 0 && !t.invis && d < t.noise && d < hd) { hd = d; heardT = t; } }
+  for (const t of AIT) { const d = distT(e, t) - (t.decoy ? 8 : 0); if (t.noise > 0 && !t.invis && distT(e, t) < t.noise && d < hd) { hd = d; heardT = t; } }
   if (visible) { e.lastKnown.copy(best.pos); e.lost = 0; e.lurk = 0; if (e.state !== 'chase') { e.state = 'chase'; e.repath = 0; if (best.local) message(e.kind === 'fast' ? 'もう一人の先生に見つかった！ 速い――隠れろ！' : '見つかった――走れ！', 2); } }
   else if (heardT && e.state !== 'chase') { e.lastKnown.copy(heardT.pos); e.state = 'search'; routeTo(e, e.lastKnown); }
 }
@@ -1753,6 +2013,8 @@ function updateEnemy(e, dt) {
   e.moving = false;
   if (e.state === 'wait') { e.timer -= dt; setAnim(e, 0, dt); if (e.timer <= 0) { e.state = 'patrol'; newPatrol(e); } return; }
   if (e.downT > 0) { e.downT -= dt; e.moving = false; lieDown(e, true); setAnim(e, 0, dt); if (e.downT <= 0) { lieDown(e, false); e.state = 'patrol'; newPatrol(e); } return; }
+  if (e.allyT > 0) { updateAlly(e, dt); return; }
+  if (e.lureT > 0) e.lureT -= dt;
   if (freezeT > 0) { setAnim(e, 0, dt); return; }
   if (e.stunT > 0) { e.stunT -= dt; e.moving = false; setAnim(e, 0, dt); return; }
   e.sense -= dt; if (e.sense <= 0) { e.sense = 0.15; sense(e); }
@@ -1828,7 +2090,7 @@ function updateScare(dt) {
   flash.intensity = 34; setAnim(scarer, 4.6, dt);
   $('flash').style.opacity = (Math.floor(scareT * 12) % 2 ? 0.45 : 0.15);
   if (scareT > 1.4 && NET && NET.started) {
-    $('flash').style.opacity = 0; state = 'play'; P.out = true; if (master) { const t = actx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(1, t + 2.6, 0.4); } enterCams(true); message('つかまった… 監視カメラで観戦中', 4); return;
+    $('flash').style.opacity = 0; state = 'play'; P.out = true; if (master) { const t = actx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setTargetAtTime(1, t + 2.6, 0.4); } startSpectate(); message('つかまった…仲間がそばで「使う」を長押しすると復活できる', 5); return;
   }
   if (scareT > 1.4) {
     state = 'end'; $('flash').style.opacity = 0; setMasterVolume(0); $('earned').textContent = '';
@@ -1894,7 +2156,7 @@ function updateWorld(dt, t) {
   if (musicCd > 0) musicCd = Math.max(0, musicCd - dt);
   if (freezeT > 0) musicBox.userData.crank.rotation.x += dt * 6;
   MATS.onair.emissiveIntensity = freezeT > 0 ? 1.6 : 0.25;
-  let dmin = 1e9; for (const e of enemies) if (e.active) dmin = Math.min(dmin, distP(e));
+  let dmin = 1e9; for (const e of enemies) if (e.active && !(e.allyT > 0) && !e.nally && !(e.downT > 0) && !e.ndown) dmin = Math.min(dmin, distP(e));
   let fear = hunter || P.out ? 0 : clamp(1 - (dmin - 2) / 14, 0, 1); if (!hunter && enemies.some(e => e.active && e.state === 'chase')) fear = Math.max(fear, 0.45);
   const va = (fear * 0.55 * (0.8 + 0.2 * Math.sin(t * (4 + fear * 6)))).toFixed(2);
   if (va !== UI.va || state === 'cams') { UI.va = va; $('vign').style.opacity = state === 'cams' ? 0 : va; }
@@ -1910,9 +2172,10 @@ function updateWorld(dt, t) {
   if (pose !== UI.pose) { UI.pose = pose; const el = $('pose'); el.textContent = pose; el.style.visibility = pose ? 'visible' : 'hidden'; el.classList.toggle('hid', pose === '隠れている'); el.classList.toggle('blown', pose === '見られている！'); }
   const pt = state === 'play' && curInteract ? (IS_TOUCH ? '「使う」' : '[E] ') + interactLabel(curInteract) : '';
   if (pt !== UI.pt) { UI.pt = pt; $('prompt').classList.toggle('hidden', !pt); $('promptText').textContent = pt; $('bUse').classList.toggle('ready', !!pt); }
-  const showBar = P.charging || (curInteract && curInteract.id === 'gen');
+  const isRev = !!(curInteract && curInteract.id === 'revive');
+  const showBar = P.charging || (curInteract && curInteract.id === 'gen') || isRev;
   $('prompt').querySelector('.pbar').classList.toggle('hidden', !showBar);
-  if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${genBroken ? (P.repair || 0) / 4 : P.battery / 100})`;
+  if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${isRev ? Math.min(1, (P.revive || 0) / 3) : genBroken ? (P.repair || 0) / 4 : P.battery / 100})`;
   const iv = P.invisT > 0 ? Math.ceil(P.invisT) : 0;
   if (iv !== UI.iv) { UI.iv = iv; $('invisHud').classList.toggle('hidden', !iv || state !== 'play'); $('invisHud').textContent = `透明 あと${iv}秒`; $('invisFx').style.opacity = iv ? 1 : 0; }
   // the other teacher shows up on the map every 5 seconds
@@ -1929,7 +2192,7 @@ function updateWorld(dt, t) {
 function batteryEmpty() {
   if (state === 'cams' && !P.out) exitCams();
   resetDoors();
-  message('バッテリー切れ！ シェルターのドアが開いた――', 3);
+  message('バッテリー切れ！ 保健室のドアが開いた――', 3);
   if (NET) netEvent({ k: 'batt0' }, true);
 }
 function collectBook(b, who) {
@@ -1947,7 +2210,7 @@ function drawZones(g, s, labels) {
     return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : 'rgba(150,110,80,.35)'; };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = colorOf(ZONE[y][x]); g.fillRect(x * s, y * s, s - 1, s - 1); }
   if (labels) { g.fillStyle = 'rgba(255,255,255,.9)'; g.font = `bold ${Math.round(s * 1.3)}px ${JFONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (const r of rooms) if (r.type !== 'class') g.fillText({ shelter: 'シ', generator: '発', broadcast: '放', staff: '職' }[r.type], (r.x0 + 1.5) * s, (r.y0 + 1.5) * s); }
+    for (const r of rooms) if (r.type !== 'class') g.fillText({ shelter: '保', generator: '発', broadcast: '放', staff: '職' }[r.type], (r.x0 + 1.5) * s, (r.y0 + 1.5) * s); }
   g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4);
 }
 function drawMapBase() { const g = $('map').getContext('2d'); g.clearRect(0, 0, 384, 208); drawZones(g, 16, true); }
@@ -2138,7 +2401,7 @@ function hostRecv(conn, d) {
     NET.conns.set(id, conn); NET.players.set(id, { id, name: String(d.name || 'プレイヤー').slice(0, 10), role: 'survivor' }); broadcastRoster();
   } else if (d.t === 'u') {
     const pl = NET.players.get(id); if (!pl || !NET.started) return;
-    pl.x = +d.x || 0; pl.z = +d.z || 0; pl.yaw = +d.yaw || 0; pl.f = d.f | 0;
+    pl.x = +d.x || 0; pl.z = +d.z || 0; pl.yaw = +d.yaw || 0; pl.f = d.f | 0; pl.pt = +d.pt || 0;
     const a = avatars.get(id); if (a) { a.tx = pl.x; a.tz = pl.z; a.tyaw = pl.yaw; }
   } else if (d.t === 'a') hostAct(id, d);
 }
@@ -2178,6 +2441,17 @@ function hostAct(id, d) {
     case 'pet': { if (!surv) return; netEvent({ k: 'pet', x: +d.x || 0, z: +d.z || 0, by: id, name: pl.name }); break; }
     case 'repair': { if (!surv || !genBroken) return; NET.hostRepair = (NET.hostRepair || 0) + clamp(+d.dt || 0, 0, 0.6); if (NET.hostRepair >= 4) { genBroken = false; NET.hostRepair = 0; netEvent({ k: 'msg', text: `${pl.name}が発電機を修理した！` }); } break; }
     case 'esc': { if (!surv || !exitOpen) return; pl.escaped = true; NET.camUsers.delete(id); netEvent({ k: 'esc', id, name: pl.name }); break; }
+    case 'revive': { if (!surv) return; const tg = NET.players.get(d.id); if (!tg || tg.role !== 'survivor' || tg.alive || tg.escaped || tg.dx == null) return;
+      const rx = id === NET.myId ? P.pos.x : pl.x, rz = id === NET.myId ? P.pos.z : pl.z;
+      if (Math.hypot(rx - tg.dx, rz - tg.dz) > 2.4) return;
+      tg.revAcc = (tg.revAcc || 0) + clamp(+d.dt || 0, 0, 0.6);
+      if (tg.revAcc >= 3) { tg.revAcc = 0; tg.alive = true; tg.x = tg.dx; tg.z = tg.dz; tg.sprayT = performance.now() + 1500; const x = tg.dx, z = tg.dz; tg.dx = tg.dz = null;
+        netEvent({ k: 'revive', id: tg.id, name: tg.name, by: pl.name, byId: id, x, z }); }
+      break; }
+    case 'ally': { if (!surv) return; const e = enemies[d.i | 0]; if (!e || !e.active || !e.netAI || e.kind === 'fast' || e.allyT > 0 || e.downT > 0) return;
+      const rx = id === NET.myId ? P.pos.x : pl.x, rz = id === NET.myId ? P.pos.z : pl.z;
+      if (Math.hypot(e.pos.x - rx, e.pos.z - rz) > 12) return;
+      makeAlly(e, id); netEvent({ k: 'msg', text: `${pl.name}が大介先生に「なかまの腕章」をつけた――45秒間、味方になる！` }); break; }
   }
 }
 function genPing() {
@@ -2185,10 +2459,10 @@ function genPing() {
   const now = performance.now(); if (now - (NET.genPingT || 0) < 2000) return; NET.genPingT = now;
   const g = interact.find(i => i.id === 'gen').pos; netEvent({ k: 'ping', x: g.x, z: g.z });
 }
-const myFlags = () => (P.crouch ? 1 : 0) | (P.hidden ? 2 : 0) | (P.sprinting ? 4 : 0) | (Math.hypot(P.vel.x, P.vel.z) > 0.5 ? 8 : 0) | (flashOn ? 16 : 0) | (P.invisT > 0 ? 32 : 0) | (itemCount('spray') > 0 ? 64 : 0);
+const myFlags = () => (P.crouch ? 1 : 0) | (P.hidden ? 2 : 0) | (P.sprinting ? 4 : 0) | (Math.hypot(P.vel.x, P.vel.z) > 0.5 ? 8 : 0) | (flashOn ? 16 : 0) | (P.invisT > 0 ? 32 : 0) | (itemCount('spray') > 0 ? 64 : 0) | (P.jumpY > 0.05 ? 128 : 0);
 function hostTick(dt) {
   const me = NET.players.get(NET.myId);
-  if (me) { me.x = P.pos.x; me.z = P.pos.z; me.yaw = P.yaw; me.f = myFlags(); }
+  if (me && !P.out) { me.x = P.pos.x; me.z = P.pos.z; me.yaw = P.yaw; me.pt = P.pitch; me.f = myFlags(); }
   if (hunterHold > 0) hunterHold = Math.max(0, hunterHold - dt);
   const h = NET.hunterId && NET.players.get(NET.hunterId);
   if (NET.hunterStunT > 0) NET.hunterStunT -= dt;
@@ -2198,7 +2472,7 @@ function hostTick(dt) {
       const now = performance.now();
       if ((p.f & 64) && now - (p.sprayT || 0) > 1500) { p.sprayT = now; NET.hunterStunT = 5; netEvent({ k: 'spray', id: p.id, name: p.name }); netEvent({ k: 'stun', t: 5, why: '撃退スプレー' }); break; }
       if (now - (p.sprayT || 0) < 1500) continue;
-      p.alive = false; NET.camUsers.delete(p.id); netEvent({ k: 'caught', id: p.id, name: p.name, by: 2 });
+      p.alive = false; p.dx = p.x; p.dz = p.z; p.revAcc = 0; NET.camUsers.delete(p.id); netEvent({ k: 'caught', id: p.id, name: p.name, by: 2, x: p.x, z: p.z });
     }
   }
   // hide-blown bookkeeping for remote players vs. AI teachers
@@ -2215,11 +2489,12 @@ function hostTick(dt) {
   const surv = [...NET.players.values()].filter(p => p.role === 'survivor');
   if (!surv.length) hostResult('逃げる人がいなくなりました');
   else if (surv.every(p => !p.alive || p.escaped)) { NET.endT = (NET.endT ?? 2.5) - dt; if (NET.endT <= 0) hostResult(); }   // let the last jumpscare play
+  else NET.endT = undefined;
   NET.sendT -= dt;
   if (NET.sendT <= 0 && NET.started) {
     NET.sendT = 1 / 15;
-    const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0)]);
-    const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0]);
+    const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0), +(pl.pt || 0).toFixed(2), pl.dx == null ? null : +pl.dx.toFixed(2), pl.dz == null ? null : +pl.dz.toFixed(2)]);
+    const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0, e.allyT > 0 ? 1 : 0]);
     sendAll({ t: 's', p, ai, gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
   }
 }
@@ -2245,15 +2520,16 @@ function clientRecv(d) {
 }
 function applySnap(d) {
   if (!NET.started) return;
-  for (const [id, x, z, yaw, f, st] of d.p) {
+  for (const [id, x, z, yaw, f, st, pt, dx, dz] of d.p) {
     const pl = NET.players.get(id); if (!pl) continue;
-    Object.assign(pl, { x, z, yaw, f, alive: !!(st & 1), escaped: !!(st & 2) });
+    Object.assign(pl, { x, z, yaw, f, pt: pt || 0, alive: !!(st & 1), escaped: !!(st & 2) });
+    if (dx != null) { pl.dx = dx; pl.dz = dz; } else if (pl.alive) pl.dx = pl.dz = null;
     const a = avatars.get(id); if (a) { a.tx = x; a.tz = z; a.tyaw = yaw; }
   }
   for (const i of [0, 1]) if (!!(d.dc & (1 << i)) !== doorsClosed[i]) setDoor(i, !!(d.dc & (1 << i)), true);
   if (d.ex && !exitOpen) { exitOpen = true; updateCount(); }
   P.battery = d.bt; musicCd = d.mc; hunterHold = d.hh; freezeT = d.fz; genBroken = !!d.gb;
-  for (const [i, x, z, yaw, sp, dn] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (Math.hypot((e.tx ?? x) - x, (e.tz ?? z) - z) > 6) { e.pos.set(x, 0, z); } e.tx = x; e.tz = z; e.tyaw = yaw; e.nspd = sp; }
+  for (const [i, x, z, yaw, sp, dn, al] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (!!al !== !!e.nally) { e.nally = !!al; setAllyLook(e, e.nally); } if (Math.hypot((e.tx ?? x) - x, (e.tz ?? z) - z) > 6) { e.pos.set(x, 0, z); } e.tx = x; e.tz = z; e.tyaw = yaw; e.nspd = sp; }
   const keep = new Set(d.b);
   for (let i = books.length - 1; i >= 0; i--) if (!keep.has(books[i].id)) { scene.remove(books[i].g); books.splice(i, 1); collected++; updateCount(); }
 }
@@ -2261,7 +2537,7 @@ function netTick(dt) {
   if (NET.host) { hostTick(dt); return; }
   if (hunterHold > 0) hunterHold = Math.max(0, hunterHold - dt);
   NET.sendT -= dt;
-  if (NET.sendT <= 0 && NET.conn && NET.conn.open) { NET.sendT = 1 / 15; NET.conn.send({ t: 'u', x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: myFlags() }); }
+  if (NET.sendT <= 0 && NET.conn && NET.conn.open && !P.out) { NET.sendT = 1 / 15; NET.conn.send({ t: 'u', x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), pt: +P.pitch.toFixed(2), f: myFlags() }); }
   if (NET.chargeAcc > 0.2) { act('charge', { dt: NET.chargeAcc }); NET.chargeAcc = 0; }
 }
 
@@ -2270,24 +2546,31 @@ function onEvent(ev) {
   if (!NET) return;
   const me = NET.myId, hunter = NET.myRole === 'hunter';
   switch (ev.k) {
-    case 'caught': { const pl = NET.players.get(ev.id); if (pl) pl.alive = false;
-      const a = avatars.get(ev.id); if (a && a.g) a.g.visible = false;
+    case 'caught': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = false; if (ev.x != null) { pl.dx = ev.x; pl.dz = ev.z; } }
       if (ev.id === me) { $('pause').classList.add('hidden'); caught(enemies[ev.by ?? 2]); STATS.caught = (STATS.caught | 0) + 1; if (STATS.caught >= 10) unlock('caught10'); saveShop(); }
       else { message(hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3); if (hunter && (ev.by ?? 2) === 2) playVoice(); }
       updateCount(); break; }
     case 'book': { const i = books.findIndex(b => b.id === ev.id); if (i < 0) break; const b = books[i]; scene.remove(b.g); books.splice(i, 1); collectBook(b, ev.by === me ? null : ev.name); break; }
-    case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}がシェルターの${ev.i ? '南' : '北'}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
+    case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}が保健室の${ev.i ? '南' : '北'}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
     case 'music': freezeT = 10; audioMusic(true); message(hunter ? 'オルゴールの音…体が動かない！' : `${ev.name}がオルゴールを流した――大介先生が止まった`, 4); break;
     case 'musicEnd': freezeT = 0; audioMusic(false); if (NET.host) aiToBroadcast();
       if (hunter) { message('音が止んだ。放送室に誰かいたはずだ…', 3.5); showPing(spots.broadcast.x, spots.broadcast.z); }
       else message('音が止んだ――大介先生が動き出す！', 3); break;
     case 'ping': if (hunter) showPing(ev.x, ev.z); break;
     case 'esc': { const pl = NET.players.get(ev.id); if (pl) pl.escaped = true; const a = avatars.get(ev.id); if (a && a.g) a.g.visible = false;
-      if (ev.id === me) { P.out = true; $('pause').classList.add('hidden'); message('脱出成功！ 監視カメラで観戦中', 4); state = 'play'; enterCams(true); }
+      if (ev.id === me) { P.out = true; $('pause').classList.add('hidden'); message('脱出成功！ 仲間の視点で観戦中', 4); state = 'play'; startSpectate(); }
       else message(`${ev.name}が脱出した！`, 3);
       updateCount(); break; }
-    case 'batt0': if (state === 'cams' && !P.out) exitCams(); resetDoors(); message('バッテリー切れ！ シェルターのドアが開いた――', 3); break;
+    case 'batt0': if (state === 'cams' && !P.out) exitCams(); resetDoors(); message('バッテリー切れ！ 保健室のドアが開いた――', 3); break;
     case 'msg': message(ev.text, 2.5); break;
+    case 'revive': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = true; pl.dx = pl.dz = null; }
+      if (ev.byId === me) unlock('revive');
+      if (ev.id === me) {
+        stopSpectate(); if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); }
+        P.out = false; P.crouch = false; P.jumpY = 0; P.jumpV = 0; P.pos.set(ev.x, 0, ev.z); P.vel.set(0, 0, 0); P.escReq = 0; flashOn = true; $('bLight').classList.add('on');
+        applyRoleLook(); state = 'play'; showPlayUI(true); lockPointer(); message(`${ev.by}が助け起こしてくれた――復活！`, 3.5);
+      } else message(ev.byId === me ? `${ev.name}を助け起こした！` : `${ev.by}が${ev.name}を助け起こした！`, 3);
+      updateCount(); break; }
     case 'pet': spawnPet(ev.x, ev.z, ev.by === me, !!NET.host); if (ev.by !== me) message(`${ev.name}がお助けペットを呼んだ！`, 2.5); break;
     case 'stun': if (hunter) { P.stunT = ev.t; message(`${ev.why || '撃退グッズ'}で体が動かない…（${ev.t}秒）`, 2.5); } else message(`大介先生がひるんだ（${ev.why || '撃退グッズ'}）`, 2); break;
     case 'spray': if (ev.id === me) { consumeItem('spray'); unlock('spray'); message('撃退スプレー！ ひるんだすきに逃げろ！', 3); } else message(hunter ? `${ev.name}に撃退スプレーをかけられた！` : `${ev.name}が撃退スプレーで逃げた！`, 2.5); break;
@@ -2334,7 +2617,7 @@ function setupOnlineRound() {
       avatars.set(r.id, st); attachSteps(st);
     }
   }
-  hunterHold = sd.hunterId ? 10 : 0; P.out = false; P.escReq = 0; NET.hunterStunT = 0; NET.hostRepair = 0;
+  hunterHold = sd.hunterId ? 10 : 0; P.out = false; P.escReq = 0; NET.hunterStunT = 0; NET.hostRepair = 0; NET.revAcc = 0;
   // AI teachers (simulated by the host, mirrored on the others)
   const activate = (e, sp, timer) => { e.active = true; e.netAI = true; e.remote = !NET.host; scene.add(e.group); e.pos.copy(sp); e.tx = sp.x; e.tz = sp.z; e.tyaw = 0; e.yaw = 0; e.nspd = 0; e.state = 'wait'; e.timer = timer; e.stunT = 0; attachSteps(e); };
   for (let i = 0; i < NET.cfg.ai; i++) activate(enemies[i], ENEMY_SPAWN[i], D.start + i * 6);
@@ -2429,14 +2712,21 @@ function updateAvatars(dt) {
     a.spd = (a.spd || 0) * 0.85 + sp * 0.15;
     const pl = NET.players.get(a.id); const f = pl ? pl.f | 0 : 0; const alive = !!(pl && pl.alive && !pl.escaped);
     if (a.kind === 'hunter') {
-      const e = a.e; e.pos.set(a.x, 0, a.z); e.yaw = a.yaw + Math.PI; e.group.rotation.y = e.yaw;
+      const e = a.e; e.pos.set(a.x, 0, a.z); e.yaw = a.yaw + Math.PI; e.group.rotation.y = e.yaw; e.group.visible = SPECT.id !== a.id;
       e.moving = a.spd > 0.4 && freezeT <= 0; e.speed = a.spd; e.raw = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z) < 30 ? lineClear(e.pos, P.pos) : false;
       setAnim(e, freezeT > 0 || a.spd < 0.3 ? 0 : Math.max(a.spd, 1.5), dt);
     } else {
       const dme = Math.hypot(a.x - P.pos.x, a.z - P.pos.z);
-      a.g.visible = alive && (!hunterMe || ((!(f & 2) || dme < 1.6) && !(f & 32)));
+      const down = !!(pl && !pl.alive && !pl.escaped && pl.dx != null);
+      if (down) {   // caught: lying on the floor where they were caught, waiting for help
+        a.g.visible = true; a.g.position.set(pl.dx, 0, pl.dz); a.body.rotation.x = -1.45; a.body.position.y = 0.16; a.body.scale.y = 1; a.cone.visible = false; a.tag.visible = !hunterMe; a.moving = false; a.active = false;
+        a.legs.forEach(l => l.rotation.x = 0); a.arms.forEach(l => l.rotation.x = 0); continue;
+      }
+      a.body.rotation.x = 0;
+      a.g.visible = alive && SPECT.id !== a.id && (!hunterMe || ((!(f & 2) || dme < 1.6) && !(f & 32)));
       a.g.position.set(a.x, 0, a.z); a.g.rotation.y = a.yaw + Math.PI;
       a.body.scale.y += (((f & 1) ? 0.6 : 1) - a.body.scale.y) * k;
+      a.body.position.y += (((f & 128) ? 0.4 : 0) - a.body.position.y) * Math.min(1, dt * 10);
       a.phase += dt * Math.min(a.spd, 6) * 3.2;
       const sw = Math.sin(a.phase) * Math.min(0.75, a.spd * 0.22);
       a.legs[0].rotation.x = sw; a.legs[1].rotation.x = -sw; a.arms[0].rotation.x = -sw * 0.8; a.arms[1].rotation.x = sw * 0.8;
@@ -2454,7 +2744,8 @@ function loop() {
   const live = state === 'play' || state === 'cams' || (NET && NET.started && (state === 'pause' || state === 'scare'));
   if (live) {
     if (state === 'play' && !P.out) updatePlayer(dt); else { lookDX = lookDY = 0; if (state !== 'play') P.noise = 0; }
-    computeTargets(); updatePets(dt);
+    if (P.out && NET && NET.started && (state === 'play' || state === 'cams')) updateSpectate(dt);
+    computeTargets(); updatePets(dt); updateClone(dt);
     if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt);
     if (state !== 'scare') updateWorld(dt, t);
     if (NET && NET.started) netTick(dt);
@@ -2476,8 +2767,8 @@ function loop() {
   }
 }
 resize();
-window.__dk = { get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
-  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); computeTargets(); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
+window.__dk = { get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
