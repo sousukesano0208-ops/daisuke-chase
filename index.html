@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>大介先生から逃げろ</title>
+<title>DAISUKE先生から逃げる</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <style>
 :root{--red:#d3261f;--fg:#efe7e2;--dim:rgba(239,231,226,.66);--bg:#000;--panel:rgba(8,6,6,.78);--cam:#9fe39a;color-scheme:dark}
@@ -64,6 +64,43 @@ canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) co
 #invisHud{position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top));font-size:15px;padding:4px 12px;border-radius:6px;background:rgba(40,80,140,.55);border:1px solid #9cc8ff;color:#d8ecff}
 #tping{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:2px solid #c9b6ff;box-shadow:0 0 8px #a68cff;background:rgba(170,140,255,.5)}
 #bTab{right:calc(196px + env(safe-area-inset-right));bottom:calc(74px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:12px}
+#fpsHud{position:fixed;inset:0;pointer-events:none;z-index:3}
+#xh{position:fixed;left:50%;top:50%;--g:8px;transition:opacity .08s}
+#xh i{position:absolute;background:rgba(255,255,255,.92);box-shadow:0 0 2px #000}
+#xh i:nth-child(1){width:2px;height:10px;left:-1px;top:calc(-10px - var(--g))}
+#xh i:nth-child(2){width:2px;height:10px;left:-1px;top:var(--g)}
+#xh i:nth-child(3){height:2px;width:10px;top:-1px;left:calc(-10px - var(--g))}
+#xh i:nth-child(4){height:2px;width:10px;top:-1px;left:var(--g)}
+#xh b{position:absolute;width:2px;height:2px;left:-1px;top:-1px;background:#fff}
+#hitm{position:fixed;left:50%;top:50%;opacity:0}
+#hitm i{position:absolute;width:2px;height:9px;background:#fff;box-shadow:0 0 2px #000}
+#hitm.kill i{background:#ff4030}
+#hitm i:nth-child(1){left:-9px;top:-11px;transform:rotate(-45deg)}#hitm i:nth-child(2){left:7px;top:-11px;transform:rotate(45deg)}
+#hitm i:nth-child(3){left:-9px;top:2px;transform:rotate(45deg)}#hitm i:nth-child(4){left:7px;top:2px;transform:rotate(-45deg)}
+#hpBox{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(46px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;font-weight:700;text-shadow:0 1px 3px #000}
+#hpBox .lbl{font-size:13px;color:#cfe}.hpbar{width:200px;height:10px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.35);transform:skewX(-20deg);overflow:hidden}
+#hpBar{display:block;height:100%;background:linear-gradient(90deg,#46d46a,#a8f0a0);transform-origin:left;transition:transform .15s}
+#hpBox.low #hpBar{background:#e04030}#hpNum{font-size:22px;min-width:40px}
+#ammoBox{position:fixed;right:calc(24px + env(safe-area-inset-right));bottom:calc(36px + env(safe-area-inset-bottom));text-align:right;text-shadow:0 2px 4px #000}
+#ammoBox .am{font-weight:800;line-height:1}#ammoMag{font-size:46px}#ammoMag.low{color:#ff6a50}#ammoRes{font-size:20px;color:#cfd8dc;margin-left:6px}
+#wName{font-size:14px;letter-spacing:.06em;color:#e0e6ea}#wHint{font-size:13px;color:#ffd166;min-height:1.2em}
+#kfeed{position:fixed;right:calc(14px + env(safe-area-inset-right));top:calc(130px + env(safe-area-inset-top));text-align:right;font-size:14px;line-height:1.7}
+#kfeed div{background:rgba(0,0,0,.45);padding:1px 10px;margin-bottom:3px;border-right:3px solid #ff5040}
+#dmgFx{position:fixed;inset:0;opacity:0;background:radial-gradient(ellipse at center,rgba(160,0,0,0) 45%,rgba(190,0,0,.7) 100%)}
+#dmgDir{position:fixed;left:50%;top:50%;width:0;height:0;opacity:0}
+#dmgDir::before{content:'';position:absolute;left:-40px;top:-170px;width:80px;height:26px;border-radius:50%/100% 100% 0 0;background:rgba(255,40,30,.75);filter:blur(2px)}
+#scope{position:fixed;inset:0;background:radial-gradient(circle at center,transparent 0,transparent 32vmin,#000 32.4vmin)}
+#scope::before,#scope::after{content:'';position:absolute;left:50%;top:50%;background:#000}
+#scope::before{width:64vmin;height:2px;transform:translate(-50%,-50%)}#scope::after{height:64vmin;width:2px;transform:translate(-50%,-50%)}
+#downFx{position:fixed;left:50%;top:62%;transform:translateX(-50%);font-size:18px;padding:6px 14px;background:rgba(120,0,0,.6);border-radius:8px;white-space:nowrap}
+body.touch #ammoBox{right:calc(14px + env(safe-area-inset-right));bottom:auto;top:calc(180px + env(safe-area-inset-top))}
+body.touch #ammoMag{font-size:30px}body.touch #kfeed{top:calc(250px + env(safe-area-inset-top))}
+body.touch #hpBox{left:50%;transform:translateX(-50%);bottom:auto;top:calc(10px + env(safe-area-inset-top))}body.touch .hpbar{width:130px}
+.fpsOnly{display:none!important}body.fps .fpsOnly{display:flex!important}body.fps #bTab{display:none}
+#bFire{right:calc(30px + env(safe-area-inset-right));bottom:calc(238px + env(safe-area-inset-bottom));width:92px;height:92px;background:rgba(220,60,40,.35);border-color:rgba(255,120,100,.7)}
+#bAds{right:calc(138px + env(safe-area-inset-right));bottom:calc(218px + env(safe-area-inset-bottom));width:60px;height:60px;font-size:13px}
+#bReload{right:calc(212px + env(safe-area-inset-right));bottom:calc(232px + env(safe-area-inset-bottom));width:54px;height:54px;font-size:12px}
+#bSwap{right:calc(270px + env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));width:54px;height:54px;font-size:12px}
 #bJump{right:calc(196px + env(safe-area-inset-right));bottom:calc(152px + env(safe-area-inset-bottom));width:62px;height:62px;font-size:13px}
 #spectBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;pointer-events:auto;z-index:6;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 8px;font-size:15px;white-space:nowrap}
 #spectBar button{font-family:inherit;font-size:16px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;cursor:pointer;touch-action:none}
@@ -176,6 +213,16 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 <div id="prompt" class="hidden"><span id="promptText"></span><div class="pbar hidden"><i></i></div></div>
 <div id="pose" class="hidden">しゃがみ中</div>
 <div id="stam" class="hidden"><i></i></div>
+<div id="fpsHud" class="hidden">
+  <div id="kfeed"></div>
+  <div id="xh"><i></i><i></i><i></i><i></i><b></b></div>
+  <div id="hitm"><i></i><i></i><i></i><i></i></div>
+  <div id="hpBox"><span class="lbl">HP</span><span class="hpbar"><i id="hpBar"></i></span><span id="hpNum">100</span></div>
+  <div id="ammoBox"><div id="wName"></div><div class="am"><span id="ammoMag">12</span><span id="ammoRes">/ 96</span></div><div id="wHint"></div></div>
+  <div id="dmgFx"></div><div id="dmgDir"></div>
+  <div id="scope" class="hidden"></div>
+  <div id="downFx" class="hidden"></div>
+</div>
 
 <div id="touch" class="layer hidden">
   <div id="stickHint">移動</div>
@@ -187,6 +234,10 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <div id="bPause" class="tbtn">Ⅱ</div>
   <div id="bTab" class="tbtn">タブ<br>レット</div>
   <div id="bJump" class="tbtn">ジャンプ</div>
+  <div id="bFire" class="tbtn fpsOnly">撃つ</div>
+  <div id="bAds" class="tbtn fpsOnly">ねらう</div>
+  <div id="bReload" class="tbtn fpsOnly">リロード</div>
+  <div id="bSwap" class="tbtn fpsOnly">持ちかえ</div>
 </div>
 <div id="spectBar" class="hidden"><button id="spPrev" type="button">◀</button><div><div id="spName">観戦中</div><small>仲間の視点</small></div><button id="spNext" type="button">▶</button></div>
 
@@ -208,20 +259,25 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 
 <div id="title" class="panel">
-  <h1>大介先生から逃げろ</h1>
-  <div class="ver">ver.3.3</div>
+  <h1>DAISUKE先生から逃げる</h1>
+  <div class="ver">ver.4.0</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
-  教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目の大介先生に見つかったら――走れ。</p>
+  教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
   <b>保健室</b>のドアを閉めれば先生は入れない（バッテリー消費）。棚の育毛剤と<b>謎の毛</b>で自分のクローンも作れる。充電は<b>発電室</b>で。<b>放送室</b>のオルゴールで先生を止められる。<br>
-  教科書を1冊見つけたら<b>職員室</b>へ――30秒だけ透明になれる。ふつう以上では<b>もう一人の先生</b>も現れる。</p>
+  教科書を1冊見つけたら<b>職員室</b>へ――30秒だけ透明になれる。ふつう以上では<b>もう一人の先生</b>も現れる。<br>
+  <b>FPSモード</b>：購買部で買った銃で戦う。先生たちも撃ってくる。教科書を集めて、決められた人数のDAISUKE先生たちを倒せば<b>条件クリア</b>。</p>
   <div class="seg" id="diffSeg" role="radiogroup" aria-label="難易度">
     <button type="button" data-d="easy">かんたん<small>教科書3冊・足おそめ</small></button>
     <button type="button" data-d="normal">ふつう<small>教科書4冊・もう一人の先生</small></button>
     <button type="button" data-d="hard">むずかしい<small>教科書5冊・足はやい</small></button>
-    <button type="button" data-d="super">スーパー<small>大介先生2人・最速</small></button>
+    <button type="button" data-d="super">スーパー<small>DAISUKE先生2人・最速</small></button>
   </div>
-  <div class="row" id="cntRow">大介先生の人数 <span class="seg mini" id="cntSeg"><button type="button" data-n="1">1人</button><button type="button" data-n="2">2人</button><button type="button" data-n="3">3人</button></span></div>
+  <div class="row" id="modeRow">モード <span class="seg mini" id="modeSeg"><button type="button" data-m="horror">ホラー（逃げる）</button><button type="button" data-m="fps">FPS（戦う）</button></span></div>
+  <div class="row">ステージ <span class="seg mini" id="stageSeg"><button type="button" data-s="0">夜の校舎</button><button type="button" data-s="1">夕方の校舎</button><button type="button" data-s="2">旧校舎</button></span></div>
+  <div class="row">味方BOT <span class="seg mini" id="botSeg"><button type="button" data-b="0">なし</button><button type="button" data-b="1">1人</button><button type="button" data-b="2">2人</button><button type="button" data-b="3">3人</button></span>
+    <label id="wpnRow" class="hidden">武器 <select id="wpnSel"></select></label></div>
+  <div class="row" id="cntRow">DAISUKE先生の人数 <span class="seg mini" id="cntSeg"><button type="button" data-n="1">1人</button><button type="button" data-n="2">2人</button><button type="button" data-n="3">3人</button></span></div>
   <p class="keys" id="howto"></p>
   <div id="loading">読み込み中… 0%</div>
   <button id="start" class="btn hidden" type="button">ひとりで遊ぶ</button>
@@ -239,7 +295,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="lobby" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,48px)">オンライン対戦</h1>
-  <p class="keys">1人が<b>大介先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたら大介先生の勝ち。</p>
+  <p class="keys">1人が<b>DAISUKE先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたらDAISUKE先生の勝ち。</p>
   <div id="lobbyHome">
     <div class="row"><label>名前 <input id="pname" type="text" maxlength="10" autocomplete="off"></label></div>
     <button id="mkRoom" class="btn" type="button">部屋を作る</button>
@@ -250,9 +306,12 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
     <p class="keys" id="roomHint">友だちにこのコードを伝えてください</p>
     <ul id="roster"></ul>
     <div id="roomCfg" class="row hidden">
-      <label>大介先生（プレイヤー） <select id="cfgHunter"></select></label>
-      <label>AIの大介先生 <select id="cfgAI"><option value="0">0人</option><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option></select></label>
+      <label>DAISUKE先生（プレイヤー） <select id="cfgHunter"></select></label>
+      <label>AIのDAISUKE先生 <select id="cfgAI"><option value="0">0人</option><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option></select></label>
       <label><input id="cfgTeacher" type="checkbox"> もう一人の先生</label>
+      <label>モード <select id="cfgMode"><option value="horror">ホラー</option><option value="fps">FPS</option></select></label>
+      <label>ステージ <select id="cfgStage"><option value="0">夜の校舎</option><option value="1">夕方の校舎</option><option value="2">旧校舎</option></select></label>
+      <label>味方BOT <select id="cfgBots"><option value="0">なし</option><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option></select></label>
     </div>
     <p id="cfgView" class="keys"></p>
     <button id="startOnline" class="btn hidden" type="button">スタート</button>
@@ -281,7 +340,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="notice" class="panel hidden">
   <h1 style="font-size:clamp(24px,5vw,38px);color:#ffd166;text-shadow:none">運営からのお知らせ</h1>
-  <p>いつも「大介先生から逃げろ」を遊んでくれてありがとう！<br>感謝の気持ちをこめて、<b>全員に100ポイント</b>をプレゼントします。<br>購買部やガチャで使ってね。</p>
+  <p>いつも「DAISUKE先生から逃げる」を遊んでくれてありがとう！<br>感謝の気持ちをこめて、<b>全員に100ポイント</b>をプレゼントします。<br>購買部やガチャで使ってね。</p>
   <button id="giftBtn" class="btn" type="button">100Pを受け取る</button>
 </div>
 <div id="gacha" class="panel hidden">
@@ -301,7 +360,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="shop" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,46px)">購買部</h1>
-  <p class="keys">ゲームをクリアするとポイントがもらえる（かんたん3P・ふつう5P・むずかしい7P・スーパー10P、大介先生を増やすとおまけあり）。<br>買ったアイテムはゲーム中、画面左上のアイテム欄か数字キーで使える。オンライン対戦でも使える。</p>
+  <p class="keys"><b>銃</b>は一度買えばずっと使える（FPSモード専用・タイトル画面で武器を選ぶ）。<br>ゲームをクリアするとポイントがもらえる（かんたん3P・ふつう5P・むずかしい7P・スーパー10P、DAISUKE先生を増やすとおまけあり）。<br>買ったアイテムはゲーム中、画面左上のアイテム欄か数字キーで使える。オンライン対戦でも使える。</p>
   <div id="pts" class="code" style="font-size:40px;letter-spacing:.08em">0 P</div>
   <div id="shopList"></div>
   <button id="shopBack" class="btn sub" type="button">もどる</button>
@@ -360,8 +419,8 @@ $('sens').value = $('sens2').value = sens; $('hq').checked = hq;
 for (const id of ['sens', 'sens2']) $(id).addEventListener('input', e => { sens = parseFloat(e.target.value); $('sens').value = $('sens2').value = sens; store.set('dk_sens', sens); });
 $('hq').addEventListener('change', e => { hq = e.target.checked; store.set('dk_hq', hq ? '1' : '0'); applyQuality(); });
 $('howto').innerHTML = IS_TOUCH
-  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる・「ジャンプ」・「使う」でドアやオルゴール（発電機は長押し）・「タブレット」で監視カメラ'
-  : 'WASD：移動　Shift：走る　Space：ジャンプ　C：しゃがむ　E：使う（発電機は長押し）　T：タブレット　F：ライト　M：地図　Esc：一時停止';
+  ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる（走りながらでスライディング）・「ジャンプ」で机にも乗れる・「使う」でドアやオルゴール・「タブレット」で監視カメラ<br>FPS：「撃つ」を押したままなぞると狙いを動かせる／「ねらう」「リロード」「持ちかえ」'
+  : 'WASD：移動　Shift：走る　Space：ジャンプ（机の上にも乗れる）　C：しゃがむ（走りながらでスライディング）　E：使う（発電機は長押し）　T：タブレット　F：ライト　M：地図　Esc：一時停止<br>FPS：左クリック 撃つ／右クリック ねらう／R リロード／Q・ホイール 持ちかえ';
 
 // ================================================================== renderer
 const canvas = $('gl');
@@ -374,6 +433,8 @@ scene.background = new THREE.Color(0x000000);
 const FOG_NORMAL = 0.072, FOG_CAM = 0.028;
 scene.fog = new THREE.FogExp2(0x000000, FOG_NORMAL);
 const camera = new THREE.PerspectiveCamera(70, 1, 0.05, 90);
+let baseFov = 70;
+if (IS_TOUCH) document.body.classList.add('touch');
 scene.add(camera);
 const secCam = new THREE.PerspectiveCamera(72, 1, 0.05, 90);
 const ambient = new THREE.AmbientLight(0x5a6878, 0.22); scene.add(ambient);
@@ -395,7 +456,7 @@ function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   for (const c of [camera, secCam]) { c.aspect = w / h; c.updateProjectionMatrix(); }
-  camera.fov = w < h ? 82 : 70; camera.updateProjectionMatrix();
+  baseFov = w < h ? 82 : 70; camera.fov = baseFov; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
 
@@ -417,7 +478,7 @@ function boardTex(lines) {
 }
 const BOARDS = [
   boardTex([['明日 数学 小テスト（教科書を持ってくること）', 44, 40, 30], ['範囲：p.48〜p.73', 36, 60, 110], ['日直', 30, 880, 190]]),
-  boardTex([['にげて', 92, 60, 40], ['大介先生が来る', 52, 70, 160]]),
+  boardTex([['にげて', 92, 60, 40], ['DAISUKE先生が来る', 52, 70, 160]]),
   boardTex([['10月19日（月）', 40, 40, 30], ['忘れ物をした者は職員室まで', 44, 40, 120]]),
 ];
 const SUBJECTS = [['数学Ⅰ', '#2b5fae'], ['現代の国語', '#b0332a'], ['英語コミュニケーションⅠ', '#2f8a4c'], ['化学基礎', '#d07a1e'], ['歴史総合', '#6a3f9b']];
@@ -508,13 +569,26 @@ function buildMeshes(group) {
 // ================================================================== level layout
 const CELL = 3, W = 24, H = 13, CEIL = 3.0;
 const ROOM_COLS = [2, 5, 8, 13, 16, 19], ROOM_ROWS = [0, 5, 10];
-const ROOM_NAMES = [['2-A', '2-B', '2-C', '職員室', '2-D', '放送室'], ['1-A', '1-B', '1-C', '保健室', '1-D', '1-E'], ['発電室', '3-A', '3-B', '3-C', '3-D', '3-E']];
+const STAGES = [
+  { name: '夜の校舎', desc: 'いつもの校舎・夜', layout: [['2-A', '2-B', '2-C', '職員室', '2-D', '放送室'], ['1-A', '1-B', '1-C', '保健室', '1-D', '1-E'], ['発電室', '3-A', '3-B', '3-C', '3-D', '3-E']],
+    look: { amb: 0x5a6878, ambI: 0.3, hemiSky: 0x2a3240, hemiI: 0.3, fog: 0.066, fogCol: 0x000000, sun: 0x6a7ca8, sunI: 0.1, win: 0x0a1428, lamp: 1, flicker: 0.35 } },
+  { name: '夕方の校舎', desc: '放課後・夕焼けで明るい', layout: [['2-A', '放送室', '2-B', '2-C', '職員室', '2-D'], ['1-A', '保健室', '1-B', '1-C', '1-D', '1-E'], ['3-A', '3-B', '3-C', '発電室', '3-D', '3-E']],
+    look: { amb: 0xffc497, ambI: 0.85, hemiSky: 0xffa45c, hemiI: 0.7, fog: 0.03, fogCol: 0x2a1408, sun: 0xffa05a, sunI: 1.1, win: 0x9a4a14, lamp: 0.6, flicker: 0 } },
+  { name: '旧校舎', desc: '古い校舎・配置がちがう', layout: [['2-A', '2-B', '発電室', '2-C', '2-D', '2-E'], ['1-A', '1-B', '1-C', '1-D', '保健室', '職員室'], ['3-A', '放送室', '3-B', '3-C', '3-D', '3-E']],
+    look: { amb: 0x7a4a40, ambI: 0.24, hemiSky: 0x3a2020, hemiI: 0.25, fog: 0.08, fogCol: 0x050000, sun: 0x804040, sunI: 0.08, win: 0x1a0606, lamp: 0.8, flicker: 0.8 } },
+];
+let stageIdx = clamp(parseInt(store.get('dk_stage', '0')) || 0, 0, STAGES.length - 1);
+let STAGE = STAGES[stageIdx];
+let MODE = store.get('dk_mode', 'horror') === 'fps' ? 'fps' : 'horror';
 const typeOf = n => n === '職員室' ? 'staff' : n === '放送室' ? 'broadcast' : n === '保健室' ? 'shelter' : n === '発電室' ? 'generator' : 'class';
 const ZONE = Array.from({ length: H }, () => Array(W).fill('C'));
-const rooms = [];
+const rooms = [], ROOM = {}, allDoors = [], shDoors = [];
 let zid = 0;
+function layoutRooms(NAMES) {
+for (const row of ZONE) row.fill('C');
+rooms.length = 0; zid = 0;
 ROOM_ROWS.forEach((y0, ri) => ROOM_COLS.forEach((x0, ci) => {
-  const name = ROOM_NAMES[ri][ci], id = String.fromCharCode(97 + zid++);
+  const name = NAMES[ri][ci], id = String.fromCharCode(97 + zid++);
   const r = { id, name, type: typeOf(name), x0, y0, ri, ox: x0 * CELL, oz: y0 * CELL, doors: [] };
   for (let y = y0; y < y0 + 3; y++) for (let x = x0; x < x0 + 3; x++) ZONE[y][x] = id;
   const one = r.type === 'shelter' || r.type === 'broadcast';
@@ -525,15 +599,18 @@ ROOM_ROWS.forEach((y0, ri) => ROOM_COLS.forEach((x0, ci) => {
   if (ri === 2) cols.forEach(cx => r.doors.push({ line: 10, cx, room: [cx, 10], cor: [cx, 9], side: -1 }));
   rooms.push(r);
 }));
-const ROOM = Object.fromEntries(rooms.map(r => [r.type === 'class' ? r.name : r.type, r]));
-const allDoors = rooms.flatMap(r => r.doors.map(d => Object.assign(d, { r })));
-const shDoors = ROOM.shelter.doors; shDoors.forEach((d, i) => d.si = i);
+for (const k in ROOM) delete ROOM[k];
+for (const r of rooms) ROOM[r.type === 'class' ? r.name : r.type] = r;
+allDoors.length = 0; for (const r of rooms) for (const d of r.doors) allDoors.push(Object.assign(d, { r }));
+shDoors.length = 0; ROOM.shelter.doors.forEach((d, i) => { d.si = i; shDoors.push(d); });
+}
+layoutRooms(STAGE.layout);
 const zoneAt = (cx, cy) => (cx < 0 || cy < 0 || cx >= W || cy >= H) ? null : ZONE[cy][cx];
 
 // collision boxes: [x0,z0,x1,z1,type]  W=wall F=furniture(cover) D=monitor door X=exit door
 const boxes = [];
 const covers = [];
-function addCol(x0, z0, x1, z1, t) { boxes.push([Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1), t]); }
+function addCol(x0, z0, x1, z1, t, top) { boxes.push([Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1), t, top]); }
 const lightCands = [];   // {pos, color, intensity, dist, flicker, special}
 const spots = {};
 const camsDef = [];
@@ -551,7 +628,7 @@ function buildLevel() {
     face('ceil', 'ny', x0, CEIL, z0, x0 + CELL, CEIL + 0.01, z0 + CELL, [x0 / 3, z0 / 3, (x0 + CELL) / 3, (z0 + CELL) / 3]);
     if (z === 'C' && (cx + cy) % 2 === 0) {
       box('lamp', x0 + 0.9, CEIL - 0.06, z0 + 1.38, x0 + 2.1, CEIL, z0 + 1.62);
-      if ((cx + cy) % 4 === 0) lightCands.push({ pos: new V3(x0 + 1.5, CEIL - 0.4, z0 + 1.5), color: 0xbcd0ff, intensity: 4.5, dist: 9, flicker: Math.random() < 0.35 });
+      if ((cx + cy) % 4 === 0) lightCands.push({ pos: new V3(x0 + 1.5, CEIL - 0.4, z0 + 1.5), color: stageIdx === 1 ? 0xffd9b0 : stageIdx === 2 ? 0xffb89a : 0xbcd0ff, intensity: 4.5 * STAGE.look.lamp, dist: 9, flicker: Math.random() < STAGE.look.flicker });
     }
   }
   // ---- walls
@@ -606,7 +683,7 @@ function buildLevel() {
       box('locker', xa, 0, z + 0.01, xb, h, z + 0.89);
       box('dark', xb, h * 0.55, z + 0.4, xb + dir * 0.02, h * 0.62, z + 0.5);
     }
-    addCol(xa, z0, xb, z1, 'F'); covers.push([Math.min(xa, xb), z0, Math.max(xa, xb), z1]);
+    addCol(xa, z0, xb, z1, 'F', h); covers.push([Math.min(xa, xb), z0, Math.max(xa, xb), z1]);
   }
   lockerBankV(0.1, 1, 0.6, 8.7); lockerBankV(0.1, 1, 30.3, 38.4);
   lockerBankV(71.9, -1, 0.6, 8.7); lockerBankV(33.1, 1, 0.6, 8.7); lockerBankV(33.1, 1, 30.3, 38.4);
@@ -654,7 +731,7 @@ function buildLevel() {
 function furnish(r) {
   const { ox, oz, type, name } = r;
   const B = (k, u0, y0, v0, u1, y1, v1, ts = 1) => box(k, ox + u0, y0, oz + v0, ox + u1, y1, oz + v1, ts);
-  const F = (u0, v0, u1, v1, cover = true) => { addCol(ox + u0, oz + v0, ox + u1, oz + v1, 'F'); if (cover) covers.push([ox + u0, oz + v0, ox + u1, oz + v1]); };
+  const F = (u0, v0, u1, v1, cover = true, top = 9) => { addCol(ox + u0, oz + v0, ox + u1, oz + v1, 'F', top); if (cover) covers.push([ox + u0, oz + v0, ox + u1, oz + v1]); };
   const lampsOff = () => { for (const [u, v] of [[3, 3], [3, 6], [6, 3], [6, 6]]) B('lampOff', u - 0.6, CEIL - 0.06, v - 0.12, u + 0.6, CEIL, v + 0.12); };
   const blackboard = (variant) => {
     face('board' + variant, 'px', ox + 0.14, 0.95, oz + 2.0, ox + 0.14, 2.15, oz + 7.0);
@@ -668,19 +745,19 @@ function furnish(r) {
     B('wood', cu - 0.18, 0.42, vv - 0.19, cu + 0.18, 0.45, vv + 0.19);
     B('wood', cu + 0.16, 0.5, vv - 0.19, cu + 0.19, 0.84, vv + 0.19);
     for (const [a, b] of [[-0.16, -0.17], [-0.16, 0.15], [0.14, -0.17], [0.14, 0.15]]) B('metal', cu + a, 0, vv + b, cu + a + 0.025, 0.42, vv + b + 0.025);
-    F(c - 0.25, vv - 0.3, Math.min(c + 0.62 + chairBack, c + 0.75), vv + 0.3);
+    F(c - 0.25, vv - 0.3, Math.min(c + 0.62 + chairBack, c + 0.75), vv + 0.3, true, 0.73);
   };
   lampsOff();
   if (type === 'class') {
     blackboard(Math.floor(Math.random() * 3));
-    B('wood', 0.55, 0.72, 3.9, 1.15, 0.77, 5.1); B('metal', 0.6, 0.02, 3.95, 1.1, 0.72, 5.05); F(0.55, 3.9, 1.15, 5.1);
+    B('wood', 0.55, 0.72, 3.9, 1.15, 0.77, 5.1); B('metal', 0.6, 0.02, 3.95, 1.1, 0.72, 5.05); F(0.55, 3.9, 1.15, 5.1, true, 0.77);
     deskTops[name] = [];
     for (const c of [2.3, 3.3, 5.3, 6.3]) for (const vv of [2.6, 3.4, 5.6, 6.4]) {
       studentDesk(c, vv, Math.random() < 0.25 ? 0.12 : 0);
       deskTops[name].push({ x: ox + c, z: oz + vv });
     }
     for (let v = 0.8; v < 8.2; v += 0.925) B('locker', 8.45, 0, v, 8.9, 1.1, v + 0.9);
-    F(8.45, 0.8, 8.9, 8.2);
+    F(8.45, 0.8, 8.9, 8.2, true, 1.1);
   } else if (type === 'staff') {
     blackboard(2);
     B('ledB', 3.55, 0.76, 2.9, 3.68, 0.86, 3.03); B('ledB', 5.32, 0.76, 5.95, 5.45, 0.86, 6.08);
@@ -689,7 +766,7 @@ function furnish(r) {
       B('wood', cu - 0.7, 0.72, cv - 0.6, cu + 0.7, 0.76, cv + 0.6); B('metal', cu - 0.65, 0.02, cv - 0.55, cu + 0.65, 0.72, cv + 0.55);
       for (const [a, b] of [[-0.45, -0.3], [0.25, 0.1], [-0.2, 0.2]]) B('paper', cu + a, 0.76, cv + b, cu + a + 0.22, 0.79 + Math.random() * 0.06, cv + b + 0.3);
       B('dark', cu - 0.1, 0.76, cv - 0.5, cu + 0.3, 1.05, cv - 0.47);
-      F(cu - 0.7, cv - 0.6, cu + 0.7, cv + 0.6);
+      F(cu - 0.7, cv - 0.6, cu + 0.7, cv + 0.6, true, 0.76);
     }
     for (let v = 0.8; v < 8.2; v += 0.925) B('locker', 8.45, 0, v, 8.9, 1.9, v + 0.9);
     F(8.45, 0.8, 8.9, 8.2);
@@ -699,10 +776,10 @@ function furnish(r) {
       for (const [a, b] of [[u0 + 0.03, v0 + 0.03], [u1 - 0.09, v0 + 0.03], [u0 + 0.03, v1 - 0.09], [u1 - 0.09, v1 - 0.09]]) B('metal', a, 0, b, a + 0.06, 0.36, b + 0.06);
       B('frame', u0, 0.36, v0, u1, 0.42, v1); B('paper', u0 + 0.03, 0.42, v0 + 0.03, u1 - 0.03, 0.58, v1 - 0.03);
       const pv = v0 < 4 ? [v0 + 0.08, v0 + 0.48] : [v1 - 0.48, v1 - 0.08]; B('paper', u0 + 0.12, 0.58, pv[0], u1 - 0.12, 0.68, pv[1]);
-      F(u0, v0, u1, v1);
+      F(u0, v0, u1, v1, true, 0.58);
     }
     B('paper', 6.1, 1.1, 0.12, 6.8, 1.7, 0.19); B('red', 6.38, 1.18, 0.19, 6.52, 1.62, 0.23); B('red', 6.23, 1.33, 0.19, 6.67, 1.47, 0.23);
-    for (const v0 of [0.15, 8.45]) { B('metal', 0.8, 0, v0, 2.9, 1.7, v0 + 0.4); for (let y = 0.3; y < 1.6; y += 0.45) { B('dark', 0.9, y, v0 + 0.05, 1.5, y + 0.25, v0 + 0.35); B('paper', 1.6, y, v0 + 0.05, 2.1, y + 0.3, v0 + 0.35); B('win', 2.2, y, v0 + 0.08, 2.8, y + 0.32, v0 + 0.32); } F(0.8, v0, 2.9, v0 + 0.4); }
+    for (const v0 of [0.15, 8.45]) { B('metal', 0.8, 0, v0, 2.9, 1.7, v0 + 0.4); for (let y = 0.3; y < 1.6; y += 0.45) { B('dark', 0.9, y, v0 + 0.05, 1.5, y + 0.25, v0 + 0.35); B('paper', 1.6, y, v0 + 0.05, 2.1, y + 0.3, v0 + 0.35); B('win', 2.2, y, v0 + 0.08, 2.8, y + 0.32, v0 + 0.32); } F(0.8, v0, 2.9, v0 + 0.4, true, 1.7); }
     lightCands.push({ pos: new V3(ox + 4.5, 2.4, oz + 4.5), color: 0xe6f1ff, intensity: 3.2, dist: 8, special: true });
     spots.shDoor = []; spots.shelter = new V3(ox + 4.5, 0, oz + 4.5);
     spots.tonic = new V3(ox + 1.85, 1.7, oz + 0.35); interact.push({ id: 'tonic', pos: new V3(ox + 1.85, 0, oz + 1.25), r: 1.3 });
@@ -715,7 +792,7 @@ function furnish(r) {
     B('gen', 2.35, 0, 5.35, 3.65, 1.5, 6.65); B('metal', 2.6, 1.5, 5.6, 3.4, 1.8, 6.4);
     B('dark', 2.3, 0.6, 5.6, 2.35, 1.2, 6.4); B('ledR', 2.28, 1.0, 5.75, 2.3, 1.08, 5.85); B('led', 2.28, 1.0, 5.95, 2.3, 1.08, 6.05);
     B('metal', 2.9, 1.8, 5.9, 3.1, 2.4, 6.1); B('metal', 2.9, 2.25, 6.1, 3.1, 2.4, 8.9);
-    F(2.35, 5.35, 3.65, 6.65);
+    F(2.35, 5.35, 3.65, 6.65, true, 1.8);
     for (let v = 1.0; v < 8.0; v += 1.2) { B('metal', 8.4, 0, v, 8.9, 1.8, v + 1.1);
       for (let y = 0.35; y < 1.7; y += 0.45) { B('dark', 8.45, y, v + 0.1, 8.75, y + 0.22, v + 0.45); B('dark', 8.45, y, v + 0.6, 8.75, y + 0.22, v + 0.95); } }
     F(8.4, 1.0, 8.9, 8.2);
@@ -723,7 +800,7 @@ function furnish(r) {
     spots.genFront = new V3(ox + 3.0, 0, oz + 4.5);
     interact.push({ id: 'gen', pos: new V3(ox + 3.0, 0, oz + 6.0), r: 1.95 });
   } else if (type === 'broadcast') {
-    B('dark', 1.5, 0.72, 0.12, 7.5, 0.78, 0.85); B('metal', 1.55, 0.02, 0.15, 7.45, 0.72, 0.8); F(1.5, 0.12, 7.5, 0.85);
+    B('dark', 1.5, 0.72, 0.12, 7.5, 0.78, 0.85); B('metal', 1.55, 0.02, 0.15, 7.45, 0.72, 0.8); F(1.5, 0.12, 7.5, 0.85, true, 0.78);
     B('dark', 2.0, 0.78, 0.25, 4.0, 0.86, 0.75);
     for (let i = 0; i < 14; i++) B(i % 3 ? 'led' : 'ledR', 2.1 + i * 0.13, 0.86, 0.35, 2.16 + i * 0.13, 0.87, 0.4);
     B('metal', 5.6, 0.78, 0.45, 5.63, 1.2, 0.48); B('dark', 5.56, 1.2, 0.42, 5.67, 1.3, 0.51);
@@ -738,17 +815,22 @@ function furnish(r) {
 MATS.onair = M({ map: onAirTex, emissive: 0xffffff, emissiveMap: onAirTex, emissiveIntensity: 0.25 });
 
 // cameras (CCTV)
+function makeCams() {
+camsDef.length = 0;
 camsDef.push(
   { name: 'CAM1 西ホール',   pos: [1.0, 2.75, 1.0],    look: [4.0, 0.6, 20] },
   { name: 'CAM2 北廊下・西', pos: [2.0, 2.75, 9.6],    look: [40, 0.8, 13] },
   { name: 'CAM3 北廊下・東', pos: [65.5, 2.75, 14.6],  look: [36, 0.8, 11] },
-  { name: 'CAM4 保健室前',     pos: [36.4, 2.75, 14.6],  look: [46, 0.8, 13] },
+  { name: 'CAM4 北廊下・中央', pos: [36.4, 2.75, 14.6],  look: [46, 0.8, 13] },
   { name: 'CAM5 南廊下',     pos: [2.0, 2.75, 24.6],   look: [40, 0.8, 27] },
   { name: 'CAM6 中央ホール', pos: [33.4, 2.75, 38.6],  look: [36, 0.8, 20] },
   { name: 'CAM7 玄関',       pos: [71.5, 2.75, 15.4],  look: [68, 0.5, 38] },
-  { name: 'CAM8 放送室',     pos: [65.6, 2.75, 8.6],   look: [60, 0.5, 2] },
-  { name: 'CAM9 発電室',     pos: [14.6, 2.75, 30.4],  look: [9, 0.5, 36] },
 );
+for (const [t, nm] of [['shelter', '保健室'], ['broadcast', '放送室'], ['generator', '発電室'], ['staff', '職員室']]) {
+  const r = ROOM[t]; if (!r) continue;
+  camsDef.push({ name: `CAM${camsDef.length + 1} ${nm}`, pos: [r.ox + 8.5, 2.75, r.oz + (r.ri === 0 ? 8.5 : 0.5)], look: [r.ox + 3, 0.5, r.oz + 4.5] });
+}
+}
 
 // ================================================================== collision helpers
 const grid = new Map();
@@ -762,9 +844,10 @@ function nearBoxes(x, z, r) {
 let exitOpen = false; const doorsClosed = [false, false];
 const closedCount = () => (doorsClosed[0] ? 1 : 0) + (doorsClosed[1] ? 1 : 0);
 const solid = (b) => b[4] === 'D' ? doorsClosed[b[5]] : b[4] === 'X' ? !exitOpen : true;
-function collide(p, r) {
+function collide(p, r, y = 0) {
   for (let iter = 0; iter < 3; iter++) for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
     const b = boxes[i]; if (!solid(b)) continue;
+    if (b[4] === 'F' && (b[5] ?? 9) <= y + 0.08) continue;   // you're standing above it
     const cx = Math.max(b[0], Math.min(p.x, b[2])), cz = Math.max(b[1], Math.min(p.z, b[3]));
     const dx = p.x - cx, dz = p.z - cz, d2 = dx * dx + dz * dz;
     if (d2 < r * r) {
@@ -773,6 +856,16 @@ function collide(p, r) {
         if (m === pl) p.x = b[0] - r; else if (m === pr) p.x = b[2] + r; else if (m === pt) p.z = b[1] - r; else p.z = b[3] + r; }
     }
   }
+}
+// the highest piece of furniture under your feet that you can stand on
+function groundAt(x, z, y, r = 0.22) {
+  let g = 0;
+  for (const i of nearBoxes(x, z, r + 0.2)) {
+    const b = boxes[i]; if (b[4] !== 'F') continue; const top = b[5] ?? 9; if (top > y + 0.08 || top <= g) continue;
+    const cx = Math.max(b[0], Math.min(x, b[2])), cz = Math.max(b[1], Math.min(z, b[3]));
+    if ((x - cx) ** 2 + (z - cz) ** 2 < r * r) g = top;
+  }
+  return g;
 }
 function segBox(x0, z0, x1, z1, b) {
   let t0 = 0, t1 = 1; const dx = x1 - x0, dz = z1 - z0;
@@ -867,9 +960,16 @@ function makeEnemy(gltf, idx) {
   const eyeLight = new THREE.PointLight(0xff1a08, 2.5, 2.6, 1.5); eyeLight.position.set(0, 0.03, 0.25); (head || group).add(eyeLight);
   return { idx, group, mixer, actions, eyeLight, eyeMat, glows, pos: group.position, state: 'wait', timer: 0, route: [], lastKnown: new V3(), lost: 0, sense: 0, repath: 0, sees: false, raw: false, yaw: 0, speed: 0, alert: false, lurk: 0, snd: null, active: false };
 }
-function init() {
+let worldExtras = [];
+function buildWorld(si) {
+  stageIdx = si; STAGE = STAGES[si]; store.set('dk_stage', String(si));
+  layoutRooms(STAGE.layout);
+  boxes.length = 0; covers.length = 0; lightCands.length = 0; interact.length = 0;
+  for (const k in spots) delete spots[k]; for (const k in deskTops) delete deskTops[k]; for (const k in GB) delete GB[k];
+  if (level) { scene.remove(level); level.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  for (const o of worldExtras) scene.remove(o); worldExtras = [];
   level = buildLevel(); scene.add(level);
-  indexBoxes(); rebuildLinks();
+  MATS.win.emissive.setHex(STAGE.look.win);
   // shelter doors (closable)
   for (const d of shDoors) {
     const L = d.line * CELL, gc = d.cx * CELL + 1.5, rs = -d.side;
@@ -878,7 +978,20 @@ function init() {
     boxes.push([gc - 0.72, L - 0.2, gc + 0.72, L + 0.2, 'D', d.si]);
     const sw = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.32, 0.05), MATS.dark); sw.position.set(gc - 1.3, 1.3, L + rs * 0.13); scene.add(sw);
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.02), MATS.led); led.position.set(gc - 1.3, 1.36, L + rs * 0.165); scene.add(led); shLeds[d.si] = led;
+    worldExtras.push(pn, sw, led);
   }
+  indexBoxes(); rebuildLinks();
+  if (musicBox) musicBox.position.copy(spots.musicbox);
+  if (tonic) tonic.position.copy(spots.tonic);
+  // enemies start in the classrooms farthest from the entrance-side start room
+  const far = rooms.filter(r => r.type === 'class' && !(r.ri === 0 && r.x0 === ROOM_COLS[0])).map(r => new V3(r.ox + 4.5, 0, r.oz + 4.5)).sort((a, b) => b.distanceTo(START.pos) - a.distanceTo(START.pos));
+  ENEMY_SPAWN.length = 0; ENEMY_SPAWN.push(far[0], far[2], far[4]); HUNTER_SPAWN[0] = far[0].x; HUNTER_SPAWN[1] = far[0].z;
+  RESPAWNS.length = 0; for (const v of far.slice(0, 8)) RESPAWNS.push(v);
+  for (const p of pool) p.cand = null; poolT = 0;
+  makeCams(); drawMapBase(); buildCamMap();
+  UI.exitDrawn = undefined;
+}
+function init() {
   // exit glass doors
   const gm = new THREE.MeshStandardMaterial({ color: 0x4a5a64, roughness: 0.1, transparent: true, opacity: 0.45, depthWrite: false });
   for (const [x, ox] of [[68.25, 66.75], [69.75, 71.25]]) { const p = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.55, 0.05), gm); p.position.set(x, 1.28, 38.98); p.userData = { closed: x, open: ox }; scene.add(p); exitPanels.push(p); }
@@ -889,13 +1002,14 @@ function init() {
   const crank = new THREE.Group(); crank.position.set(0.11, 0.06, 0);
   const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.012, 0.012), MATS.metal); c1.position.x = 0.015; crank.add(c1);
   const c2 = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.06, 0.012), MATS.metal); c2.position.set(0.03, 0.025, 0); crank.add(c2);
-  musicBox.add(crank); musicBox.userData.crank = crank; musicBox.position.copy(spots.musicbox); scene.add(musicBox);
+  musicBox.add(crank); musicBox.userData.crank = crank; scene.add(musicBox);
   // 育毛剤 on the 保健室 shelf
   tonic = new THREE.Group();
   const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.17, 14), new THREE.MeshStandardMaterial({ color: 0x2f9a58, emissive: 0x1d6b3a, emissiveIntensity: 0.9, roughness: 0.2, transparent: true, opacity: 0.85 })); tb.position.y = 0.085; tonic.add(tb);
   const tcap = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.05, 10), MATS.metal); tcap.position.y = 0.195; tonic.add(tcap);
   const tl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.003), MATS.paper); tl.position.set(0, 0.08, 0.05); tonic.add(tl);
-  tonic.position.copy(spots.tonic); scene.add(tonic);
+  scene.add(tonic);
+  buildWorld(stageIdx);
   // light pool
   const K = IS_TOUCH ? 5 : 7;
   for (let i = 0; i < K; i++) { const l = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(l); pool.push({ l, cand: null }); }
@@ -905,7 +1019,7 @@ function init() {
   applyQuality();
   $('loading').classList.add('hidden'); $('start').classList.remove('hidden'); $('online').classList.remove('hidden'); $('navRow').classList.remove('hidden'); updatePtsUI();
   if (CUR && PROFILES[CUR]) { loadProfile(CUR); maybeGift(); } else showLogin();
-  drawMapBase(); buildCamMap();
+  setMode(MODE); setStage(stageIdx); setBots(botCount);
   resetGame();
   requestAnimationFrame(loop);
 }
@@ -973,8 +1087,12 @@ const ITEMS = [
   { id: 'spray', name: '撃退スプレー', price: 6, key: 0, repel: true, desc: 'つかまった瞬間に自動で使う。先生を5秒ひるませて、そのすきに逃げられる。' },
   { id: 'radar', name: '先生レーダー', price: 7, key: 4, desc: '30秒間、すべての先生の居場所が地図に赤い点で出る。' },
   { id: 'ghost', name: '透明スプレー', price: 8, key: 5, desc: 'その場で20秒間、透明になれる（職員室に行かなくてよい）。' },
-  { id: 'pet', name: 'お助けペット（柴犬）', price: 9, key: 7, repel: true, desc: '呼ぶと勝手に大介先生のところへ走っていき、体当たりで40秒ダウンさせる。' },
-  { id: 'ally', name: 'なかまの腕章', price: 8, key: 8, desc: '近く（10m以内）の大介先生に腕章をつけると45秒間味方になる。ついてきて、ほかの先生を押さえこんでくれる。' },
+  { id: 'pet', name: 'お助けペット（柴犬）', price: 9, key: 7, repel: true, desc: '呼ぶと勝手にDAISUKE先生のところへ走っていき、体当たりで40秒ダウンさせる。' },
+  { id: 'ally', name: 'なかまの腕章', price: 8, key: 8, desc: '近く（10m以内）のDAISUKE先生に腕章をつけると45秒間味方になる。ついてきて、ほかの先生を押さえこんでくれる。' },
+  { id: 'g_smg', gunId: 'smg', name: 'サブマシンガン', price: 6, desc: 'FPSモードの武器。連射が速い（32発）。近〜中距離向き。' },
+  { id: 'g_shotgun', gunId: 'shotgun', name: 'ショットガン', price: 8, desc: 'FPSモードの武器。近距離で一発が強い（6発）。' },
+  { id: 'g_ar', gunId: 'ar', name: 'アサルトライフル', price: 10, desc: 'FPSモードの武器。連射・威力・精度のバランスがいい（30発）。' },
+  { id: 'g_sniper', gunId: 'sniper', name: 'スナイパーライフル', price: 12, desc: 'FPSモードの武器。スコープでねらえば遠くから一撃（5発）。' },
   { id: 'hair', name: '謎の毛', price: 10, key: 6, desc: '誰のものかわからない毛。そのままでは効果はない。ひとりで遊ぶとき、保健室の育毛剤と合わせると自分のクローンが作れる。' },
 ];
 const CLEAR_PTS = { easy: 3, normal: 5, hard: 7, super: 10 };
@@ -1047,7 +1165,7 @@ const ACHS = [
   { id: 'clear_normal', name: 'ふつうの生徒', desc: '「ふつう」で脱出する', p: 5 },
   { id: 'clear_hard', name: '放課後の達人', desc: '「むずかしい」で脱出する', p: 10 },
   { id: 'clear_super', name: '伝説の生徒', desc: '「スーパー」で脱出する', p: 20 },
-  { id: 'clear_3d', name: '大介先生×3', desc: '大介先生3人から逃げ切る', p: 15 },
+  { id: 'clear_3d', name: 'DAISUKE先生×3', desc: 'DAISUKE先生3人から逃げ切る', p: 15 },
   { id: 'noitem', name: '手ぶらの勇者', desc: 'アイテムを使わずに「むずかしい」以上で脱出する', p: 10 },
   { id: 'hide', name: '息をひそめて', desc: '隠れているあいだに先生がすぐ横を通りすぎる', p: 3 },
   { id: 'music', name: '校内放送', desc: 'オルゴールを流す', p: 2 },
@@ -1058,10 +1176,12 @@ const ACHS = [
   { id: 'ssr', name: '神引き', desc: 'ガチャでSSRを引く', p: 3 },
   { id: 'gacha10', name: 'ガチャ好き', desc: 'ガチャを合計10回まわす', p: 2 },
   { id: 'online_win', name: 'みんなで勝利', desc: 'オンライン対戦で勝つ', p: 5 },
-  { id: 'hunter_all', name: '本物の大介先生', desc: 'オンライン対戦で大介先生になって全員つかまえる', p: 5 },
+  { id: 'hunter_all', name: '本物のDAISUKE先生', desc: 'オンライン対戦でDAISUKE先生になって全員つかまえる', p: 5 },
   { id: 'caught10', name: 'また会ったね', desc: '合計10回つかまる', p: 3 },
   { id: 'clone', name: 'もう一人の自分', desc: '保健室の育毛剤と謎の毛でクローンを作る', p: 5 },
-  { id: 'ally', name: '先生と仲直り', desc: 'なかまの腕章で大介先生を味方にする', p: 3 },
+  { id: 'ally', name: '先生と仲直り', desc: 'なかまの腕章でDAISUKE先生を味方にする', p: 3 },
+  { id: 'fps_clear', name: '条件クリア', desc: 'FPSモードで条件クリアする', p: 5 },
+  { id: 'headshot', name: 'ヘッドショット', desc: 'FPSモードで頭に命中させる', p: 2 },
   { id: 'revive', name: '助け合い', desc: 'オンライン対戦でつかまった仲間を助け起こす', p: 3 },
 ];
 function unlock(id) {
@@ -1125,8 +1245,10 @@ function renderShop() {
     const ft = document.createElement('div'); ft.className = 'ft';
     const pr = document.createElement('span'); pr.className = 'pr'; pr.textContent = `${it.price}P`;
     const own = document.createElement('span'); own.textContent = `持っている：${itemCount(it.id)}`;
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = '買う'; b.disabled = points < it.price;
-    b.addEventListener('click', () => { if (points < it.price) return; points -= it.price; INV[it.id] = itemCount(it.id) + 1; saveShop(); renderShop(); if (it.id === 'hair') unlock('hair'); });
+    const b = document.createElement('button'); b.type = 'button'; const ownedGun = it.gunId && itemCount(it.id) > 0;
+    b.textContent = ownedGun ? '購入済み' : '買う'; b.disabled = ownedGun || points < it.price;
+    if (it.gunId) { const t = document.createElement('span'); t.className = 'tag'; t.style.color = '#9fd0ff'; t.textContent = '銃'; nm.appendChild(t); own.textContent = ownedGun ? '持っている' : ''; }
+    b.addEventListener('click', () => { if (points < it.price || (it.gunId && itemCount(it.id) > 0)) return; points -= it.price; INV[it.id] = it.gunId ? 1 : itemCount(it.id) + 1; saveShop(); renderShop(); if (it.id === 'hair') unlock('hair'); if (it.gunId) { loadout = it.gunId; store.set('dk_wpn', loadout); renderWpnSel(); } });
     ft.append(pr, own, b); c.append(nm, ds, ft); box.appendChild(c);
   }
   updatePtsUI();
@@ -1138,6 +1260,7 @@ function renderItems() {
   const box = $('items'); if (!box) return; box.textContent = '';
   const hunter = !!(NET && NET.started && NET.myRole === 'hunter');
   for (const it of ITEMS) {
+    if (it.gunId) continue;
     const n = itemCount(it.id); if (!n) continue;
     if (hunter && !['drink', 'hair'].includes(it.id)) continue;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'islot' + (it.key ? '' : ' passive');
@@ -1165,7 +1288,7 @@ function useItem(id) {
     case 'hair': message(NET ? '謎の毛を握りしめた。……何も起きない。' : '謎の毛を握りしめた。……保健室の育毛剤があれば何か起きるかも', 2.5); return;
     case 'ally': {
       const e = allyCandidate(P.pos.x, P.pos.z);
-      if (!e) { message('近く（10m以内）に大介先生がいない', 2); return; }
+      if (!e) { message('近く（10m以内）にDAISUKE先生がいない', 2); return; }
       if (NET && NET.started) act('ally', { i: enemies.indexOf(e) }); else makeAlly(e, 'me');
       unlock('ally'); break; }
     case 'pet': {
@@ -1190,7 +1313,7 @@ function buzzAt(x, z) {
   }
 }
 
-// ---- お助けペット: runs to the nearest teacher (大介先生 first) and knocks him down
+// ---- お助けペット: runs to the nearest teacher (DAISUKE先生 first) and knocks him down
 let pets = [];
 function makeDog() {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
@@ -1335,12 +1458,12 @@ function updateClone(dt) {
   c.cone.visible = flashOn;
 }
 
-// ---- なかまの腕章: a 大介先生 fights on your side for 45 s
+// ---- なかまの腕章: a DAISUKE先生 fights on your side for 45 s
 function allyCandidate(x, z) {
   let best = null, bd = 10;
   for (const e of enemies) {
     if (!e.active || e.kind === 'fast' || e.downT > 0 || e.ndown || e.allyT > 0 || e.nally) continue;
-    if (e.remote && !e.netAI) continue;   // a human 大介先生 can't be won over
+    if (e.remote && !e.netAI) continue;   // a human DAISUKE先生 can't be won over
     const d = Math.hypot(e.pos.x - x, e.pos.z - z); if (d < bd) { bd = d; best = e; }
   }
   return best;
@@ -1353,7 +1476,7 @@ function setAllyLook(e, on) {
 function makeAlly(e, owner) {
   e.allyT = 45; e.owner = owner; e.state = 'ally'; e.route = []; e.sees = false; e.stunT = 0; e.arp = 0; e.lurk = 0;
   setAllyLook(e, true);
-  if (!NET) message('大介先生に「なかまの腕章」をつけた！ 45秒間、味方になってくれる', 3.5);
+  if (!NET) message('DAISUKE先生に「なかまの腕章」をつけた！ 45秒間、味方になってくれる', 3.5);
 }
 function allyOwnerPos(e) {
   if (!NET || !NET.started || e.owner === NET.myId) return P.out ? null : P.pos;
@@ -1362,10 +1485,10 @@ function allyOwnerPos(e) {
 }
 function updateAlly(e, dt) {
   const before = e.allyT; e.allyT -= dt;
-  if (before > 5 && e.allyT <= 5) { const m = 'あと5秒で腕章の効果が切れる――大介先生から離れろ！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3); }
+  if (before > 5 && e.allyT <= 5) { const m = 'あと5秒で腕章の効果が切れる――DAISUKE先生から離れろ！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3); }
   if (e.allyT <= 0) {
     e.allyT = 0; setAllyLook(e, false); e.state = 'patrol'; e.stunT = 4; e.route = []; newPatrol(e);
-    const m = '腕章の効果が切れた…大介先生がもとに戻る！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
+    const m = '腕章の効果が切れた…DAISUKE先生がもとに戻る！'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
     return;
   }
   const C = e.cfg; let speed = 0, goal = null;
@@ -1379,9 +1502,9 @@ function updateAlly(e, dt) {
   if (foe) {
     goal = foe.pos; speed = C.chase * 1.08;
     if (fd < 1.3) {
-      if (NET && NET.started && foe.remote && !foe.netAI) { NET.hunterStunT = 12; netEvent({ k: 'stun', t: 12, why: '味方の大介先生' }); }
+      if (NET && NET.started && foe.remote && !foe.netAI) { NET.hunterStunT = 12; netEvent({ k: 'stun', t: 12, why: '味方のDAISUKE先生' }); }
       else { foe.downT = 20; foe.route = []; foe.state = 'patrol'; foe.sees = false; }
-      const m = 'ガシッ！ 味方の大介先生がほかの先生を押さえこんだ'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
+      const m = 'ガシッ！ 味方のDAISUKE先生がほかの先生を押さえこんだ'; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
       e.route = []; goal = null;
     }
   } else {
@@ -1427,7 +1550,7 @@ function switchSpect(d) {
 }
 function updateSpectName() {
   const pl = NET && NET.players.get(SPECT.id); if (!pl) return;
-  $('spName').textContent = `観戦中：${pl.name}${pl.role === 'hunter' ? '（大介先生）' : ''}`;
+  $('spName').textContent = `観戦中：${pl.name}${pl.role === 'hunter' ? '（DAISUKE先生）' : ''}`;
 }
 function updateSpectate(dt) {
   const L = spectList();
@@ -1448,14 +1571,532 @@ function updateSpectate(dt) {
   camera.position.set(P.pos.x, P.eye + UI.spJump, P.pos.z); camera.rotation.set(P.pitch, P.yaw, 0, 'YXZ');
 }
 
+// ================================================================== FPS mode: guns, enemies that shoot back, objectives
+const WEAPONS = {
+  pistol:  { name: 'ハンドガン', dmg: 30, rpm: 330, mag: 12, res: 96, reload: 1.3, spread: 0.012, auto: false, pellets: 1, snd: 'gun_pistol', rate: 1.05, vol: 0.5, kick: 0.02, fov: 58 },
+  smg:     { name: 'サブマシンガン', dmg: 18, rpm: 820, mag: 32, res: 224, reload: 1.9, spread: 0.03, auto: true, pellets: 1, snd: 'gun_pistol', rate: 1.32, vol: 0.4, kick: 0.012, fov: 58 },
+  ar:      { name: 'アサルトライフル', dmg: 26, rpm: 620, mag: 30, res: 180, reload: 2.2, spread: 0.016, auto: true, pellets: 1, snd: 'gun_heavy', rate: 1.3, vol: 0.45, kick: 0.016, fov: 50 },
+  shotgun: { name: 'ショットガン', dmg: 16, rpm: 78, mag: 6, res: 42, reload: 2.6, spread: 0.075, auto: false, pellets: 8, snd: 'gun_shotgun', rate: 1, vol: 0.65, kick: 0.07, fov: 60, pump: true },
+  sniper:  { name: 'スナイパーライフル', dmg: 130, rpm: 42, mag: 5, res: 35, reload: 2.8, spread: 0.06, adsSpread: 0.0006, auto: false, pellets: 1, snd: 'gun_heavy', rate: 0.72, vol: 0.75, kick: 0.08, fov: 20, scope: true },
+};
+const GUN_ITEMS = ['smg', 'shotgun', 'ar', 'sniper'];
+const ownsGun = (w) => w === 'pistol' || itemCount('g_' + w) > 0;
+const FP = { slots: ['pistol'], cur: 0, ammo: {}, reloadT: 0, fireCd: 0, firing: false, ads: false, adsK: 0, bloom: 0, kick: 0, kills: 0, score: 0, killsNeed: 6, swapT: 0, fired: false, hmT: 0, dmgT: 0, touchFire: null };
+const KILLS_NEED = { easy: 4, normal: 6, hard: 8, super: 10 };
+const ENEMY_DMG = { easy: 6, normal: 8, hard: 10, super: 12 };
+const ENEMY_ACC = { easy: 0.32, normal: 0.42, hard: 0.5, super: 0.56 };
+const ENEMY_HP = { easy: 80, normal: 100, hard: 120, super: 140 };
+let loadout = store.get('dk_wpn', 'pistol'); if (!WEAPONS[loadout]) loadout = 'pistol';
+const isFPS = () => MODE === 'fps';
+const curW = () => WEAPONS[FP.slots[FP.cur]];
+
+// ---- gun models (viewmodel + the teachers' guns)
+const GUNMAT = { metal: new THREE.MeshStandardMaterial({ color: 0x2b2e33, metalness: 0.6, roughness: 0.38 }), dark: new THREE.MeshStandardMaterial({ color: 0x141518, roughness: 0.6 }),
+  wood: new THREE.MeshStandardMaterial({ color: 0x6b4426, roughness: 0.7 }), glass: new THREE.MeshStandardMaterial({ color: 0x0a1a24, metalness: 0.4, roughness: 0.1, emissive: 0x06202a }) };
+function makeGunModel(kind) {
+  const g = new THREE.Group();
+  const bx = (w, h, d, m, x, y, z, rx = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.x = rx; g.add(o); return o; };
+  const cyl = (r, l, m, x, y, z) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r, r, l, 10), m); o.rotation.x = Math.PI / 2; o.position.set(x, y, z); g.add(o); return o; };
+  let tip = -0.2;
+  if (kind === 'pistol') { bx(0.034, 0.045, 0.19, GUNMAT.metal, 0, 0.02, -0.05); bx(0.03, 0.09, 0.045, GUNMAT.dark, 0, -0.04, 0.02, -0.25); tip = -0.15; }
+  else if (kind === 'smg') { bx(0.045, 0.07, 0.3, GUNMAT.metal, 0, 0.02, -0.08); bx(0.03, 0.13, 0.04, GUNMAT.dark, 0, -0.07, -0.08); bx(0.03, 0.08, 0.04, GUNMAT.dark, 0, -0.04, 0.04, -0.3); cyl(0.012, 0.08, GUNMAT.dark, 0, 0.03, -0.27); tip = -0.31; }
+  else if (kind === 'ar') { bx(0.05, 0.075, 0.44, GUNMAT.metal, 0, 0.02, -0.12); bx(0.035, 0.14, 0.05, GUNMAT.dark, 0, -0.08, -0.12, 0.25); bx(0.035, 0.09, 0.04, GUNMAT.dark, 0, -0.04, 0.03, -0.3); bx(0.045, 0.07, 0.18, GUNMAT.dark, 0, 0.0, 0.17); cyl(0.013, 0.2, GUNMAT.dark, 0, 0.03, -0.42); bx(0.02, 0.03, 0.06, GUNMAT.dark, 0, 0.075, -0.05); tip = -0.52; }
+  else if (kind === 'shotgun') { cyl(0.02, 0.62, GUNMAT.metal, 0, 0.03, -0.2); cyl(0.018, 0.5, GUNMAT.dark, 0, -0.01, -0.16); bx(0.05, 0.05, 0.13, GUNMAT.wood, 0, -0.01, -0.22); bx(0.045, 0.06, 0.12, GUNMAT.metal, 0, 0.02, 0.07); bx(0.04, 0.08, 0.22, GUNMAT.wood, 0, -0.03, 0.22, 0.12); tip = -0.51; }
+  else { bx(0.045, 0.07, 0.42, GUNMAT.metal, 0, 0.02, -0.06); cyl(0.012, 0.42, GUNMAT.dark, 0, 0.03, -0.47); bx(0.045, 0.085, 0.24, GUNMAT.wood, 0, -0.01, 0.24, 0.1); cyl(0.022, 0.22, GUNMAT.dark, 0, 0.1, -0.06); cyl(0.02, 0.01, GUNMAT.glass, 0, 0.1, 0.055); bx(0.03, 0.1, 0.04, GUNMAT.dark, 0, -0.06, 0.06, -0.3); tip = -0.69; }
+  const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.03, tip); g.add(muzzle); g.userData.muzzle = muzzle;
+  return g;
+}
+// viewmodel (attached to the camera)
+const VM = new THREE.Group(); camera.add(VM); VM.visible = false; VM.scale.setScalar(IS_TOUCH ? 0.6 : 0.72);
+const vmLight = new THREE.PointLight(0xfff2e0, 0.45, 1.4, 2); vmLight.position.set(0.1, 0.25, -0.45); camera.add(vmLight); vmLight.visible = false;
+const muzzleLight = new THREE.PointLight(0xffb050, 0, 7, 2); camera.add(muzzleLight); muzzleLight.position.set(0.2, -0.1, -0.7);
+const flashSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xffc070, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); flashSprite.scale.set(0.28, 0.28, 1); flashSprite.visible = false;
+let vmModel = null;
+function setViewModel(kind) {
+  if (vmModel) VM.remove(vmModel);
+  vmModel = makeGunModel(kind); VM.add(vmModel); vmModel.userData.muzzle.add(flashSprite);
+  vmModel.traverse(o => { if (o.isMesh) { o.renderOrder = 10; } });
+}
+
+// ---- tracers / muzzle flashes / impacts (pooled)
+const tracerMat = new THREE.LineBasicMaterial({ color: 0xffe2a0, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+const tracers = [];
+for (let i = 0; i < 28; i++) { const geo = new THREE.BufferGeometry().setFromPoints([new V3(), new V3(0, 0, -1)]); const l = new THREE.Line(geo, tracerMat.clone()); l.visible = false; l.frustumCulled = false; scene.add(l); tracers.push({ l, t: 0 }); }
+let tracerI = 0;
+function drawTracer(a, b, col = 0xffe2a0) {
+  const tr = tracers[tracerI++ % tracers.length]; const pa = tr.l.geometry.attributes.position;
+  pa.setXYZ(0, a.x, a.y, a.z); pa.setXYZ(1, b.x, b.y, b.z); pa.needsUpdate = true; tr.l.material.color.setHex(col); tr.l.visible = true; tr.t = 0.07;
+}
+const flashes = [];
+for (let i = 0; i < 10; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xffb060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); s.visible = false; scene.add(s); flashes.push({ s, t: 0 }); }
+let flashI = 0;
+function worldFlash(p, size = 0.5, col = 0xffb060) { const f = flashes[flashI++ % flashes.length]; f.s.position.copy(p); f.s.scale.set(size, size, 1); f.s.material.color.setHex(col); f.s.visible = true; f.t = 0.06; }
+function updateFx(dt) {
+  for (const tr of tracers) if (tr.t > 0) { tr.t -= dt; tr.l.material.opacity = Math.max(0, tr.t / 0.07) * 0.9; if (tr.t <= 0) tr.l.visible = false; }
+  for (const f of flashes) if (f.t > 0) { f.t -= dt; if (f.t <= 0) f.s.visible = false; }
+  if (FP.flashT > 0) { FP.flashT -= dt; if (FP.flashT <= 0) { flashSprite.visible = false; muzzleLight.intensity = 0; } }
+}
+
+// ---- sounds
+function playSfx(key, vol = 1, rate = 1) {
+  if (!actx || !sfx[key]) return;
+  const src = actx.createBufferSource(); src.buffer = sfx[key]; src.playbackRate.value = rate * (0.96 + Math.random() * 0.08);
+  const g = actx.createGain(); g.gain.value = vol; src.connect(g); g.connect(master); src.start();
+}
+function playSfxAt(key, pos, vol = 1, rate = 1) {
+  if (!actx || !sfx[key]) return;
+  const d = Math.hypot(pos.x - P.pos.x, pos.z - P.pos.z); const v = vol * Math.pow(clamp(1 - d / 45, 0, 1), 1.3); if (v < 0.01) return;
+  const src = actx.createBufferSource(); src.buffer = sfx[key]; src.playbackRate.value = rate * (0.95 + Math.random() * 0.1);
+  const g = actx.createGain(); g.gain.value = v; src.connect(g);
+  if (actx.createStereoPanner) { const pn = actx.createStereoPanner(); const dx = (pos.x - P.pos.x) / (d || 1), dz = (pos.z - P.pos.z) / (d || 1); pn.pan.value = clamp(dx * Math.cos(P.yaw) - dz * Math.sin(P.yaw), -1, 1) * 0.7; g.connect(pn); pn.connect(master); } else g.connect(master);
+  src.start();
+}
+
+// ---- ray tests
+function slab3(o, d, x0, y0, z0, x1, y1, z1) {
+  let t0 = 0, t1 = 1e9;
+  for (const [oo, dd, a, b] of [[o.x, d.x, x0, x1], [o.y, d.y, y0, y1], [o.z, d.z, z0, z1]]) {
+    if (Math.abs(dd) < 1e-9) { if (oo < a || oo > b) return null; continue; }
+    let ta = (a - oo) / dd, tb = (b - oo) / dd; if (ta > tb) [ta, tb] = [tb, ta];
+    if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; if (t0 > t1) return null;
+  }
+  return t0;
+}
+function rayWorld(o, d, maxT) {
+  let best = maxT;
+  if (d.y < -1e-4) best = Math.min(best, (0 - o.y) / d.y); if (d.y > 1e-4) best = Math.min(best, (CEIL - o.y) / d.y);
+  const steps = Math.ceil(best / 1.5) + 1, cand = new Set();
+  for (let k = 0; k <= steps; k++) { const t = best * k / steps; for (const i of nearBoxes(o.x + d.x * t, o.z + d.z * t, 0.8)) cand.add(i); }
+  for (const i of cand) { const b = boxes[i]; if (!solid(b)) continue; const top = b[4] === 'F' ? Math.min(b[5] ?? 9, CEIL) : CEIL;
+    const t = slab3(o, d, b[0], 0, b[1], b[2], top, b[3]); if (t !== null && t > 0.02 && t < best) best = t; }
+  return best;
+}
+function rayCyl(o, d, cx, cz, y0, y1, r) {
+  const ox = o.x - cx, oz = o.z - cz, a = d.x * d.x + d.z * d.z; if (a < 1e-8) return null;
+  const b = 2 * (ox * d.x + oz * d.z), c = ox * ox + oz * oz - r * r, disc = b * b - 4 * a * c; if (disc < 0) return null;
+  const sq = Math.sqrt(disc), t1 = (-b - sq) / (2 * a), t2 = (-b + sq) / (2 * a); if (t2 < 0) return null;
+  for (const t of [Math.max(0, t1), (Math.max(0, t1) + t2) / 2, t2]) { const y = o.y + d.y * t; if (y >= y0 && y <= y1) return { t, y }; }
+  return null;
+}
+// things a shot can hit: [{kind:'enemy'|'player'|'bot', ref, x, z, y0, y1, head}]
+function shotTargets(byHunter) {
+  const out = [];
+  if (!byHunter) for (const e of enemies) {
+    if (!e.active || e.dead || e.ndead || e.allyT > 0 || e.nally) continue;
+    if (NET && NET.started && e.remote && !e.netAI && SPECT.id === NET.hunterId) continue;
+    const top = e.kind === 'fast' ? 1.88 : 1.74; out.push({ kind: 'enemy', ref: e, x: e.pos.x, z: e.pos.z, y0: e.pos.y, y1: e.pos.y + top, head: e.pos.y + top - 0.26, r: 0.36 });
+  }
+  if (byHunter && NET && NET.started) {
+    for (const a of avatars.values()) { if (a.kind !== 'student') continue; const pl = NET.players.get(a.id); if (!pl || !pl.alive || pl.escaped) continue;
+      const crouch = (pl.f | 0) & 1, y0 = pl.py || 0; out.push({ kind: 'player', ref: pl, x: a.x, z: a.z, y0, y1: y0 + (crouch ? 1.15 : 1.75), head: y0 + (crouch ? 0.95 : 1.5), r: 0.34 }); }
+    for (const b of bots) { if (b.state === 'down' || b.state === 'out') continue; out.push({ kind: 'bot', ref: b, x: b.pos.x, z: b.pos.z, y0: 0, y1: b.crouch ? 1.15 : 1.75, head: 1.5, r: 0.34 }); }
+  }
+  return out;
+}
+function castShot(o, d, range, byHunter) {
+  const wallT = rayWorld(o, d, range);
+  let best = null;
+  for (const tg of shotTargets(byHunter)) { const h = rayCyl(o, d, tg.x, tg.z, tg.y0, tg.y1, tg.r); if (h && h.t < wallT && (!best || h.t < best.t)) best = Object.assign({ t: h.t, y: h.y }, { tg, hs: h.y > tg.head }); }
+  return { wallT, hit: best };
+}
+
+// ---- the player's gun
+function fpsResetLoadout() {
+  const prim = ownsGun(loadout) ? loadout : 'pistol';
+  FP.slots = prim === 'pistol' ? ['pistol'] : [prim, 'pistol']; FP.cur = 0; FP.ammo = {};
+  for (const w of FP.slots) FP.ammo[w] = { mag: WEAPONS[w].mag, res: WEAPONS[w].res };
+  FP.reloadT = 0; FP.fireCd = 0; FP.firing = false; FP.ads = false; FP.adsK = 0; FP.bloom = 0; FP.kick = 0; FP.kills = 0; FP.score = 0; FP.swapT = 0; FP.hmT = 0; FP.dmgT = 0;
+  FP.killsNeed = KILLS_NEED[diffKey] || 6;
+  setViewModel(FP.slots[0]);
+}
+function fpsArmed() { return isFPS() && state === 'play' && !P.out && !P.downed && !(NET && NET.started && NET.myRole === 'hunter' && (hunterHold > 0 || P.stunT > 0 || freezeT > 0)); }
+function startReload() {
+  const w = curW(), a = FP.ammo[FP.slots[FP.cur]];
+  if (FP.reloadT > 0 || a.mag >= w.mag || a.res <= 0) return;
+  FP.reloadT = w.reload; playSfx('reload1', 0.5); setTimeout(() => { if (FP.reloadT > 0) playSfx(w.pump ? 'pump' : 'reload2', 0.55); }, w.reload * 450);
+}
+function swapWeapon() {
+  if (FP.slots.length < 2 || !fpsArmed()) return;
+  FP.cur = (FP.cur + 1) % FP.slots.length; FP.reloadT = 0; FP.swapT = 0.35; FP.ads = false; setViewModel(FP.slots[FP.cur]); playSfx('wswitch', 0.5);
+}
+const _o = new V3(), _d = new V3(), _q = new V3();
+function fireWeapon() {
+  const wid = FP.slots[FP.cur], w = WEAPONS[wid], a = FP.ammo[wid];
+  if (FP.fireCd > 0 || FP.reloadT > 0 || FP.swapT > 0) return;
+  if (a.mag <= 0) { FP.firing = w.auto && FP.firing; startReload(); return; }
+  a.mag--; FP.fireCd = 60 / w.rpm; FP.fired = true;
+  const hunter = !!(NET && NET.started && NET.myRole === 'hunter');
+  camera.getWorldPosition(_o); camera.getWorldDirection(_d);
+  const moving = Math.hypot(P.vel.x, P.vel.z) > 1, air = P.jumpY > groundAt(P.pos.x, P.pos.z, P.jumpY) + 0.05;
+  let spread = (FP.ads && w.adsSpread !== undefined ? w.adsSpread : w.spread * (FP.ads ? 0.4 : 1)) + FP.bloom + (moving ? 0.012 : 0) + (air ? 0.03 : 0) + (P.crouch ? -0.004 : 0);
+  spread = Math.max(0.0004, spread);
+  const muzzle = vmModel ? vmModel.userData.muzzle.getWorldPosition(_q.set(0, 0, 0)).clone() : _o.clone();
+  let anyHit = false, killed = false, hs = false;
+  for (let k = 0; k < w.pellets; k++) {
+    const d = _d.clone(); d.x += (Math.random() - 0.5) * 2 * spread; d.y += (Math.random() - 0.5) * 2 * spread; d.z += (Math.random() - 0.5) * 2 * spread; d.normalize();
+    const res = castShot(_o, d, 70, hunter);
+    const end = _o.clone().addScaledVector(d, res.hit ? res.hit.t : res.wallT);
+    if (k < 3) drawTracer(muzzle, end);
+    if (res.hit) {
+      anyHit = true; const dmg = Math.round(w.dmg * (res.hit.hs ? (wid === 'sniper' ? 2 : 1.6) : 1) * (res.hit.t > 30 && wid === 'shotgun' ? 0.3 : 1)); if (res.hit.hs) hs = true;
+      const tg = res.hit.tg;
+      if (tg.kind === 'enemy') { if (damageEnemy(tg.ref, dmg, NET ? NET.myId : 'me', myDisplayName(), res.hit.hs, P.pos)) killed = true; }
+      else if (tg.kind === 'player') act('phit', { id: tg.ref.id, dmg, hs: res.hit.hs ? 1 : 0, x: P.pos.x, z: P.pos.z });
+      else if (tg.kind === 'bot') act('bhit', { i: tg.ref.idx, dmg, hs: res.hit.hs ? 1 : 0 });
+      worldFlash(end, 0.25, 0xff7050);
+    } else if (res.wallT < 70) worldFlash(end, 0.18, 0xffe0a0);
+  }
+  if (anyHit) { showHitmarker(killed); playSfx('hit', killed ? 0.5 : 0.28, killed ? 0.8 : 1.4); if (hs) unlock('headshot'); }
+  playSfx(w.snd, w.vol, w.rate);
+  if (NET && NET.started) act('shot', { x: +muzzle.x.toFixed(2), y: +muzzle.y.toFixed(2), z: +muzzle.z.toFixed(2), ex: +(_o.x + _d.x * 20).toFixed(1), ey: +(_o.y + _d.y * 20).toFixed(1), ez: +(_o.z + _d.z * 20).toFixed(1), w: wid });
+  P.noise = Math.max(P.noise, 22);
+  FP.bloom = Math.min(0.06, FP.bloom + w.spread * 0.35); FP.kick = Math.min(1, FP.kick + 0.6);
+  P.pitch = clamp(P.pitch + w.kick * (FP.ads ? 0.6 : 1), -1.3, 1.3); P.yaw += (Math.random() - 0.5) * w.kick * 0.4;
+  flashSprite.visible = true; muzzleLight.intensity = 5; FP.flashT = 0.045;
+  if (!w.auto) FP.firing = false;
+  if (a.mag === 0 && a.res > 0) setTimeout(() => startReload(), 180);
+}
+function updateGun(dt) {
+  const w = curW(), wid = FP.slots[FP.cur];
+  FP.fireCd = Math.max(0, FP.fireCd - dt); FP.swapT = Math.max(0, FP.swapT - dt);
+  FP.bloom = Math.max(0, FP.bloom - dt * 0.12); FP.kick = Math.max(0, FP.kick - dt * 9);
+  if (FP.reloadT > 0) { FP.reloadT -= dt; if (FP.reloadT <= 0) { FP.reloadT = 0; const a = FP.ammo[wid], n = Math.min(w.mag - a.mag, a.res); a.mag += n; a.res -= n; playSfx('reload3', 0.55); } }
+  if (FP.firing && fpsArmed()) fireWeapon();
+  FP.adsK += ((FP.ads && fpsArmed() && FP.reloadT <= 0 ? 1 : 0) - FP.adsK) * Math.min(1, dt * 12);
+  // viewmodel sway / recoil / ads
+  const hv = Math.hypot(P.vel.x, P.vel.z), bob = Math.sin(P.bob * 1.0) * 0.012 * Math.min(1, hv / 3) * (1 - FP.adsK);
+  const rel = FP.reloadT > 0 ? Math.sin(Math.min(1, (w.reload - FP.reloadT) / w.reload) * Math.PI) : 0;
+  const hip = new V3(0.17, -0.17, -0.36), ads = new V3(0, -0.078 + (w.scope ? -0.045 : 0), -0.26);
+  VM.position.lerpVectors(hip, ads, FP.adsK); VM.position.y += bob - rel * 0.18 - FP.swapT * 0.5; VM.position.x += Math.cos(P.bob * 0.5) * 0.01 * Math.min(1, hv / 3);
+  VM.position.z += FP.kick * 0.06; VM.rotation.set(FP.kick * 0.12 + rel * 0.5, 0, rel * 0.4);
+  VM.visible = isFPS() && state === 'play' && !P.out && !P.downed && !(w.scope && FP.adsK > 0.85);
+  // field of view
+  const target = baseFov - (baseFov - w.fov * (camera.aspect < 1 ? 1.15 : 1)) * FP.adsK;
+  if (Math.abs(camera.fov - target) > 0.05) { camera.fov = target; camera.updateProjectionMatrix(); }
+}
+function myDisplayName() { return NET && NET.started ? (NET.players.get(NET.myId)?.name || 'あなた') : 'あなた'; }
+
+// ---- damage to the teachers
+function enemyName(e) { return e.kind === 'fast' ? 'もう一人の先生' : 'DAISUKE先生'; }
+function damageEnemy(e, dmg, byId, byName, hs, fromPos) {
+  if (!e || e.dead || e.ndead) return false;
+  if (NET && NET.started && !NET.host) {   // the host owns the teachers: tell it, show the hit locally
+    if (e.remote && !e.netAI) { act('hhit', { dmg, hs: hs ? 1 : 0, x: P.pos.x, z: P.pos.z }); return (e.chp ?? 9999) <= dmg; }
+    act('hit', { i: enemies.indexOf(e), dmg, hs: hs ? 1 : 0, x: fromPos ? fromPos.x : 0, z: fromPos ? fromPos.z : 0 }); e.chp = (e.chp ?? e.maxHp ?? 100) - dmg; return e.chp <= 0;
+  }
+  if (NET && NET.started && e.remote && !e.netAI) { hostHunterHit(dmg, byName, fromPos); return NET.hunterHP <= 0; }
+  e.hp -= dmg; e.stunT = Math.max(e.stunT || 0, 0.12);
+  if (fromPos && e.state !== 'chase') { e.lastKnown.set(fromPos.x, 0, fromPos.z); e.state = 'search'; e.alert = true; routeTo(e, e.lastKnown); }
+  if (e.hp <= 0) { killEnemy(e, byId, byName, hs); return true; }
+  return false;
+}
+function killEnemy(e, byId, byName, hs) {
+  e.hp = 0; e.dead = true; e.deadT = 12; e.state = 'dead'; e.route = []; e.sees = false; e.moving = false; lieDown(e, true);
+  FP.kills++; if (!NET && byId === 'me') FP.score += hs ? 150 : 100;
+  const text = `${byName} ▶ ${enemyName(e)}${hs ? '（ヘッドショット）' : ''}`;
+  if (NET && NET.started) netEvent({ k: 'kill', text, by: byId, kills: FP.kills }); else { addKillfeed(text); checkObjectives(); }
+}
+function respawnEnemy(e) {
+  let best = null, bd = -1;
+  for (const v of RESPAWNS) { let dmin = 1e9; for (const t of AIT) dmin = Math.min(dmin, Math.hypot(v.x - t.pos.x, v.z - t.pos.z)); if (dmin > bd) { bd = dmin; best = v; } }
+  e.dead = false; e.group.visible = true; lieDown(e, false); e.hp = e.maxHp; e.pos.copy(best || ENEMY_SPAWN[0]); e.state = 'patrol'; e.route = []; newPatrol(e); e.stunT = 0;
+}
+// ---- the teachers shoot back
+function enemyShoot(e, t) {
+  const o = gunMuzzleOf(e), aim = new V3(t.pos.x, (t.y || 0) + (t.crouch ? 0.95 : 1.35), t.pos.z);
+  const d = Math.hypot(aim.x - o.x, aim.z - o.z);
+  let acc = (ENEMY_ACC[diffKey] || 0.42) - d / 70; if (t.moving) acc *= 0.65; if (t.crouch) acc *= 0.75; if (t.hidden) acc *= 0.5; if (NET && NET.started) acc = (ENEMY_ACC.normal) - d / 70;
+  const hit = Math.random() < clamp(acc, 0.06, 0.85);
+  const end = hit ? aim : aim.clone().add(new V3((Math.random() - 0.5) * 2.4, (Math.random() - 0.3) * 1.2, (Math.random() - 0.5) * 2.4));
+  drawTracer(o, end, 0xffb070); worldFlash(o, 0.45); playSfxAt(e.kind === 'fast' ? 'gun_heavy' : 'gun_pistol', o, 0.55, e.kind === 'fast' ? 1.25 : 0.95);
+  if (NET && NET.started) netEvent({ k: 'esh', i: enemies.indexOf(e), x: +end.x.toFixed(1), y: +end.y.toFixed(1), z: +end.z.toFixed(1) }, true);
+  if (hit) hitTarget(t, NET && NET.started ? ENEMY_DMG.normal : ENEMY_DMG[diffKey] || 8, e.pos, enemyName(e));
+}
+function hitTarget(t, dmg, from, byName) {
+  if (t.local) hurtPlayer(dmg, from, byName);
+  else if (t.bot) hurtBot(t.bot, dmg, byName);
+  else if (t.ref && NET && NET.host) { if (t.ref.id === NET.myId) hurtPlayer(dmg, from, byName); else sendTo(t.ref.id, { t: 'ev', k: 'dmg', amt: dmg, x: from.x, z: from.z, by: byName }); }
+}
+const _gm = new V3();
+function gunMuzzleOf(e) {
+  if (e.gun) { e.gun.updateMatrixWorld(true); return e.gun.userData.muzzle.getWorldPosition(_gm.set(0, 0, 0)).clone(); }
+  return new V3(e.pos.x + Math.sin(e.yaw) * 0.5, 1.35, e.pos.z + Math.cos(e.yaw) * 0.5);
+}
+function attachEnemyGun(e) {
+  if (e.gun) return;
+  e.gun = makeGunModel(e.kind === 'fast' ? 'smg' : 'ar'); e.gun.scale.setScalar(1.0); e.gun.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(e.gun);
+  e.handBone = null; e.group.traverse(o => { if (o.isBone && o.name === 'hand.R') e.handBone = o; });
+}
+const _hp = new V3();
+function updateEnemyGun(e) {
+  if (!e.gun) return;
+  const show = isFPS() && e.active && !e.dead && !e.ndead && !(e.downT > 0) && !e.ndown && e.group.visible && state !== 'title';
+  e.gun.visible = show; if (!show) return;
+  if (e.handBone) e.handBone.getWorldPosition(_hp); else if (e.limbs) { e.limbs.elR.getWorldPosition(_hp); _hp.y -= 0.3; }
+  else _hp.set(e.pos.x, 1.2, e.pos.z);
+  const fwd = e.yaw; // the teachers face +z in their own frame
+  e.gun.position.set(_hp.x + Math.sin(fwd) * 0.12, _hp.y + 0.02, _hp.z + Math.cos(fwd) * 0.12);
+  e.gun.rotation.set(0, fwd + Math.PI, 0);
+}
+
+// ---- hurting the player
+function hurtPlayer(dmg, from, byName) {
+  if (state !== 'play' || P.out || P.downed || !isFPS()) return;
+  if (NET && NET.started && NET.myRole === 'hunter') { return; }
+  P.hp -= dmg; P.hurtT = 0; FP.dmgT = 1;
+  if (from) { const ang = Math.atan2(from.x - P.pos.x, from.z - P.pos.z); FP.dmgAng = ang; }
+  if (P.hp <= 0) { P.hp = 0; playerDownFPS(byName); }
+}
+function playerDownFPS(byName) {
+  FP.firing = false; FP.ads = false;
+  if (NET && NET.started) {
+    P.downed = true; act('dead', { by: byName || '' });   // the host turns this into "caught" -> spectate, teammates can revive
+    return;
+  }
+  if (bots.some(b => b.state !== 'down' && b.state !== 'out')) { P.downed = true; P.downT = 25; P.crouch = false; message('ダウン！ BOTが助けに来るまで耐えろ（25秒）', 3.5); }
+  else fpsGameOver(byName);
+}
+function fpsGameOver(byName) {
+  state = 'end'; showPlayUI(false); unlockPointer(); setMasterVolume(0); $('earned').textContent = '';
+  addHist({ mode: 'FPS', diff: D.label, res: 'やられた', time: playT, pts: 0 });
+  $('endTitle').textContent = 'やられた…'; $('endTitle').style.color = '';
+  $('endText').innerHTML = `${byName ? byName + 'に倒された　' : ''}ステージ：${STAGE.name}　難易度：${D.label}<br>教科書：${collected} / ${books.length + collected}　撃破：${FP.kills} / ${FP.killsNeed}　スコア：${FP.score}`;
+  $('end').classList.remove('hidden');
+}
+function checkObjectives() {
+  if (!isFPS() || state !== 'play') return;
+  updateCount();
+  if (books.length === 0 && FP.kills >= FP.killsNeed) {
+    if (NET && NET.started) { if (NET.host) hostResult('条件クリア！'); }
+    else fpsClear();
+  }
+}
+function fpsClear() {
+  state = 'end'; showPlayUI(false); unlockPointer(); setMasterVolume(0);
+  const got = CLEAR_PTS[diffKey] + Math.floor(FP.kills / 3) + stageIdx;
+  addPoints(got); unlock('fps_clear'); unlock('first_clear'); if (diffKey !== 'easy') unlock('clear_' + diffKey);
+  addHist({ mode: 'FPS', diff: D.label, res: '条件クリア', time: playT, pts: got });
+  $('endTitle').textContent = '条件クリア！'; $('endTitle').style.color = '#7de08a';
+  $('endText').innerHTML = `ステージ：${STAGE.name}　難易度：${D.label}　タイム：${fmtTime(playT)}<br>教科書 ${collected}冊・DAISUKE先生たち ${FP.kills}人を倒した　スコア：${FP.score}`;
+  $('earned').textContent = `+${got}P（合計 ${points}P）`;
+  $('end').classList.remove('hidden');
+}
+// ---- HUD
+function showHitmarker(kill) { const h = $('hitm'); h.classList.toggle('kill', !!kill); h.style.opacity = 1; FP.hmT = 0.14; }
+function addKillfeed(text) {
+  const box = $('kfeed'); const row = document.createElement('div'); row.textContent = text; box.prepend(row);
+  while (box.children.length > 5) box.lastChild.remove(); setTimeout(() => row.remove(), 6000);
+}
+function updateFpsHud(dt) {
+  const w = curW(), a = FP.ammo[FP.slots[FP.cur]] || { mag: 0, res: 0 };
+  const key = `${w.name}|${a.mag}|${a.res}|${FP.reloadT > 0}`;
+  if (key !== UI.ammoKey) { UI.ammoKey = key; $('wName').textContent = w.name + (FP.slots.length > 1 ? (IS_TOUCH ? '' : '　[Q] 持ちかえ') : ''); $('ammoMag').textContent = a.mag; $('ammoRes').textContent = '/ ' + a.res;
+    $('ammoMag').classList.toggle('low', a.mag <= Math.ceil(w.mag * 0.25)); $('wHint').textContent = FP.reloadT > 0 ? 'リロード中…' : a.mag === 0 && a.res === 0 ? '弾切れ' : a.mag <= Math.ceil(w.mag * 0.25) ? (IS_TOUCH ? 'リロード' : '[R] リロード') : ''; }
+  const hp = Math.ceil(P.hp);
+  if (hp !== UI.hp) { UI.hp = hp; $('hpBar').style.transform = `scaleX(${hp / 100})`; $('hpNum').textContent = hp; $('hpBox').classList.toggle('low', hp < 35); }
+  const spread = (FP.ads && w.adsSpread !== undefined ? w.adsSpread : w.spread * (FP.ads ? 0.4 : 1)) + FP.bloom + (Math.hypot(P.vel.x, P.vel.z) > 1 ? 0.012 : 0);
+  const gap = Math.round(6 + spread * 520 + FP.kick * 6);
+  if (gap !== UI.gap) { UI.gap = gap; $('xh').style.setProperty('--g', gap + 'px'); }
+  $('xh').style.opacity = (1 - FP.adsK * (w.scope ? 1 : 0.85)).toFixed(2);
+  $('scope').classList.toggle('hidden', !(w.scope && FP.adsK > 0.85));
+  if (FP.hmT > 0) { FP.hmT -= dt; if (FP.hmT <= 0) $('hitm').style.opacity = 0; }
+  if (FP.dmgT > 0) { FP.dmgT = Math.max(0, FP.dmgT - dt * 1.2); }
+  const lowHp = P.hp < 35 ? 0.35 + 0.15 * Math.sin(playT * 6) : 0;
+  $('dmgFx').style.opacity = Math.max(FP.dmgT * 0.8, lowHp).toFixed(2);
+  if (FP.dmgT > 0.05 && FP.dmgAng !== undefined) { const rel = FP.dmgAng - P.yaw + Math.PI; $('dmgDir').style.opacity = FP.dmgT.toFixed(2); $('dmgDir').style.transform = `translate(-50%,-50%) rotate(${(-rel).toFixed(2)}rad)`; } else $('dmgDir').style.opacity = 0;
+  $('downFx').classList.toggle('hidden', !P.downed);
+  if (P.downed && !(NET && NET.started)) $('downFx').textContent = `ダウン中… BOTが助けに来るのを待て（${Math.ceil(P.downT)}秒）`;
+}
+function fpsObjText() {
+  const tot = collected + books.length;
+  return [`教科書を集める　${collected} / ${tot}`, `DAISUKE先生たちを倒す　${Math.min(FP.kills, FP.killsNeed)} / ${FP.killsNeed}`];
+}
+
+// ================================================================== BOTs (AI teammates)
+const BOT_NAMES = ['BOT-ケン', 'BOT-ユイ', 'BOT-ソラ', 'BOT-リク'], BOT_COLORS = [0x4fc3f7, 0xffb74d, 0xba68c8, 0x81c784];
+let bots = [], botCount = clamp(parseInt(store.get('dk_bots', '0')) || 0, 0, 3);
+function clearBots() { for (const b of bots) scene.remove(b.g); bots = []; }
+function spawnBots(n, spawnPts) {
+  clearBots();
+  for (let i = 0; i < n; i++) {
+    const st = makeStudent(BOT_COLORS[i], BOT_NAMES[i]); const sp = spawnPts[i % spawnPts.length];
+    st.g.position.set(sp[0] + (i - 1) * 0.6, 0, sp[1] + 0.8); scene.add(st.g);
+    bots.push(Object.assign(st, { idx: i, name: BOT_NAMES[i], color: BOT_COLORS[i], pos: st.g.position, yaw: Math.PI / 2, route: [], rt: Math.random(), state: 'go', hp: 100, hurtT: 9, fireCd: 0.5, spd: 0, crouch: false, hidden: false,
+      hideT: 0, downT: 0, revT: 0, goal: null, strafe: 0, aimT: 0 }));
+  }
+}
+function botTargets() { return bots.filter(b => b.state !== 'down' && b.state !== 'out').map(b => ({ id: 'bot' + b.idx, pos: b.pos, yaw: b.yaw, crouch: b.crouch, hidden: b.hidden, blown: false, invis: false, light: true, noise: b.spd > 4 ? D.hear : 0, spray: false, local: false, bot: b, moving: b.spd > 1 })); }
+function hurtBot(b, dmg, byName) {
+  if (b.state === 'down' || b.state === 'out') return;
+  b.hp -= dmg; b.hurtT = 0; if (b.hp <= 0) downBot(b, byName);
+}
+function downBot(b, byName) {
+  b.hp = 0; b.state = 'down'; b.downT = isFPS() ? 35 : 9999; b.route = []; b.crouch = false; b.hidden = false;
+  const m = isFPS() ? `${b.name}がダウン！ そばで長押しで助け起こせる` : `${b.name}がつかまった！ そばで長押しで助けられる`;
+  if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 3);
+  if (isFPS() && byName) { const t = `${byName} ▶ ${b.name}`; if (NET && NET.started) netEvent({ k: 'kill', text: t, kills: FP.kills }); else addKillfeed(t); }
+}
+function reviveBot(b) { b.state = 'go'; b.hp = 60; b.hurtT = 0; b.downT = 0; b.route = []; const m = `${b.name}が復活した！`; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 2.5); }
+function botThreat(b) {
+  let best = null, bd = 1e9;
+  for (const e of enemies) {
+    if (!e.active || e.dead || e.ndead || e.state === 'wait' || e.downT > 0 || e.ndown || e.allyT > 0 || e.nally) continue;
+    const d = Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z);
+    if (d < bd && (d < 9 || (d < 28 && lineClear(b.pos, e.pos)))) { bd = d; best = e; }
+  }
+  return best ? { e: best, d: bd } : null;
+}
+function botLeader() {   // who the bots stick with
+  if (!NET || !NET.started) return P.out || P.downed ? null : P.pos;
+  for (const p of NET.players.values()) if (p.role === 'survivor' && p.alive && !p.escaped) { p.tpos = p.tpos || new V3(); p.tpos.set(p.x || 0, 0, p.z || 0); return p.tpos; }
+  return null;
+}
+function botPathTo(b, target, every = 0.6) {
+  b.rt -= 0; if (b.rt > 0) return;
+  b.rt = every; const d = Math.hypot(target.x - b.pos.x, target.z - b.pos.z);
+  if (d < 4.5 && lineClear(b.pos, target)) { b.route = [target.clone()]; return; }
+  const p = bfs(toCell(b.pos), toCell(target)); b.route = p ? p.map(cellCenter).concat([target.clone()]) : [];
+}
+function updateBots(dt) {
+  if (NET && NET.started && !NET.host) {   // mirror the host's bots
+    const k = Math.min(1, dt * 12);
+    for (const b of bots) {
+      if (b.state === 'out') { b.g.visible = false; continue; }
+      if (b.tx === undefined) { animBot(b, 0, dt, false); continue; }
+      const px = b.pos.x, pz = b.pos.z; b.pos.x += (b.tx - b.pos.x) * k; b.pos.z += (b.tz - b.pos.z) * k;
+      let dy = b.tyaw - b.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); b.yaw += dy * k;
+      animBot(b, Math.hypot(b.pos.x - px, b.pos.z - pz) / Math.max(dt, 1e-3), dt, b.state === 'down');
+    }
+    return;
+  }
+  for (const b of bots) {
+    if (b.state === 'out') { b.g.visible = false; continue; }
+    b.rt -= dt; b.hurtT += dt; b.fireCd -= dt;
+    if (b.state === 'down') {
+      b.downT -= dt; animBot(b, 0, dt, true);
+      if (b.downT <= 0) { b.state = 'out'; b.g.visible = false; const m = `${b.name}は脱落した…`; if (NET && NET.started) netEvent({ k: 'msg', text: m }); else message(m, 2.5); }
+      continue;
+    }
+    if (isFPS() && b.hurtT > 5 && b.hp < 100) b.hp = Math.min(100, b.hp + 12 * dt);
+    let speed = 0, goal = null; b.crouch = false; b.hidden = false;
+    const th = freezeT > 0 ? null : botThreat(b);
+    // someone to help up?
+    let help = null;
+    if (!NET && P.downed) help = { pos: P.pos, isPlayer: true };
+    if (!help) for (const o of bots) if (o !== b && o.state === 'down') { help = { pos: o.pos, bot: o }; break; }
+    if (!help && NET && NET.started) for (const p of NET.players.values()) if (p.role === 'survivor' && !p.alive && !p.escaped && p.dx != null) { help = { pos: new V3(p.dx, 0, p.dz), pl: p }; break; }
+    if (isFPS()) {
+      if (th && th.d < 30 && lineClear(b.pos, th.e.pos)) {
+        // face and shoot; keep some distance
+        const e = th.e; b.yaw = Math.atan2(e.pos.x - b.pos.x, e.pos.z - b.pos.z);
+        if (b.fireCd <= 0) { b.fireCd = 0.35 + Math.random() * 0.35; botShoot(b, e); }
+        b.strafe -= dt; if (b.strafe <= 0) { b.strafe = 0.8 + Math.random(); b.sdir = Math.random() < 0.5 ? -1 : 1; }
+        const side = b.yaw + (Math.PI / 2) * (b.sdir || 1), back = th.d < 6 ? -1 : 0;
+        goal = new V3(b.pos.x + Math.sin(side) * 1.2 + Math.sin(b.yaw) * back * 2, 0, b.pos.z + Math.cos(side) * 1.2 + Math.cos(b.yaw) * back * 2);
+        b.route = [goal]; speed = 2.2; b.crouch = th.d > 12 && b.strafe > 1.2;
+      } else if (help && Math.hypot(help.pos.x - b.pos.x, help.pos.z - b.pos.z) < 40) {
+        const d = Math.hypot(help.pos.x - b.pos.x, help.pos.z - b.pos.z);
+        if (d < 1.3) { b.route = []; b.revT += dt; if (b.revT > 3) { b.revT = 0; botRevive(b, help); } }
+        else { botPathTo(b, help.pos); speed = 4.6; }
+      } else {
+        b.revT = 0;
+        const lead = botLeader(), book = nearestBook(b.pos);
+        if (book && (!lead || Math.hypot(book.x - lead.x, book.z - lead.z) < 26)) { botPathTo(b, book); speed = 3.4; }
+        else if (lead) { const d = Math.hypot(lead.x - b.pos.x, lead.z - b.pos.z); if (d > 4) { botPathTo(b, lead); speed = d > 9 ? 5 : 3.2; } else b.route = []; }
+      }
+    } else {
+      // horror: avoid the teachers, hide or run; otherwise hunt for textbooks
+      if (b.hideT > 0) { b.hideT -= dt; b.crouch = true; b.hidden = nearCover(b.pos, 1.1); b.route = []; if (th && th.d < 2.5 && th.e.sees && th.e.tgt === 'bot' + b.idx) b.hideT = 0; }
+      else if (th && th.d < 11) {
+        const chased = th.e.state === 'chase' && th.e.tgt === 'bot' + b.idx;
+        if (!chased && nearCover(b.pos, 1.0)) { b.hideT = 4 + Math.random() * 3; }
+        else { if (b.rt <= 0 || !b.route.length) { b.rt = 2; b.route = fleeRoute(b.pos, th.e.pos); } speed = 4.8; }
+      } else if (help && help.bot && Math.hypot(help.pos.x - b.pos.x, help.pos.z - b.pos.z) < 30) {
+        const d = Math.hypot(help.pos.x - b.pos.x, help.pos.z - b.pos.z);
+        if (d < 1.3) { b.route = []; b.revT += dt; if (b.revT > 3) { b.revT = 0; botRevive(b, help); } } else { botPathTo(b, help.pos); speed = 3.4; }
+      } else {
+        const book = nearestBook(b.pos);
+        if (book) { botPathTo(b, book); speed = 2.9; }
+        else if (exitOpen) { botPathTo(b, spots.exit); speed = 3.4; if (b.pos.z > 37.8 && b.pos.x > 67.5 && b.pos.x < 70.5) { b.state = 'out'; b.g.visible = false; message(`${b.name}が脱出した！`, 2.5); } }
+        else { const lead = botLeader(); if (lead && Math.hypot(lead.x - b.pos.x, lead.z - b.pos.z) > 5) { botPathTo(b, lead); speed = 2.6; } else b.route = []; }
+      }
+    }
+    // move
+    let moved = 0; const t = b.route[0];
+    if (t && speed > 0) {
+      const dx = t.x - b.pos.x, dz = t.z - b.pos.z, d = Math.hypot(dx, dz);
+      if (d < 0.3) b.route.shift();
+      else { const sp = speed * (b.crouch ? 0.5 : 1), s = Math.min(sp * dt, d); b.pos.x += dx / d * s; b.pos.z += dz / d * s; collide(b.pos, 0.3); moved = s / Math.max(dt, 1e-3);
+        if (!(isFPS() && th && th.d < 30)) { let dy = Math.atan2(dx, dz) - b.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); b.yaw += dy * Math.min(1, dt * 8); } }
+    }
+    // pick up textbooks
+    if (!(NET && NET.started && !NET.host)) for (let i = books.length - 1; i >= 0; i--) {
+      const bk = books[i]; if (Math.hypot(b.pos.x - bk.g.position.x, b.pos.z - bk.g.position.z) < 1.3) {
+        if (NET && NET.started) netEvent({ k: 'book', id: bk.id, by: 'bot', name: b.name });
+        else { scene.remove(bk.g); books.splice(i, 1); collectBook(bk, b.name); if (isFPS()) checkObjectives(); }
+      }
+    }
+    animBot(b, moved, dt, false);
+  }
+}
+function animBot(b, spd, dt, down) {
+  b.spd = (b.spd || 0) * 0.8 + spd * 0.2;
+  b.g.visible = true; b.g.rotation.y = b.yaw;
+  if (down) { b.body.rotation.x = -1.45; b.body.position.y = 0.16; b.cone.visible = false; return; }
+  b.body.rotation.x = 0; b.body.position.y = 0;
+  b.body.scale.y += ((b.crouch ? 0.6 : 1) - b.body.scale.y) * Math.min(1, dt * 10);
+  b.phase += dt * Math.min(b.spd, 6) * 3.2; const sw = Math.sin(b.phase) * Math.min(0.75, b.spd * 0.22);
+  b.legs[0].rotation.x = sw; b.legs[1].rotation.x = -sw; b.arms[0].rotation.x = -sw * 0.8; b.arms[1].rotation.x = sw * 0.8;
+  if (isFPS()) b.arms[1].rotation.x = -1.3;
+  b.gun.visible = isFPS(); b.cone.visible = true;
+}
+function nearestBook(p) { let best = null, bd = 1e9; for (const bk of books) { const d = Math.hypot(bk.g.position.x - p.x, bk.g.position.z - p.z); if (d < bd) { bd = d; best = bk.g.position; } } return best ? new V3(best.x, 0, best.z) : null; }
+function fleeRoute(from, danger) {
+  const fc = toCell(from); let bestR = null, bs = -1;
+  for (let i = 0; i < 18; i++) {
+    const cell = [Math.floor(Math.random() * W), Math.floor(Math.random() * H)], cc = cellCenter(cell);
+    const sc = Math.hypot(cc.x - danger.x, cc.z - danger.z) - 0.3 * Math.hypot(cc.x - from.x, cc.z - from.z);
+    if (sc <= bs) continue; const r = bfs(fc, cell); if (r && r.length && r.length < 20) { bs = sc; bestR = r; }
+  }
+  return bestR ? bestR.map(cellCenter) : [];
+}
+function botShoot(b, e) {
+  const o = new V3(b.pos.x + Math.sin(b.yaw) * 0.4, 1.3, b.pos.z + Math.cos(b.yaw) * 0.4), d = Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z);
+  const hit = Math.random() < clamp(0.62 - d / 60, 0.15, 0.7);
+  const end = new V3(e.pos.x + (hit ? 0 : (Math.random() - 0.5) * 2), 1.2 + (hit ? 0 : Math.random()), e.pos.z + (hit ? 0 : (Math.random() - 0.5) * 2));
+  drawTracer(o, end, 0x9fe0ff); worldFlash(o, 0.35, 0xffd080); playSfxAt('gun_pistol', o, 0.45, 1.15);
+  if (NET && NET.started) netEvent({ k: 'bsh', x: +o.x.toFixed(1), y: 1.3, z: +o.z.toFixed(1), ex: +end.x.toFixed(1), ey: +end.y.toFixed(1), ez: +end.z.toFixed(1) }, true);
+  if (hit) damageEnemy(e, 16, 'bot' + b.idx, b.name, false, b.pos);
+}
+function botRevive(b, help) {
+  if (help.isPlayer) { P.downed = false; P.hp = 50; P.hurtT = 0; message(`${b.name}が助け起こしてくれた！`, 3); }
+  else if (help.bot) reviveBot(help.bot);
+  else if (help.pl && NET && NET.host) hostRevivePlayer(help.pl, b.name, null);
+}
+
+// ---- title options: mode / stage / bots / weapon
+function setMode(m) { MODE = m; store.set('dk_mode', m); for (const b of $('modeSeg').children) b.classList.toggle('on', b.dataset.m === m); $('wpnRow').classList.toggle('hidden', m !== 'fps'); renderWpnSel(); document.body.classList.toggle('fps', m === 'fps'); if (enemies.length && state === 'title') { resetGame(); } }
+function setStage(i) { for (const b of $('stageSeg').children) b.classList.toggle('on', +b.dataset.s === i); if (i !== stageIdx || !level) { if (enemies.length) { buildWorld(i); resetGame(); } else { stageIdx = i; STAGE = STAGES[i]; store.set('dk_stage', String(i)); } } }
+function setBots(n) { botCount = n; store.set('dk_bots', String(n)); for (const b of $('botSeg').children) b.classList.toggle('on', +b.dataset.b === n); }
+function renderWpnSel() {
+  const sel = $('wpnSel'); sel.textContent = '';
+  for (const w of ['pistol', ...GUN_ITEMS]) if (ownsGun(w)) { const o = document.createElement('option'); o.value = w; o.textContent = WEAPONS[w].name; sel.appendChild(o); }
+  if (!ownsGun(loadout)) loadout = 'pistol'; sel.value = loadout;
+}
+for (const b of $('modeSeg').children) b.addEventListener('click', () => setMode(b.dataset.m));
+for (const b of $('stageSeg').children) b.addEventListener('click', () => setStage(+b.dataset.s));
+for (const b of $('botSeg').children) b.addEventListener('click', () => setBots(+b.dataset.b));
+$('wpnSel').addEventListener('change', e => { loadout = e.target.value; store.set('dk_wpn', loadout); });
+
 // ================================================================== game state
-const P = { pos: new V3(), vel: new V3(), yaw: 0, pitch: 0, stamina: 4.5, staminaMax: 4.5, sprinting: false, bob: 0, crouch: false, eye: 1.6,
+const P = { pos: new V3(), vel: new V3(), slideDir: new V3(), slideT: 0, yaw: 0, pitch: 0, stamina: 6.5, staminaMax: 6.5, sprinting: false, bob: 0, crouch: false, eye: 1.6,
   hidden: false, hideBlown: false, unseenT: 0, noise: 0, battery: 100, charging: false };
 let state = 'title', collected = 0, msgT = 0, showMap = true, freezeT = 0, musicCd = 0, bonus = 0, playT = 0, camIdx = 0, camSwT = 0;
 let curInteract = null, useHeld = false, hunterHold = 0, genBroken = false, invisUsed = 0, revT = 5, sawReveal = false, tonicUsed = false;
 const SPECT = { id: null };
 const START = { pos: new V3(12.3, 0, 4.5), yaw: Math.PI / 2 };
-const ENEMY_SPAWN = [new V3(61.5, 0, 34.5), new V3(61.5, 0, 19.5), new V3(19.5, 0, 34.5)];
+const ENEMY_SPAWN = [new V3(61.5, 0, 34.5), new V3(61.5, 0, 19.5), new V3(19.5, 0, 34.5)], RESPAWNS = [];
 const TEACHER_SPAWN = new V3(69, 0, 4.5);
 
 function resetGame() {
@@ -1464,7 +2105,7 @@ function resetGame() {
   resetDoors();
   for (const b of books) scene.remove(b.g); books = [];
   for (const p of pets) scene.remove(p.g); pets = []; UI.usedItem = false;
-  Object.assign(P, { stamina: P.staminaMax, crouch: false, eye: 1.6, hidden: false, hideBlown: false, battery: 100, pitch: 0, yaw: START.yaw, out: false, escReq: 0, jumpY: 0, jumpV: 0, jumpReq: false, revive: 0 });
+  Object.assign(P, { stamina: P.staminaMax, crouch: false, eye: 1.6, hidden: false, hideBlown: false, battery: 100, pitch: 0, yaw: START.yaw, out: false, escReq: 0, jumpY: 0, jumpV: 0, jumpReq: false, revive: 0, slideT: 0, landT: 0 });
   removeClone(); tonicUsed = false; if (tonic) tonic.visible = true; stopSpectate();
   P.pos.copy(START.pos); P.vel.set(0, 0, 0);
   const on = !!(NET && NET.started);
@@ -1476,6 +2117,8 @@ function resetGame() {
     e.pos.copy(isT ? TEACHER_SPAWN : ENEMY_SPAWN[i]); e.yaw = isT ? 0 : i === 0 ? Math.PI : 0; e.state = 'wait'; e.timer = isT ? D.start + 4 : D.start + i * 6;
     e.route = []; e.sees = e.raw = false; e.alert = false; e.lurk = 0; e.moving = false; e.noticeT = 0; e.susp = false;
     e.cfg = isT ? { patrol: 1.15, search: 1.9, chase: D.fastChase || 6, sightMul: 0.75, notice: D.fastNotice || 1.5 } : { patrol: D.patrol, search: D.search, chase: D.chase, sightMul: 1, notice: 0 };
+    if (MODE === 'fps') e.cfg = isT ? { patrol: 1.3, search: 1.9, chase: 2.7, sightMul: 0.9, notice: 0.5 } : { patrol: 1.3, search: 1.8, chase: 2.3, sightMul: 1, notice: 0 };   // they walk and shoot instead of sprinting
+    e.maxHp = (ENEMY_HP[diffKey] || 100) * (isT ? 1.3 : 1); e.hp = e.maxHp; e.chp = e.maxHp; e.dead = false; e.ndead = false; e.deadT = 0; e.fireCd = 1.5 + Math.random(); e.meleeCd = 0; attachEnemyGun(e);
     if (isT && D.sab) e.sabT = D.sab[0] + Math.random() * (D.sab[1] - D.sab[0]);
   });
   let plan;
@@ -1483,6 +2126,11 @@ function resetGame() {
   else plan = makeBookPlan(D.books);
   for (const bp of plan) spawnBook(bp);
   if (on) setupOnlineRound(); else clearAvatars();
+  P.hp = 100; P.hurtT = 9; P.downed = false; P.downT = 0; FP.firing = false; FP.ads = false;
+  if (isFPS()) fpsResetLoadout(); VM.visible = false; vmLight.visible = isFPS();
+  if (!on) spawnBots(state === 'starting' ? botCount : 0, [[START.pos.x, START.pos.z]]);
+  document.body.classList.toggle('fps', isFPS()); camera.fov = baseFov; camera.updateProjectionMatrix();
+  for (const k of ['ammoKey', 'hp', 'gap']) UI[k] = undefined; $('kfeed').textContent = '';
   applyRoleLook();
   updateCount(); flashOn = true; $('bLight').classList.add('on'); $('bCrouch').classList.remove('on'); renderItems();
 }
@@ -1508,6 +2156,7 @@ function updateCount() {
     $('hint').textContent = hunterHold > 0 ? `あと${Math.ceil(hunterHold)}秒で動ける…` : freezeT > 0 ? 'オルゴールの音で動けない…' : exitOpen ? '教科書がそろった。玄関を見張れ！' : `教科書 ${collected} / ${collected + books.length} が回収された`;
     return;
   }
+  if (isFPS()) { const [a, b] = fpsObjText(); $('count').textContent = a; $('hint').textContent = b; return; }
   $('count').textContent = `教科書 ${collected} / ${books.length + collected}`;
   $('hint').textContent = exitOpen ? '玄関（東側ホールの南）へ急げ！' : '教室の机の上を探せ';
 }
@@ -1534,7 +2183,7 @@ function playMusic() {
   if (musicCd > 0) { message(`オルゴールのゼンマイがまだ戻らない…（あと${Math.ceil(musicCd)}秒）`, 2); return; }
   freezeT = D.freeze; musicCd = D.freeze + 40; unlock('music');
   for (const e of enemies) if (e.active) e.route = [];
-  message(`オルゴールが校内放送で流れる…大介先生の動きが止まった（${D.freeze}秒）`, 4);
+  message(`オルゴールが校内放送で流れる…DAISUKE先生の動きが止まった（${D.freeze}秒）`, 4);
   audioMusic(true);
 }
 function endFreeze() {
@@ -1550,7 +2199,7 @@ async function initAudio() {
   if (actx) { try { actx.resume(); } catch (e) {} return; }
   actx = new AC(); master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
   // load everything in parallel (the caught voice is first, so it is ready as early as possible)
-  await Promise.all([['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['near', 'assets/sfx/near.mp3'], ['home', 'assets/sfx/home.mp3']].map(async ([k, url]) => {
+  await Promise.all([['voice1', 'assets/sfx/voice1.mp3'], ['voice2', 'assets/sfx/voice2.mp3'], ['amb', 'assets/sfx/ambience.mp3'], ['steps', 'assets/sfx/steps.mp3'], ['music', 'assets/sfx/musicbox.mp3'], ['giggle', 'assets/sfx/giggle.mp3'], ['near', 'assets/sfx/near.mp3'], ['gun_pistol', 'assets/sfx/gun_pistol.mp3'], ['gun_shotgun', 'assets/sfx/gun_shotgun.mp3'], ['gun_heavy', 'assets/sfx/gun_heavy.mp3'], ['reload1', 'assets/sfx/reload1.mp3'], ['reload2', 'assets/sfx/reload2.mp3'], ['reload3', 'assets/sfx/reload3.mp3'], ['pump', 'assets/sfx/pump.mp3'], ['hit', 'assets/sfx/hit.mp3'], ['wswitch', 'assets/sfx/wswitch.mp3']].map(async ([k, url]) => {
     try { const r = await fetch(url); if (!r.ok) return; const ab = await r.arrayBuffer(); sfx[k] = await new Promise((res, rej) => actx.decodeAudioData(ab, res, rej)); } catch (e) { console.warn('sound', k, e); }
   }));
   for (const e of enemies) attachSteps(e);
@@ -1571,6 +2220,7 @@ function startAmbience() {
 let homeSrc = null, homeGain = null;
 const HOME_PANELS = ['title', 'login', 'account', 'notice', 'gacha', 'achPanel', 'shop', 'lobby'];
 function updateHomeBgm() {
+  return;   // the title screen is silent now
   if (!actx || !sfx.home) return;
   const onHome = state === 'title' && HOME_PANELS.some(id => !$(id).classList.contains('hidden'));
   if (onHome && !homeSrc) {
@@ -1664,6 +2314,8 @@ addEventListener('keydown', e => {
   } else if (state === 'play') {
     if (e.code === 'Space') { P.jumpReq = true; e.preventDefault(); }
     if (e.code === 'KeyF') toggleLight();
+    if (isFPS() && e.code === 'KeyR') startReload();
+    if (isFPS() && e.code === 'KeyQ') swapWeapon();
     if (e.code === 'KeyC' || e.code === 'ControlLeft') toggleCrouch();
     if (e.code === 'KeyE') doInteract();
     if (e.code === 'KeyT') openTablet();
@@ -1684,7 +2336,10 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
 function toggleLight() { flashOn = !flashOn; $('bLight').classList.toggle('on', flashOn); }
-function toggleCrouch() { if (NET && NET.myRole === 'hunter' && NET.started) return; P.crouch = !P.crouch; if (P.crouch) { runToggle = false; $('bRun').classList.remove('on'); } $('bCrouch').classList.toggle('on', P.crouch); }
+function toggleCrouch() {
+  if (NET && NET.myRole === 'hunter' && NET.started && MODE !== 'fps') return;
+  if (!P.crouch && P.sprinting && state === 'play' && !(P.slideT > 0) && P.jumpY - groundAt(P.pos.x, P.pos.z, P.jumpY) < 0.05) { P.slideT = 0.8; P.slideDir.set(P.vel.x, 0, P.vel.z); P.noise = Math.max(P.noise, D.hear * 0.5); }
+  P.crouch = !P.crouch; if (P.crouch) { runToggle = false; $('bRun').classList.remove('on'); } $('bCrouch').classList.toggle('on', P.crouch); }
 
 let lookDX = 0, lookDY = 0, locked = false, noLock = false, mouseDown = false;
 function lockPointer() {
@@ -1696,8 +2351,13 @@ document.addEventListener('mousemove', e => {
   if (Math.abs(e.movementX) > 300 || Math.abs(e.movementY) > 300) return;
   if (locked || mouseDown) { lookDX += e.movementX; lookDY += e.movementY; }
 });
-canvas.addEventListener('mousedown', e => { if (e.button === 0) { mouseDown = true; if (state === 'play' && !locked) lockPointer(); } });
-addEventListener('mouseup', () => { mouseDown = false; });
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 0) { mouseDown = true; if (state === 'play' && !locked && !noLock) lockPointer(); else if (isFPS() && state === 'play') FP.firing = true; }
+  if (e.button === 2 && isFPS() && state === 'play') FP.ads = true;
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('mouseup', e => { mouseDown = false; if (e.button === 0) FP.firing = false; if (e.button === 2) FP.ads = false; });
+addEventListener('wheel', e => { if (isFPS() && state === 'play' && Math.abs(e.deltaY) > 20) swapWeapon(); }, { passive: true });
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === canvas) { locked = true; lookDX = lookDY = 0; }
   else if (locked) { locked = false; if (state === 'play') pause(); }
@@ -1726,6 +2386,7 @@ function onTouchMove(e) {
       if (d > R) { dx *= R / d; dy *= R / d; } stick.x = dx / R; stick.y = dy / R;
       $('stickKnob').style.transform = `translate(${dx}px,${dy}px)`;
     } else if (t.identifier === look.id) { lookDX += (t.clientX - look.lx) * 1.6; lookDY += (t.clientY - look.ly) * 1.6; look.lx = t.clientX; look.ly = t.clientY; }
+    else if (FP.touchFire && t.identifier === FP.touchFire.id) { lookDX += (t.clientX - FP.touchFire.lx) * 1.4; lookDY += (t.clientY - FP.touchFire.ly) * 1.4; FP.touchFire.lx = t.clientX; FP.touchFire.ly = t.clientY; }
   }
   if (state === 'play') e.preventDefault();
 }
@@ -1742,6 +2403,11 @@ tapBtn('bLight', toggleLight);
 tapBtn('bPause', () => pause());
 tapBtn('bTab', () => openTablet());
 tapBtn('bJump', () => { P.jumpReq = true; });
+tapBtn('bAds', () => { FP.ads = !FP.ads; $('bAds').classList.toggle('on', FP.ads); });
+tapBtn('bReload', () => startReload());
+tapBtn('bSwap', () => swapWeapon());
+$('bFire').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); const t = e.changedTouches[0]; FP.touchFire = { id: t.identifier, lx: t.clientX, ly: t.clientY }; FP.firing = true; }, { passive: false });
+for (const ev of ['touchend', 'touchcancel']) $('bFire').addEventListener(ev, e => { for (const t of e.changedTouches) if (FP.touchFire && t.identifier === FP.touchFire.id) { FP.touchFire = null; FP.firing = false; } });
 tapBtn('spPrev', () => switchSpect(-1));
 tapBtn('spNext', () => switchSpect(1));
 $('bUse').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); useHeld = true; doInteract(); }, { passive: false });
@@ -1767,10 +2433,11 @@ function showPlayUI(on) {
   $('touch').classList.toggle('hidden', !on || !IS_TOUCH);
   $('bCrouch').classList.toggle('hidden', hunter); $('bUse').classList.toggle('hidden', hunter); $('bTab').classList.toggle('hidden', hunter);
   $('invisHud').classList.toggle('hidden', !on || !(P.invisT > 0));
+  $('fpsHud').classList.toggle('hidden', !on || !isFPS()); if (isFPS()) $('cross').classList.add('hidden');
   if (!on) $('prompt').classList.add('hidden');
 }
 function startGame() {
-  resetGame();
+  state = 'starting'; resetGame();
   $('title').classList.add('hidden'); state = 'play'; showPlayUI(true);
   goFullscreen(); lockPointer(); initAudio(); setMasterVolume(1);
   message('…静かだ。教科書を探そう。', 3.5);
@@ -1786,9 +2453,11 @@ function resume() {
   if (P.out) { state = 'play'; startSpectate(); return; }
   state = 'play'; showPlayUI(true); lockPointer();
 }
-function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); setMasterVolume(1); message('もう一度…', 2); }
+function retry() { $('end').classList.add('hidden'); $('flash').style.opacity = 0; state = 'starting'; resetGame(); state = 'play'; showPlayUI(true); lockPointer(); setMasterVolume(1); message('もう一度…', 2); }
 function toTitle() {
   if (NET) leaveNet();
+  MODE = store.get('dk_mode', 'horror') === 'fps' ? 'fps' : 'horror'; document.body.classList.toggle('fps', MODE === 'fps');
+  { const si = clamp(parseInt(store.get('dk_stage', '0')) || 0, 0, STAGES.length - 1); if (si !== stageIdx) buildWorld(si); }
   for (const id of ['pause', 'end', 'lobby']) $(id).classList.add('hidden');
   $('camui').classList.add('hidden'); canvas.classList.remove('cam');
   $('flash').style.opacity = 0; audioMusic(false); setMasterVolume(0); D = DIFFS[diffKey]; $('msg').style.opacity = 0; msgT = 0;
@@ -1851,6 +2520,12 @@ function switchCam(i) {
 // ================================================================== update: player
 function updatePlayer(dt) {
   const hunter = !!(NET && NET.started && NET.myRole === 'hunter');
+  if (P.downed) {   // FPS: knocked down, waiting for help
+    P.vel.set(0, 0, 0); P.eye += (0.4 - P.eye) * Math.min(1, dt * 4); lookDX = lookDY = 0;
+    if (!(NET && NET.started)) { P.downT -= dt; if (P.downT <= 0) { fpsGameOver(); return; } }
+    camera.position.set(P.pos.x, P.eye + P.jumpY, P.pos.z); camera.rotation.set(P.pitch * 0.3, P.yaw, 0.35, 'YXZ'); return;
+  }
+  if (isFPS()) { P.hurtT = (P.hurtT || 0) + dt; if (P.hurtT > 5 && P.hp < 100) P.hp = Math.min(100, P.hp + 14 * dt); }
   const k = 0.0022 * sens;
   P.yaw -= lookDX * k; P.pitch = clamp(P.pitch - lookDY * k, -1.3, 1.3); lookDX = lookDY = 0;
   let ix = 0, iy = 0;
@@ -1859,29 +2534,38 @@ function updatePlayer(dt) {
   let mag = Math.hypot(ix, iy); if (mag > 1) { ix /= mag; iy /= mag; mag = 1; }
   let push = 0; if (stick.id !== null) { ix = stick.x; iy = -stick.y; push = Math.hypot(ix, iy); mag = Math.min(1, push); }
   if (hunter && (hunterHold > 0 || freezeT > 0 || P.stunT > 0)) { ix = iy = 0; mag = 0; push = 0; }
+  // P.jumpY = height of your feet (0 = floor, ~0.73 = on a desk), P.jumpV = vertical speed
+  const gY0 = groundAt(P.pos.x, P.pos.z, P.jumpY);
+  const onGround = P.jumpY - gY0 < 0.03 && P.jumpV <= 0;
   if (P.jumpReq) {
     P.jumpReq = false;
-    if (P.crouch) toggleCrouch();
-    else if (P.jumpY <= 0 && !(hunter && (hunterHold > 0 || freezeT > 0 || P.stunT > 0))) P.jumpV = 4.6;
+    if (P.crouch && !P.slideT) toggleCrouch();
+    else if (onGround && !(hunter && (hunterHold > 0 || freezeT > 0 || P.stunT > 0))) { P.jumpV = 5.7; P.slideT = 0; }
   }
-  if (P.jumpV !== 0 || P.jumpY > 0) {
-    P.jumpV -= 14 * dt; P.jumpY += P.jumpV * dt;
-    if (P.jumpY <= 0) { P.jumpY = 0; P.jumpV = 0; P.landT = 0.3; }
-  }
-  const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || push > 0.92) && mag > 0.1;
+  const wantRun = (keys.has('ShiftLeft') || keys.has('ShiftRight') || runToggle || push > 0.92) && mag > 0.1 && !(FP.ads && isFPS());
+  if (wantRun && FP.firing && isFPS() && !curW().auto) FP.firing = false;
   if (wantRun && P.crouch) toggleCrouch();
   P.sprinting = wantRun && P.stamina > 0.05;
   P.stamina = P.sprinting ? (P.drinkT > 0 ? P.stamina : Math.max(0, P.stamina - dt)) : Math.min(P.staminaMax, P.stamina + dt * (mag > 0.1 ? 0.55 : 1.0));
   if (P.drinkT > 0) P.drinkT = Math.max(0, P.drinkT - dt); if (P.stunT > 0) P.stunT = Math.max(0, P.stunT - dt); if (P.radarT > 0) P.radarT = Math.max(0, P.radarT - dt);
   if (P.stamina <= 0.05 && runToggle) { runToggle = false; $('bRun').classList.remove('on'); }
-  const speed = (P.sprinting ? (hunter ? 4.8 : 5.6) : P.crouch ? 1.4 : (hunter ? 3.7 : 3.0)) * (stick.id !== null ? Math.max(0.35, mag) : 1);
+  const speed = (P.sprinting ? (hunter ? 4.8 : 5.6) : P.crouch ? 1.6 : (hunter ? 3.7 : 3.2)) * (stick.id !== null ? Math.max(0.35, mag) : 1) * (isFPS() && FP.adsK > 0.5 ? 0.6 : 1);
   const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw);
-  const tvx = (fx * iy + rx * ix) * speed, tvz = (fz * iy + rz * ix) * speed, a = 1 - Math.exp(-14 * dt);
-  P.vel.x += (tvx - P.vel.x) * a; P.vel.z += (tvz - P.vel.z) * a;
+  const tvx = (fx * iy + rx * ix) * speed, tvz = (fz * iy + rz * ix) * speed, a = 1 - Math.exp(-(onGround ? 18 : 5) * dt);
+  if (P.slideT > 0) {   // sliding: keep the burst of speed, slowly bleeding off
+    P.slideT -= dt; const k2 = Math.max(0, P.slideT / 0.8); const sp = 3 + 6 * k2; const d0 = Math.hypot(P.slideDir.x, P.slideDir.z) || 1;
+    P.vel.x = P.slideDir.x / d0 * sp; P.vel.z = P.slideDir.z / d0 * sp; if (P.slideT <= 0) P.slideT = 0;
+  } else { P.vel.x += (tvx - P.vel.x) * a; P.vel.z += (tvz - P.vel.z) * a; }
   P.pos.x += P.vel.x * dt; P.pos.z += P.vel.z * dt;
-  collide(P.pos, 0.3);
+  collide(P.pos, 0.3, P.jumpY);
+  // gravity / landing on desks
+  const gY = groundAt(P.pos.x, P.pos.z, P.jumpY);
+  if (P.jumpV !== 0 || P.jumpY > gY + 0.001) {
+    P.jumpV -= 16 * dt; P.jumpY += P.jumpV * dt;
+    if (P.jumpY <= gY) { if (P.jumpV < -3) P.landT = 0.3; P.jumpY = gY; P.jumpV = 0; }
+  }
   const hv = Math.hypot(P.vel.x, P.vel.z);
-  P.eye += ((P.crouch ? 0.95 : hunter ? 1.72 : 1.6) - P.eye) * Math.min(1, dt * 10);
+  P.eye += ((P.slideT > 0 ? 0.8 : P.crouch ? 0.95 : hunter ? 1.72 : 1.6) - P.eye) * Math.min(1, dt * (P.slideT > 0 ? 16 : 10));
   if (P.hidden && enemies.some(e => e.active && !(e.downT > 0) && Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z) < 2.2 && !e.sees && e.state !== 'wait')) unlock('hide');
   const wasHidden = P.hidden;
   P.hidden = !hunter && P.crouch && nearCover(P.pos, 1.1);
@@ -1895,6 +2579,7 @@ function updatePlayer(dt) {
   if (!hunter) for (const it of interact) { const d = Math.hypot(P.pos.x - it.pos.x, P.pos.z - it.pos.z); if (d < it.r && d < best) { best = d; curInteract = it; } }
   const holding = keys.has('KeyE') || useHeld;
   // online: help a caught teammate back up (hold "use" next to them)
+  if (!hunter) for (const b of bots) if (b.state === 'down') { const d = Math.hypot(P.pos.x - b.pos.x, P.pos.z - b.pos.z); if (d < 1.7 && d < best + 1) { best = d; curInteract = { id: 'revive', bot: b, name: b.name, pos: b.pos }; } }
   if (!hunter && NET && NET.started) {
     for (const pl of NET.players.values()) {
       if (pl.id === NET.myId || pl.role !== 'survivor' || pl.alive || pl.escaped || pl.dx == null) continue;
@@ -1902,9 +2587,11 @@ function updatePlayer(dt) {
     }
   }
   if (curInteract && curInteract.id === 'revive' && holding) {
-    P.revive = (P.revive || 0) + dt; NET.revAcc = (NET.revAcc || 0) + dt;
-    if (NET.revAcc > 0.3) { act('revive', { id: curInteract.pid, dt: NET.revAcc }); NET.revAcc = 0; }
-    if (P.revive > 3.5) P.revive = 0;
+    P.revive = (P.revive || 0) + dt;
+    if (!NET) { if (P.revive >= 3) { P.revive = 0; reviveBot(curInteract.bot); unlock('revive'); } }
+    else { NET.revAcc = (NET.revAcc || 0) + dt;
+      if (NET.revAcc > 0.3) { act('revive', curInteract.bot ? { bot: curInteract.bot.idx, dt: NET.revAcc } : { id: curInteract.pid, dt: NET.revAcc }); NET.revAcc = 0; }
+      if (P.revive > 3.5) P.revive = 0; }
   } else P.revive = 0;
   if (curInteract && curInteract.id === 'gen' && genBroken && holding) {
     P.repair = (P.repair || 0) + dt; P.noise = Math.max(P.noise, 18);
@@ -1921,6 +2608,8 @@ function updatePlayer(dt) {
   }
   P.bob += dt * hv * (P.crouch ? 1.4 : 2.2);
   const bob = Math.sin(P.bob) * (P.crouch ? 0.02 : 0.035) * Math.min(1, hv / 3);
+  if (isFPS()) { updateGun(dt); if (IS_TOUCH && FP.firing) aimAssist(dt); }
+  else VM.visible = false;
   camera.position.set(P.pos.x, P.eye + bob + P.jumpY, P.pos.z);
   camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob * 0.5) * 0.008 * Math.min(1, hv / 3), 'YXZ');
 }
@@ -1946,17 +2635,24 @@ function newPatrol(e) {
 const distP = (e) => Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z);
 
 let AIT = [];
-function localTarget() { return { id: NET ? NET.myId : 'me', pos: P.pos, yaw: P.yaw, crouch: P.crouch, hidden: P.hidden, blown: P.hideBlown, invis: P.invisT > 0, light: flashOn && state === 'play', noise: P.noise, spray: itemCount('spray') > 0, local: true }; }
+function aimAssist(dt) {   // touch screens: nudge the aim toward a teacher that is almost under the crosshair
+  let best = null, ba = 0.09;
+  for (const e of enemies) { if (!e.active || e.dead || e.ndead || e.allyT > 0 || e.nally) continue; const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z); if (d > 30) continue;
+    let dy = Math.atan2(-(e.pos.x - P.pos.x), -(e.pos.z - P.pos.z)) - P.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); if (Math.abs(dy) < ba && lineClear(P.pos, e.pos)) { ba = Math.abs(dy); best = dy; } }
+  if (best !== null) P.yaw += best * Math.min(1, dt * 5);
+}
+function localTarget() { return { id: NET ? NET.myId : 'me', pos: P.pos, y: P.jumpY, moving: Math.hypot(P.vel.x, P.vel.z) > 2.5 || P.slideT > 0, yaw: P.yaw, crouch: P.crouch, hidden: P.hidden, blown: P.hideBlown, invis: P.invisT > 0, light: flashOn && state === 'play', noise: P.noise, spray: itemCount('spray') > 0, local: true }; }
 function computeTargets() {
   AIT = [];
-  if (!NET || !NET.started) { if (!P.out && (state === 'play' || state === 'cams')) { AIT.push(localTarget()); if (clone) AIT.push(cloneTarget()); } return; }
+  if (!NET || !NET.started) { if (!P.out && !P.downed && (state === 'play' || state === 'cams')) { AIT.push(localTarget()); if (clone) AIT.push(cloneTarget()); } for (const t of botTargets()) AIT.push(t); return; }
   for (const p of NET.players.values()) {
     if (p.role !== 'survivor' || !p.alive || p.escaped) continue;
     if (p.id === NET.myId) { if (!P.out && state !== 'scare') AIT.push(localTarget()); continue; }
     const f = p.f | 0; p.tpos = p.tpos || new V3(); p.tpos.set(p.x || 0, 0, p.z || 0);
-    AIT.push({ id: p.id, pos: p.tpos, yaw: p.yaw || 0, crouch: !!(f & 1), hidden: !!(f & 2), blown: !!p.blown, invis: !!(f & 32), light: !!(f & 16),
+    AIT.push({ id: p.id, pos: p.tpos, y: p.py || 0, moving: !!(f & 4), yaw: p.yaw || 0, crouch: !!(f & 1), hidden: !!(f & 2), blown: !!p.blown, invis: !!(f & 32), light: !!(f & 16),
       noise: (f & 4) ? D.hear : ((f & 8) && !(f & 1)) ? D.hear * 0.35 : 0, spray: !!(f & 64), local: false, ref: p });
   }
+  if (NET.host) for (const t of botTargets()) AIT.push(t);
 }
 const distT = (e, t) => Math.hypot(e.pos.x - t.pos.x, e.pos.z - t.pos.z);
 function seesTarget(e, t) {
@@ -1970,6 +2666,8 @@ function seesTarget(e, t) {
 function pushBack(e, t) { const dx = e.pos.x - t.pos.x, dz = e.pos.z - t.pos.z, d = Math.hypot(dx, dz) || 1; e.pos.x += dx / d * 1.0; e.pos.z += dz / d * 1.0; }
 function doCatch(e, t) {
   if (t.decoy) { cloneCaught(e); return; }
+  if (isFPS()) { if (e.meleeCd > 0) return; e.meleeCd = 1.0; hitTarget(t, 15, e.pos, enemyName(e)); return; }   // FPS: a shove instead of a catch
+  if (t.bot) { downBot(t.bot); e.stunT = 2; e.route = []; e.state = 'patrol'; return; }
   if (!NET || !NET.started) {
     if (state !== 'play' && state !== 'cams') return;
     if (t.spray) { consumeItem('spray'); unlock('spray'); e.stunT = 5; e.route = []; pushBack(e, t); message('撃退スプレー！ 先生がひるんだ――今のうちに逃げろ！', 3); return; }
@@ -2005,12 +2703,14 @@ function sense(e) {
   e.sees = visible; if (best) e.tgt = best.id;
   let heardT = null, hd = 1e9;
   for (const t of AIT) { const d = distT(e, t) - (t.decoy ? 8 : 0); if (t.noise > 0 && !t.invis && distT(e, t) < t.noise && d < hd) { hd = d; heardT = t; } }
-  if (visible) { e.lastKnown.copy(best.pos); e.lost = 0; e.lurk = 0; if (e.state !== 'chase') { e.state = 'chase'; e.repath = 0; if (best.local) message(e.kind === 'fast' ? 'もう一人の先生に見つかった！ 速い――隠れろ！' : '見つかった――走れ！', 2); } }
+  if (visible) { e.lastKnown.copy(best.pos); e.lost = 0; e.lurk = 0; if (e.state !== 'chase') { e.state = 'chase'; e.repath = 0; if (best.local) message(isFPS() ? (e.kind === 'fast' ? 'もう一人の先生に見つかった！ 撃ってくるぞ！' : '見つかった――撃ってくるぞ！') : e.kind === 'fast' ? 'もう一人の先生に見つかった！ 速い――隠れろ！' : '見つかった――走れ！', 2); } }
   else if (heardT && e.state !== 'chase') { e.lastKnown.copy(heardT.pos); e.state = 'search'; routeTo(e, e.lastKnown); }
 }
 function updateEnemy(e, dt) {
   if (!e.active || e.remote) return;
   e.moving = false;
+  if (e.dead) { e.deadT -= dt; setAnim(e, 0, dt); if (e.deadT < 9) e.group.visible = false; if (e.deadT <= 0) respawnEnemy(e); return; }
+  if (e.meleeCd > 0) e.meleeCd -= dt;
   if (e.state === 'wait') { e.timer -= dt; setAnim(e, 0, dt); if (e.timer <= 0) { e.state = 'patrol'; newPatrol(e); } return; }
   if (e.downT > 0) { e.downT -= dt; e.moving = false; lieDown(e, true); setAnim(e, 0, dt); if (e.downT <= 0) { lieDown(e, false); e.state = 'patrol'; newPatrol(e); } return; }
   if (e.allyT > 0) { updateAlly(e, dt); return; }
@@ -2044,6 +2744,15 @@ function updateEnemy(e, dt) {
   } else if (e.state === 'search') {
     speed = e.alert ? C.chase * 0.9 + bonus : C.search + bonus * 0.5;
     if (!e.route.length && e.lurk <= 0) { e.state = 'patrol'; e.alert = false; newPatrol(e); }
+  }
+  if (isFPS() && e.state === 'chase') {   // FPS: stop at a distance and shoot
+    const tg = AIT.find(t => t.id === e.tgt);
+    if (tg && e.sees) {
+      const dd = distT(e, tg), want = Math.atan2(tg.pos.x - e.pos.x, tg.pos.z - e.pos.z);
+      if (dd < 7.5) { e.route = []; let dy = want - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * 6); }
+      e.fireCd -= dt;
+      if (e.fireCd <= 0 && dd < 28 && freezeT <= 0) { e.yaw = want; e.group.rotation.y = want; enemyShoot(e, tg); e.fireCd = (e.kind === 'fast' ? 0.85 : 1.25) + Math.random() * 0.7; }
+    }
   }
   e.speed = speed;
   if (e.stare) {   // turning to look at whoever he spotted
@@ -2109,7 +2818,7 @@ function win() {
   if (!UI.usedItem && (diffKey === 'hard' || diffKey === 'super')) unlock('noitem');
   addHist({ mode: 'ひとり', diff: D.label, res: '脱出', time: playT, pts: got });
   $('endTitle').textContent = '脱出成功！'; $('endTitle').style.color = '#7de08a';
-  $('endText').innerHTML = `難易度：${D.label}　タイム：${fmtTime(playT)}<br>教科書はぜんぶ取り返した。…でも明日も、学校で大介先生に会う。`;
+  $('endText').innerHTML = `難易度：${D.label}　タイム：${fmtTime(playT)}<br>教科書はぜんぶ取り返した。…でも明日も、学校でDAISUKE先生に会う。`;
   $('earned').textContent = `+${got}P（合計 ${points}P）　購買部でアイテムと交換できる`;
   $('end').classList.remove('hidden');
 }
@@ -2145,7 +2854,7 @@ function updateWorld(dt, t) {
     }
   }
   for (const p of exitPanels) p.position.x += ((exitOpen ? p.userData.open : p.userData.closed) - p.position.x) * Math.min(1, dt * 3);
-  if (exitOpen && canCollect && P.pos.z > 38.2 && P.pos.x > 67.5 && P.pos.x < 70.5) { if (NET) { if (!P.escReq) { P.escReq = 1; act('esc'); } } else win(); }
+  if (exitOpen && canCollect && !isFPS() && P.pos.z > 38.2 && P.pos.x > 67.5 && P.pos.x < 70.5) { if (NET) { if (!P.escReq) { P.escReq = 1; act('esc'); } } else win(); }
   shPanels.forEach((pn, i) => { pn.position.x += ((doorsClosed[i] ? pn.userData.closed : pn.userData.open) - pn.position.x) * Math.min(1, dt * 8); });
   if (!NET || NET.host) {
     const camsN = NET ? NET.camUsers.size : (state === 'cams' ? 1 : 0);
@@ -2157,7 +2866,7 @@ function updateWorld(dt, t) {
   if (freezeT > 0) musicBox.userData.crank.rotation.x += dt * 6;
   MATS.onair.emissiveIntensity = freezeT > 0 ? 1.6 : 0.25;
   let dmin = 1e9; for (const e of enemies) if (e.active && !(e.allyT > 0) && !e.nally && !(e.downT > 0) && !e.ndown) dmin = Math.min(dmin, distP(e));
-  let fear = hunter || P.out ? 0 : clamp(1 - (dmin - 2) / 14, 0, 1); if (!hunter && enemies.some(e => e.active && e.state === 'chase')) fear = Math.max(fear, 0.45);
+  let fear = hunter || P.out || isFPS() ? 0 : clamp(1 - (dmin - 2) / 14, 0, 1); if (!hunter && enemies.some(e => e.active && e.state === 'chase')) fear = Math.max(fear, 0.45);
   const va = (fear * 0.55 * (0.8 + 0.2 * Math.sin(t * (4 + fear * 6)))).toFixed(2);
   if (va !== UI.va || state === 'cams') { UI.va = va; $('vign').style.opacity = state === 'cams' ? 0 : va; }
   const fl = hunter ? 0 : clamp(1 - (dmin - 2) / 8, 0, 1), noise = (Math.sin(t * 31) + Math.sin(t * 17.7)) * 0.5;
@@ -2185,8 +2894,9 @@ function updateWorld(dt, t) {
   for (const e of enemies) updateEnemyAudio(e);
   for (const a of avatars.values()) if (a.kind === 'student') updateEnemyAudio(a);
   updateRadar(dt);
-  updateNear(hunter ? 1e9 : dmin, !hunter && enemies.some(e => e.active && e.state === 'chase' && !e.remote));
-  if (state === 'play' || state === 'cams') updateGiggle(dt);
+  updateNear(hunter || isFPS() ? 1e9 : dmin, !hunter && !isFPS() && enemies.some(e => e.active && e.state === 'chase' && !e.remote));
+  if ((state === 'play' || state === 'cams') && !isFPS()) updateGiggle(dt);
+  if (isFPS()) updateFpsHud(dt);
   if (NET) { UI.cntT = (UI.cntT || 0) - dt; if (UI.cntT <= 0) { UI.cntT = 0.5; updateCount(); } }
 }
 function batteryEmpty() {
@@ -2196,11 +2906,11 @@ function batteryEmpty() {
   if (NET) netEvent({ k: 'batt0' }, true);
 }
 function collectBook(b, who) {
-  collected++; bonus += 0.12;
+  collected++; if (!isFPS()) bonus += 0.12;
   const total = collected + books.length;
   if (!books.length) { exitOpen = true; message(who ? `${who}が最後の教科書を回収！ 玄関が開いた――急げ！` : '教科書がぜんぶそろった！ 玄関へ――急げ！', 5); }
   else message(who ? `${who}が教科書「${b.name}」を回収（${collected}/${total}）` : `教科書「${b.name}」を回収（${collected}/${total}）`, 3);
-  updateCount();
+  updateCount(); if (isFPS()) checkObjectives();
 }
 
 // ================================================================== maps
@@ -2216,7 +2926,7 @@ function drawZones(g, s, labels) {
 function drawMapBase() { const g = $('map').getContext('2d'); g.clearRect(0, 0, 384, 208); drawZones(g, 16, true); }
 function buildCamMap() {
   const c = $('camMapC'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); drawZones(g, 24, true);
-  const box = $('camMap');
+  const box = $('camMap'); for (const b of [...box.querySelectorAll('.cbtn')]) b.remove();
   camsDef.forEach((cd, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'cbtn'; b.dataset.i = i; b.textContent = String(i + 1);
     b.style.left = (cd.pos[0] / (W * CELL) * 288) + 'px'; b.style.top = (cd.pos[2] / (H * CELL) * 156) + 'px';
@@ -2241,7 +2951,7 @@ const GH_URL = 'https://sousukesano0208-ops.github.io/daisuke-chase/';
 const ONLINE_OK = !/claude/.test(location.hostname);
 const USE_LOCAL = /[?&]net=local/.test(location.search);   // same-browser test transport
 const SURV_SPAWNS = [[10.5, 3.0], [13.5, 3.0], [10.5, 6.0], [13.5, 6.0], [12.0, 4.5]];
-const HUNTER_SPAWN = [61.5, 34.5];
+const HUNTER_SPAWN = [61.5, 34.5];   // set per stage in buildWorld
 const SURV_COLORS = [0xe0483a, 0x3a8ee0, 0xe0c23a, 0x55c26a, 0xb05ad8];
 
 class LocalConn { constructor(peer, peerId) { this.p = peer; this.peer = peerId; this.h = {}; this.open = false; }
@@ -2289,6 +2999,9 @@ $('startOnline').addEventListener('click', hostStart);
 $('cfgHunter').addEventListener('change', e => { if (!NET || !NET.host) return; NET.hunterId = e.target.value === 'none' ? null : e.target.value; broadcastRoster(); });
 $('cfgAI').addEventListener('change', e => { if (!NET || !NET.host) return; NET.cfg.ai = +e.target.value; broadcastRoster(); });
 $('cfgTeacher').addEventListener('change', e => { if (!NET || !NET.host) return; NET.cfg.teacher = e.target.checked; broadcastRoster(); });
+$('cfgMode').addEventListener('change', e => { if (!NET || !NET.host) return; NET.cfg.mode = e.target.value; broadcastRoster(); });
+$('cfgStage').addEventListener('change', e => { if (!NET || !NET.host) return; NET.cfg.stage = +e.target.value; broadcastRoster(); });
+$('cfgBots').addEventListener('change', e => { if (!NET || !NET.host) return; NET.cfg.bots = +e.target.value; broadcastRoster(); });
 $('backLobby').addEventListener('click', () => { if (!NET) return; sendAll({ t: 'lobby' }); backToLobby(); });
 $('leaveOnline').addEventListener('click', () => toTitle());
 
@@ -2300,7 +3013,7 @@ async function createRoom() {
   const peer = newPeer(NET_PREFIX + code);
   NET = { host: true, code, peer, conns: new Map(), players: new Map(), myId: null, started: false, hunterId: null, sendT: 0, camUsers: new Set(), pingT: 0, chargeAcc: 0 };
   const net = NET;
-  NET.cfg = { ai: 0, teacher: false };
+  NET.cfg = { ai: 0, teacher: false, mode: MODE, stage: stageIdx, bots: 0 };
   peer.on('open', id => { if (NET !== net) return; net.myId = id; net.players.set(id, { id, name: myName(), role: 'survivor' }); net.hunterId = id; showRoom(); broadcastRoster(); netStatus(''); });
   peer.on('connection', conn => {
     conn.on('data', d => hostRecv(conn, d));
@@ -2364,12 +3077,12 @@ function renderRoster() {
   for (const pl of NET.players.values()) {
     const li = document.createElement('li');
     const who = document.createElement('span'); who.className = 'who'; who.textContent = pl.name + (pl.id === NET.myId ? '（あなた）' : ''); li.appendChild(who);
-    const role = document.createElement('span'); const h = pl.id === NET.hunterId; role.className = 'role' + (h ? ' h' : ''); role.textContent = h ? '大介先生' : '逃げる'; li.appendChild(role);
-    if (NET.host && !h) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '大介先生にする'; b.addEventListener('click', () => { NET.hunterId = pl.id; broadcastRoster(); }); li.appendChild(b); }
+    const role = document.createElement('span'); const h = pl.id === NET.hunterId; role.className = 'role' + (h ? ' h' : ''); role.textContent = h ? 'DAISUKE先生' : '逃げる'; li.appendChild(role);
+    if (NET.host && !h) { const b = document.createElement('button'); b.type = 'button'; b.textContent = 'DAISUKE先生にする'; b.addEventListener('click', () => { NET.hunterId = pl.id; broadcastRoster(); }); li.appendChild(b); }
     ul.appendChild(li);
   }
   const cfg = NET.cfg || { ai: 0, teacher: false }, hn = NET.hunterId && NET.players.get(NET.hunterId);
-  $('cfgView').textContent = `大介先生（プレイヤー）：${hn ? hn.name : 'なし（全員で逃げる）'}　AIの大介先生：${cfg.ai}人　もう一人の先生：${cfg.teacher ? 'あり' : 'なし'}`;
+  $('cfgView').textContent = `モード：${cfg.mode === 'fps' ? 'FPS（銃で戦う）' : 'ホラー（逃げる）'}　ステージ：${STAGES[cfg.stage | 0].name}　DAISUKE先生（プレイヤー）：${hn ? hn.name : 'なし（全員で逃げる）'}　AIのDAISUKE先生：${cfg.ai}人　もう一人の先生：${cfg.teacher ? 'あり' : 'なし'}　味方BOT：${cfg.bots | 0}人`;
   $('roomCfg').classList.toggle('hidden', !NET.host);
   if (NET.host) {
     const sel = $('cfgHunter'); sel.textContent = '';
@@ -2377,10 +3090,10 @@ function renderRoster() {
     for (const pl of NET.players.values()) { const o = document.createElement('option'); o.value = pl.id; o.textContent = pl.name; sel.appendChild(o); }
     sel.value = NET.hunterId || 'none';
     for (const o of $('cfgAI').options) o.disabled = !!NET.hunterId && +o.value > 2;
-    $('cfgAI').value = String(cfg.ai); $('cfgTeacher').checked = !!cfg.teacher;
+    $('cfgAI').value = String(cfg.ai); $('cfgTeacher').checked = !!cfg.teacher; $('cfgMode').value = cfg.mode || 'horror'; $('cfgStage').value = String(cfg.stage | 0); $('cfgBots').value = String(cfg.bots | 0);
     const hasEnemy = !!NET.hunterId || cfg.ai > 0 || cfg.teacher;
     const ok = NET.players.size >= 2 && hasEnemy; $('startOnline').classList.toggle('hidden', !ok);
-    netStatus(NET.players.size < 2 ? 'あと1人以上の参加を待っています（最大5人）' : !hasEnemy ? '大介先生（プレイヤー）かAIの先生を1人以上にしてください' : '');
+    netStatus(NET.players.size < 2 ? 'あと1人以上の参加を待っています（最大5人）' : !hasEnemy ? 'DAISUKE先生（プレイヤー）かAIの先生を1人以上にしてください' : '');
   }
 }
 function broadcastRoster() {
@@ -2401,7 +3114,7 @@ function hostRecv(conn, d) {
     NET.conns.set(id, conn); NET.players.set(id, { id, name: String(d.name || 'プレイヤー').slice(0, 10), role: 'survivor' }); broadcastRoster();
   } else if (d.t === 'u') {
     const pl = NET.players.get(id); if (!pl || !NET.started) return;
-    pl.x = +d.x || 0; pl.z = +d.z || 0; pl.yaw = +d.yaw || 0; pl.f = d.f | 0; pl.pt = +d.pt || 0;
+    pl.x = +d.x || 0; pl.z = +d.z || 0; pl.yaw = +d.yaw || 0; pl.f = d.f | 0; pl.pt = +d.pt || 0; pl.py = +d.py || 0;
     const a = avatars.get(id); if (a) { a.tx = pl.x; a.tz = pl.z; a.tyaw = pl.yaw; }
   } else if (d.t === 'a') hostAct(id, d);
 }
@@ -2411,7 +3124,7 @@ function hostDrop(id) {
   removeAvatar(id);
   if (NET.started) {
     message(`${pl.name}が切断しました`, 3);
-    if (id === NET.hunterId) hostResult('大介先生が切断しました');
+    if (id === NET.hunterId) hostResult('DAISUKE先生が切断しました');
   } else broadcastRoster();
 }
 function hostStart() {
@@ -2420,7 +3133,7 @@ function hostStart() {
   const survivors = roster.filter(p => p.id !== NET.hunterId).length;
   const plan = makeBookPlan(clamp(survivors + 2, 3, 5));
   if (!(NET.hunterId || NET.cfg.ai > 0 || NET.cfg.teacher)) return;
-  NET.startData = { t: 'start', roster: roster.map(p => ({ id: p.id, name: p.name })), hunterId: NET.hunterId || null, books: plan, cfg: { ai: Math.min(NET.cfg.ai | 0, NET.hunterId ? 2 : 3), teacher: !!NET.cfg.teacher } };
+  NET.startData = { t: 'start', roster: roster.map(p => ({ id: p.id, name: p.name })), hunterId: NET.hunterId || null, books: plan, cfg: { ai: Math.min(NET.cfg.ai | 0, NET.hunterId ? 2 : 3), teacher: !!NET.cfg.teacher, mode: NET.cfg.mode === 'fps' ? 'fps' : 'horror', stage: NET.cfg.stage | 0, bots: NET.cfg.bots | 0 } };
   sendAll(NET.startData);
   startOnlineGame();
 }
@@ -2441,17 +3154,39 @@ function hostAct(id, d) {
     case 'pet': { if (!surv) return; netEvent({ k: 'pet', x: +d.x || 0, z: +d.z || 0, by: id, name: pl.name }); break; }
     case 'repair': { if (!surv || !genBroken) return; NET.hostRepair = (NET.hostRepair || 0) + clamp(+d.dt || 0, 0, 0.6); if (NET.hostRepair >= 4) { genBroken = false; NET.hostRepair = 0; netEvent({ k: 'msg', text: `${pl.name}が発電機を修理した！` }); } break; }
     case 'esc': { if (!surv || !exitOpen) return; pl.escaped = true; NET.camUsers.delete(id); netEvent({ k: 'esc', id, name: pl.name }); break; }
-    case 'revive': { if (!surv) return; const tg = NET.players.get(d.id); if (!tg || tg.role !== 'survivor' || tg.alive || tg.escaped || tg.dx == null) return;
+    case 'revive': { if (!surv) return;
       const rx = id === NET.myId ? P.pos.x : pl.x, rz = id === NET.myId ? P.pos.z : pl.z;
+      if (d.bot !== undefined) { const b = bots[d.bot | 0]; if (!b || b.state !== 'down' || Math.hypot(rx - b.pos.x, rz - b.pos.z) > 2.4) return;
+        b.revAcc = (b.revAcc || 0) + clamp(+d.dt || 0, 0, 0.6); if (b.revAcc >= 3) { b.revAcc = 0; reviveBot(b); if (id === NET.myId) unlock('revive'); else sendTo(id, { t: 'ev', k: 'ach', id: 'revive' }); } break; }
+      const tg = NET.players.get(d.id); if (!tg || tg.role !== 'survivor' || tg.alive || tg.escaped || tg.dx == null) return;
       if (Math.hypot(rx - tg.dx, rz - tg.dz) > 2.4) return;
       tg.revAcc = (tg.revAcc || 0) + clamp(+d.dt || 0, 0, 0.6);
-      if (tg.revAcc >= 3) { tg.revAcc = 0; tg.alive = true; tg.x = tg.dx; tg.z = tg.dz; tg.sprayT = performance.now() + 1500; const x = tg.dx, z = tg.dz; tg.dx = tg.dz = null;
-        netEvent({ k: 'revive', id: tg.id, name: tg.name, by: pl.name, byId: id, x, z }); }
+      if (tg.revAcc >= 3) hostRevivePlayer(tg, pl.name, id);
       break; }
+    case 'shot': { const m = { k: 'psh', id, x: +d.x, y: +d.y, z: +d.z, ex: +d.ex, ey: +d.ey, ez: +d.ez, w: String(d.w || 'pistol') }; netEvent(m); break; }
+    case 'hit': { if (!surv) return; const e = enemies[d.i | 0]; if (!e || !e.active || !e.netAI) return; damageEnemy(e, clamp(+d.dmg || 0, 0, 300), id, pl.name, !!d.hs, { x: +d.x || pl.x, z: +d.z || pl.z }); break; }
+    case 'hhit': { if (!surv || !NET.hunterId) return; hostHunterHit(clamp(+d.dmg || 0, 0, 300), pl.name, { x: +d.x || pl.x, z: +d.z || pl.z }); break; }
+    case 'phit': { if (id !== NET.hunterId) return; const tg = NET.players.get(d.id); if (!tg || tg.role !== 'survivor' || !tg.alive || tg.escaped || performance.now() < (tg.sprayT || 0)) return;
+      const amt = clamp(+d.dmg || 0, 0, 300); if (tg.id === NET.myId) hurtPlayer(amt, { x: +d.x, z: +d.z }, pl.name); else sendTo(tg.id, { t: 'ev', k: 'dmg', amt, x: +d.x, z: +d.z, by: pl.name }); break; }
+    case 'bhit': { if (id !== NET.hunterId) return; const b = bots[d.i | 0]; if (b) hurtBot(b, clamp(+d.dmg || 0, 0, 300), pl.name); break; }
+    case 'dead': { if (!surv) return; pl.alive = false; pl.dx = pl.x; pl.dz = pl.z; pl.revAcc = 0; NET.camUsers.delete(id); netEvent({ k: 'caught', id, name: pl.name, by: -1, x: pl.x, z: pl.z, why: String(d.by || '') }); break; }
     case 'ally': { if (!surv) return; const e = enemies[d.i | 0]; if (!e || !e.active || !e.netAI || e.kind === 'fast' || e.allyT > 0 || e.downT > 0) return;
       const rx = id === NET.myId ? P.pos.x : pl.x, rz = id === NET.myId ? P.pos.z : pl.z;
       if (Math.hypot(e.pos.x - rx, e.pos.z - rz) > 12) return;
-      makeAlly(e, id); netEvent({ k: 'msg', text: `${pl.name}が大介先生に「なかまの腕章」をつけた――45秒間、味方になる！` }); break; }
+      makeAlly(e, id); netEvent({ k: 'msg', text: `${pl.name}がDAISUKE先生に「なかまの腕章」をつけた――45秒間、味方になる！` }); break; }
+  }
+}
+function hostRevivePlayer(tg, byName, byId) {
+  tg.revAcc = 0; tg.alive = true; tg.x = tg.dx; tg.z = tg.dz; tg.sprayT = performance.now() + 1500; const x = tg.dx, z = tg.dz; tg.dx = tg.dz = null;
+  netEvent({ k: 'revive', id: tg.id, name: tg.name, by: byName, byId, x, z });
+}
+function hostHunterHit(dmg, byName, from) {
+  if (!NET || !NET.host || !(NET.hunterHP > 0) || NET.hunterStunT > 0) return;
+  NET.hunterHP -= dmg;
+  if (NET.hunterHP <= 0) {
+    NET.hunterHP = 250; NET.hunterStunT = 10; FP.kills++;
+    netEvent({ k: 'hdown', by: byName, x: HUNTER_SPAWN[0], z: HUNTER_SPAWN[1] });
+    netEvent({ k: 'kill', text: `${byName} ▶ DAISUKE先生（プレイヤー）`, kills: FP.kills });
   }
 }
 function genPing() {
@@ -2462,11 +3197,11 @@ function genPing() {
 const myFlags = () => (P.crouch ? 1 : 0) | (P.hidden ? 2 : 0) | (P.sprinting ? 4 : 0) | (Math.hypot(P.vel.x, P.vel.z) > 0.5 ? 8 : 0) | (flashOn ? 16 : 0) | (P.invisT > 0 ? 32 : 0) | (itemCount('spray') > 0 ? 64 : 0) | (P.jumpY > 0.05 ? 128 : 0);
 function hostTick(dt) {
   const me = NET.players.get(NET.myId);
-  if (me && !P.out) { me.x = P.pos.x; me.z = P.pos.z; me.yaw = P.yaw; me.pt = P.pitch; me.f = myFlags(); }
+  if (me && !P.out) { me.x = P.pos.x; me.z = P.pos.z; me.yaw = P.yaw; me.pt = P.pitch; me.py = P.jumpY; me.f = myFlags(); }
   if (hunterHold > 0) hunterHold = Math.max(0, hunterHold - dt);
   const h = NET.hunterId && NET.players.get(NET.hunterId);
   if (NET.hunterStunT > 0) NET.hunterStunT -= dt;
-  if (h && hunterHold <= 0 && freezeT <= 0 && !(NET.hunterStunT > 0)) for (const p of NET.players.values()) {
+  if (h && !isFPS() && hunterHold <= 0 && freezeT <= 0 && !(NET.hunterStunT > 0)) for (const p of NET.players.values()) {
     if (p.role !== 'survivor' || !p.alive || p.escaped) continue;
     if (!(p.f & 32) && Math.hypot(p.x - h.x, p.z - h.z) < 1.1) {
       const now = performance.now();
@@ -2493,15 +3228,17 @@ function hostTick(dt) {
   NET.sendT -= dt;
   if (NET.sendT <= 0 && NET.started) {
     NET.sendT = 1 / 15;
-    const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0), +(pl.pt || 0).toFixed(2), pl.dx == null ? null : +pl.dx.toFixed(2), pl.dz == null ? null : +pl.dz.toFixed(2)]);
-    const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0, e.allyT > 0 ? 1 : 0]);
-    sendAll({ t: 's', p, ai, gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
+    const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0), +(pl.pt || 0).toFixed(2), pl.dx == null ? null : +pl.dx.toFixed(2), pl.dz == null ? null : +pl.dz.toFixed(2), +(pl.py || 0).toFixed(2)]);
+    const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0, e.allyT > 0 ? 1 : 0, Math.round(e.hp ?? 0), e.dead ? 1 : 0]);
+    const bo = bots.map(b => [b.idx, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.yaw.toFixed(2), (b.crouch ? 1 : 0) | (b.state === 'down' ? 2 : 0) | (b.state === 'out' ? 4 : 0) | (b.spd > 0.4 ? 8 : 0), Math.round(b.hp)]);
+    sendAll({ t: 's', p, ai, bo, k: FP.kills, hhp: NET.hunterHP, gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
   }
 }
 function hostResult(reason) {
   if (!NET || !NET.started) return;
-  const list = [...NET.players.values()].map(p => ({ name: p.name, role: p.role, st: p.role === 'hunter' ? '大介先生' : p.escaped ? '脱出' : p.alive ? '生き残り' : 'つかまった' }));
-  const d = { t: 'result', list: [...NET.players.values()].map(p => ({ id: p.id, name: p.name, role: p.role, st: p.role === 'hunter' ? '大介先生' : p.escaped ? '脱出' : p.alive ? '生き残り' : 'つかまった' })), hunterWin: !list.some(p => p.st === '脱出'), reason: reason || '', human: !!NET.hunterId, cfg: NET.cfg, surv: list.filter(p => p.role !== 'hunter').length };
+  const survWin = reason === '条件クリア！';
+  const list = [...NET.players.values()].map(p => ({ name: p.name, role: p.role, st: p.role === 'hunter' ? 'DAISUKE先生' : p.escaped ? '脱出' : p.alive ? '生き残り' : 'つかまった' }));
+  const d = { t: 'result', list: [...NET.players.values()].map(p => ({ id: p.id, name: p.name, role: p.role, st: p.role === 'hunter' ? 'DAISUKE先生' : p.escaped ? '脱出' : p.alive ? '生き残り' : 'つかまった' })), hunterWin: survWin ? false : !list.some(p => p.st === '脱出'), survWin, reason: reason || '', human: !!NET.hunterId, cfg: NET.cfg, surv: list.filter(p => p.role !== 'hunter').length };
   sendAll(d); showResult(d);
 }
 
@@ -2520,16 +3257,22 @@ function clientRecv(d) {
 }
 function applySnap(d) {
   if (!NET.started) return;
-  for (const [id, x, z, yaw, f, st, pt, dx, dz] of d.p) {
+  for (const [id, x, z, yaw, f, st, pt, dx, dz, py] of d.p) {
     const pl = NET.players.get(id); if (!pl) continue;
-    Object.assign(pl, { x, z, yaw, f, pt: pt || 0, alive: !!(st & 1), escaped: !!(st & 2) });
+    Object.assign(pl, { x, z, yaw, f, pt: pt || 0, py: py || 0, alive: !!(st & 1), escaped: !!(st & 2) });
     if (dx != null) { pl.dx = dx; pl.dz = dz; } else if (pl.alive) pl.dx = pl.dz = null;
     const a = avatars.get(id); if (a) { a.tx = x; a.tz = z; a.tyaw = yaw; }
   }
   for (const i of [0, 1]) if (!!(d.dc & (1 << i)) !== doorsClosed[i]) setDoor(i, !!(d.dc & (1 << i)), true);
   if (d.ex && !exitOpen) { exitOpen = true; updateCount(); }
   P.battery = d.bt; musicCd = d.mc; hunterHold = d.hh; freezeT = d.fz; genBroken = !!d.gb;
-  for (const [i, x, z, yaw, sp, dn, al] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (!!al !== !!e.nally) { e.nally = !!al; setAllyLook(e, e.nally); } if (Math.hypot((e.tx ?? x) - x, (e.tz ?? z) - z) > 6) { e.pos.set(x, 0, z); } e.tx = x; e.tz = z; e.tyaw = yaw; e.nspd = sp; }
+  for (const [bi, x, z, yaw, f, hp] of (d.bo || [])) { const b = bots[bi]; if (!b) continue; b.tx = x; b.tz = z; b.tyaw = yaw; b.crouch = !!(f & 1); b.state = f & 4 ? 'out' : f & 2 ? 'down' : 'go'; b.hp = hp; b.nmov = !!(f & 8); }
+  if (d.k !== undefined && d.k !== FP.kills) { FP.kills = d.k; updateCount(); }
+  if (d.hhp !== undefined && NET.myRole === 'hunter') P.hp = d.hhp / 2.5;
+  { const he = enemies[2]; if (he && he.remote && !he.netAI && d.hhp !== undefined) he.chp = d.hhp; }
+  for (const [i, x, z, yaw, sp, dn, al, hp, dead] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (hp !== undefined) e.chp = hp;
+    if (!!dead !== !!e.ndead) { e.ndead = !!dead; lieDown(e, e.ndead); e.group.visible = true; e.deadSeen = performance.now(); }
+    if (e.ndead && performance.now() - (e.deadSeen || 0) > 3000) e.group.visible = false; if (!!al !== !!e.nally) { e.nally = !!al; setAllyLook(e, e.nally); } if (Math.hypot((e.tx ?? x) - x, (e.tz ?? z) - z) > 6) { e.pos.set(x, 0, z); } e.tx = x; e.tz = z; e.tyaw = yaw; e.nspd = sp; }
   const keep = new Set(d.b);
   for (let i = books.length - 1; i >= 0; i--) if (!keep.has(books[i].id)) { scene.remove(books[i].g); books.splice(i, 1); collected++; updateCount(); }
 }
@@ -2537,7 +3280,7 @@ function netTick(dt) {
   if (NET.host) { hostTick(dt); return; }
   if (hunterHold > 0) hunterHold = Math.max(0, hunterHold - dt);
   NET.sendT -= dt;
-  if (NET.sendT <= 0 && NET.conn && NET.conn.open && !P.out) { NET.sendT = 1 / 15; NET.conn.send({ t: 'u', x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), pt: +P.pitch.toFixed(2), f: myFlags() }); }
+  if (NET.sendT <= 0 && NET.conn && NET.conn.open && !P.out) { NET.sendT = 1 / 15; NET.conn.send({ t: 'u', x: +P.pos.x.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), pt: +P.pitch.toFixed(2), py: +P.jumpY.toFixed(2), f: myFlags() }); }
   if (NET.chargeAcc > 0.2) { act('charge', { dt: NET.chargeAcc }); NET.chargeAcc = 0; }
 }
 
@@ -2547,15 +3290,19 @@ function onEvent(ev) {
   const me = NET.myId, hunter = NET.myRole === 'hunter';
   switch (ev.k) {
     case 'caught': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = false; if (ev.x != null) { pl.dx = ev.x; pl.dz = ev.z; } }
-      if (ev.id === me) { $('pause').classList.add('hidden'); caught(enemies[ev.by ?? 2]); STATS.caught = (STATS.caught | 0) + 1; if (STATS.caught >= 10) unlock('caught10'); saveShop(); }
-      else { message(hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3); if (hunter && (ev.by ?? 2) === 2) playVoice(); }
+      if (ev.id === me) {
+        $('pause').classList.add('hidden'); STATS.caught = (STATS.caught | 0) + 1; if (STATS.caught >= 10) unlock('caught10'); saveShop();
+        if (isFPS() || ev.by === -1) { P.downed = false; FP.firing = false; FP.ads = false; P.out = true; startSpectate(); message(`やられた…${ev.why ? '（' + ev.why + '）' : ''} 仲間がそばで「使う」を長押しすると復活できる`, 5); }
+        else caught(enemies[ev.by ?? 2]);
+      }
+      else { message(isFPS() ? `${ev.name}がやられた！ そばで長押しで助け起こせる` : hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3); if (hunter && (ev.by ?? 2) === 2 && !isFPS()) playVoice(); }
       updateCount(); break; }
     case 'book': { const i = books.findIndex(b => b.id === ev.id); if (i < 0) break; const b = books[i]; scene.remove(b.g); books.splice(i, 1); collectBook(b, ev.by === me ? null : ev.name); break; }
     case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}が保健室の${ev.i ? '南' : '北'}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
-    case 'music': freezeT = 10; audioMusic(true); message(hunter ? 'オルゴールの音…体が動かない！' : `${ev.name}がオルゴールを流した――大介先生が止まった`, 4); break;
+    case 'music': freezeT = 10; audioMusic(true); message(hunter ? 'オルゴールの音…体が動かない！' : `${ev.name}がオルゴールを流した――DAISUKE先生が止まった`, 4); break;
     case 'musicEnd': freezeT = 0; audioMusic(false); if (NET.host) aiToBroadcast();
       if (hunter) { message('音が止んだ。放送室に誰かいたはずだ…', 3.5); showPing(spots.broadcast.x, spots.broadcast.z); }
-      else message('音が止んだ――大介先生が動き出す！', 3); break;
+      else message('音が止んだ――DAISUKE先生が動き出す！', 3); break;
     case 'ping': if (hunter) showPing(ev.x, ev.z); break;
     case 'esc': { const pl = NET.players.get(ev.id); if (pl) pl.escaped = true; const a = avatars.get(ev.id); if (a && a.g) a.g.visible = false;
       if (ev.id === me) { P.out = true; $('pause').classList.add('hidden'); message('脱出成功！ 仲間の視点で観戦中', 4); state = 'play'; startSpectate(); }
@@ -2563,16 +3310,23 @@ function onEvent(ev) {
       updateCount(); break; }
     case 'batt0': if (state === 'cams' && !P.out) exitCams(); resetDoors(); message('バッテリー切れ！ 保健室のドアが開いた――', 3); break;
     case 'msg': message(ev.text, 2.5); break;
+    case 'kill': addKillfeed(ev.text); if (ev.kills !== undefined) FP.kills = ev.kills; if (ev.by === me) { FP.score += 100; showHitmarker(true); } updateCount(); if (NET.host) checkObjectives(); break;
+    case 'psh': if (ev.id === me) break; { const a = new V3(ev.x, ev.y, ev.z), b = new V3(ev.ex, ev.ey, ev.ez); drawTracer(a, b); worldFlash(a, 0.4); const w = WEAPONS[ev.w] || WEAPONS.pistol; playSfxAt(w.snd, a, w.vol * 1.1, w.rate); } break;
+    case 'esh': if (NET.host) break; { const e = enemies[ev.i]; if (!e) break; const o = gunMuzzleOf(e), b = new V3(ev.x, ev.y, ev.z); drawTracer(o, b, 0xffb070); worldFlash(o, 0.45); playSfxAt(e.kind === 'fast' ? 'gun_heavy' : 'gun_pistol', o, 0.55, e.kind === 'fast' ? 1.25 : 0.95); } break;
+    case 'bsh': if (NET.host) break; { const a = new V3(ev.x, ev.y, ev.z), b = new V3(ev.ex, ev.ey, ev.ez); drawTracer(a, b, 0x9fe0ff); worldFlash(a, 0.35, 0xffd080); playSfxAt('gun_pistol', a, 0.45, 1.15); } break;
+    case 'dmg': hurtPlayer(ev.amt, { x: ev.x, z: ev.z }, ev.by); break;
+    case 'ach': unlock(ev.id); break;
+    case 'hdown': if (hunter) { P.stunT = 10; P.pos.set(ev.x, 0, ev.z); FP.firing = false; message(`${ev.by}に倒された…10秒後に復活`, 4); } else message(`${ev.by}がDAISUKE先生（プレイヤー）を倒した！ 10秒間動けない`, 3); break;
     case 'revive': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = true; pl.dx = pl.dz = null; }
       if (ev.byId === me) unlock('revive');
       if (ev.id === me) {
         stopSpectate(); if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); }
-        P.out = false; P.crouch = false; P.jumpY = 0; P.jumpV = 0; P.pos.set(ev.x, 0, ev.z); P.vel.set(0, 0, 0); P.escReq = 0; flashOn = true; $('bLight').classList.add('on');
+        P.out = false; P.crouch = false; P.jumpY = 0; P.jumpV = 0; P.downed = false; P.hp = 60; P.hurtT = 0; P.pos.set(ev.x, 0, ev.z); P.vel.set(0, 0, 0); P.escReq = 0; flashOn = true; $('bLight').classList.add('on');
         applyRoleLook(); state = 'play'; showPlayUI(true); lockPointer(); message(`${ev.by}が助け起こしてくれた――復活！`, 3.5);
       } else message(ev.byId === me ? `${ev.name}を助け起こした！` : `${ev.by}が${ev.name}を助け起こした！`, 3);
       updateCount(); break; }
     case 'pet': spawnPet(ev.x, ev.z, ev.by === me, !!NET.host); if (ev.by !== me) message(`${ev.name}がお助けペットを呼んだ！`, 2.5); break;
-    case 'stun': if (hunter) { P.stunT = ev.t; message(`${ev.why || '撃退グッズ'}で体が動かない…（${ev.t}秒）`, 2.5); } else message(`大介先生がひるんだ（${ev.why || '撃退グッズ'}）`, 2); break;
+    case 'stun': if (hunter) { P.stunT = ev.t; message(`${ev.why || '撃退グッズ'}で体が動かない…（${ev.t}秒）`, 2.5); } else message(`DAISUKE先生がひるんだ（${ev.why || '撃退グッズ'}）`, 2); break;
     case 'spray': if (ev.id === me) { consumeItem('spray'); unlock('spray'); message('撃退スプレー！ ひるんだすきに逃げろ！', 3); } else message(hunter ? `${ev.name}に撃退スプレーをかけられた！` : `${ev.name}が撃退スプレーで逃げた！`, 2.5); break;
   }
 }
@@ -2587,13 +3341,16 @@ function showPing(x, z) {
   clearTimeout(pingTimer); pingTimer = setTimeout(() => el.classList.add('hidden'), 4000);
 }
 function startOnlineGame() {
+  const sc = NET.startData.cfg || {};
+  MODE = sc.mode === 'fps' ? 'fps' : 'horror';
+  if ((sc.stage | 0) !== stageIdx) { const keep = store.get('dk_stage', '0'); buildWorld(sc.stage | 0); store.set('dk_stage', keep); }
   NET.started = true; NET.camUsers = new Set(); NET.pingT = 0; NET.sendT = 0; NET.chargeAcc = 0; NET.endT = undefined;
   D = DIFFS.normal;
   for (const id of ['lobby', 'end', 'title', 'pause']) $(id).classList.add('hidden');
   $('camui').classList.add('hidden'); canvas.classList.remove('cam');
   resetGame();
   state = 'play'; showPlayUI(true); goFullscreen(); lockPointer(); initAudio(); setMasterVolume(1);
-  message(NET.myRole === 'hunter' ? 'あなたは大介先生。逃げる人を全員つかまえろ（10秒後に動ける）' : 'あなたは逃げる側。教科書を集めて玄関から脱出しろ！', 5);
+  message(NET.myRole === 'hunter' ? 'あなたはDAISUKE先生。逃げる人を全員つかまえろ（10秒後に動ける）' : 'あなたは逃げる側。教科書を集めて玄関から脱出しろ！', 5);
 }
 function setupOnlineRound() {
   const sd = NET.startData;
@@ -2617,7 +3374,8 @@ function setupOnlineRound() {
       avatars.set(r.id, st); attachSteps(st);
     }
   }
-  hunterHold = sd.hunterId ? 10 : 0; P.out = false; P.escReq = 0; NET.hunterStunT = 0; NET.hostRepair = 0; NET.revAcc = 0;
+  hunterHold = sd.hunterId ? 10 : 0; P.out = false; P.escReq = 0; NET.hunterStunT = 0; NET.hostRepair = 0; NET.revAcc = 0; NET.hunterHP = 250;
+  spawnBots(NET.cfg.bots | 0, SURV_SPAWNS);
   // AI teachers (simulated by the host, mirrored on the others)
   const activate = (e, sp, timer) => { e.active = true; e.netAI = true; e.remote = !NET.host; scene.add(e.group); e.pos.copy(sp); e.tx = sp.x; e.tz = sp.z; e.tyaw = 0; e.yaw = 0; e.nspd = 0; e.state = 'wait'; e.timer = timer; e.stunT = 0; attachSteps(e); };
   for (let i = 0; i < NET.cfg.ai; i++) activate(enemies[i], ENEMY_SPAWN[i], D.start + i * 6);
@@ -2632,6 +3390,7 @@ function removeAvatar(id) {
 function clearAvatars() { for (const id of [...avatars.keys()]) removeAvatar(id); }
 function backToLobby() {
   if (!NET) return;
+  MODE = store.get('dk_mode', 'horror') === 'fps' ? 'fps' : 'horror';
   NET.started = false; NET.camUsers = new Set(); P.out = false;
   clearAvatars(); audioMusic(false); setMasterVolume(0);
   D = DIFFS[diffKey]; resetGame(); applyRoleLook();
@@ -2645,13 +3404,13 @@ function showResult(d) {
   NET.started = false; state = 'end'; showPlayUI(false); unlockPointer(); setMasterVolume(0); audioMusic(false);
   $('camui').classList.add('hidden'); canvas.classList.remove('cam'); $('pause').classList.add('hidden');
   const meHunter = NET.myRole === 'hunter', won = d.hunterWin === meHunter;
-  $('endTitle').textContent = (d.hunterWin ? (d.human ? '大介先生の勝ち' : '先生たちの勝ち') : '逃げる側の勝ち') + (won ? '！' : '…');
+  $('endTitle').textContent = (d.hunterWin ? (d.human ? 'DAISUKE先生の勝ち' : '先生たちの勝ち') : '逃げる側の勝ち') + (won ? '！' : '…');
   const mine = (d.list || []).find(p => p.id === NET.myId); let got = 0;
   if (meHunter && d.hunterWin) got = 3 + (d.surv | 0);
-  else if (mine && mine.st === '脱出') { const c = d.cfg || {}; got = Math.max(3, 3 + (c.ai | 0) + (c.teacher ? 2 : 0) + (d.human ? 2 : 0)); }
+  else if (mine && (mine.st === '脱出' || (d.survWin && mine.role !== 'hunter'))) { const c = d.cfg || {}; got = Math.max(3, 3 + (c.ai | 0) + (c.teacher ? 2 : 0) + (d.human ? 2 : 0)); }
   if (got) addPoints(got);
   if (won) unlock('online_win'); if (meHunter && d.hunterWin) unlock('hunter_all');
-  addHist({ mode: 'オンライン', diff: meHunter ? '大介先生' : '逃げる側', res: won ? '勝ち' : '負け', time: playT, pts: got });
+  addHist({ mode: 'オンライン', diff: meHunter ? 'DAISUKE先生' : '逃げる側', res: won ? '勝ち' : '負け', time: playT, pts: got });
   $('earned').textContent = got ? `+${got}P（合計 ${points}P）` : '';
   $('endTitle').style.color = won ? '#7de08a' : '';
   $('endText').textContent = d.reason || '';
@@ -2662,11 +3421,15 @@ function showResult(d) {
   $('end').classList.remove('hidden');
 }
 function applyRoleLook() {
-  const h = !!(NET && NET.started && NET.myRole === 'hunter');
+  const h = !!(NET && NET.started && NET.myRole === 'hunter'), L = STAGE.look, fps = MODE === 'fps';
   flash.color.setHex(h ? 0xff5040 : 0xfff0dc); flash.angle = THREE.MathUtils.degToRad(h ? 42 : 30); flashBase = h ? 16 : 30;
-  ambient.color.setHex(h ? 0x8a3a34 : 0x5a6878); ambient.intensity = h ? 0.6 : 0.22; hemi.intensity = 0.25;
-  scene.fog.density = h ? 0.05 : FOG_NORMAL; flash.visible = true;
-  P.staminaMax = h ? 6 : 4.5; P.stamina = Math.min(P.stamina, P.staminaMax);
+  ambient.color.setHex(h ? 0x8a3a34 : L.amb); ambient.intensity = (h ? 0.6 : L.ambI) + (fps ? 0.55 : 0);
+  hemi.color.setHex(L.hemiSky); hemi.intensity = L.hemiI + (fps ? 0.35 : 0);
+  moon.color.setHex(L.sun); moon.intensity = L.sunI + (fps ? 0.25 : 0);
+  scene.fog.color.setHex(L.fogCol); scene.background.setHex(L.fogCol);
+  scene.fog.density = (h ? 0.05 : L.fog) * (fps ? 0.45 : 1); flash.visible = true;
+  renderer.toneMappingExposure = fps ? 1.35 : 1.2;
+  P.staminaMax = MODE === 'fps' ? 10 : h ? 8 : 6.5; P.stamina = Math.min(P.stamina, P.staminaMax);
   if (!NET || !NET.started) { $('endList').classList.add('hidden'); $('retry').classList.remove('hidden'); $('toTitle2').classList.remove('hidden'); $('backLobby').classList.add('hidden'); $('leaveOnline').classList.add('hidden'); }
 }
 function nameTag(name, color) {
@@ -2690,8 +3453,9 @@ function makeStudent(color, name) {
   const cone = new THREE.Mesh(new THREE.ConeGeometry(1.3, 5, 18, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff1c0, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   cone.rotation.x = -Math.PI / 2; cone.position.set(0.2, 1.3, 2.55); body.add(cone);
   const tag = nameTag(name, color); g.add(tag);
+  const gun = makeGunModel('smg'); gun.rotation.x = -Math.PI / 2; gun.position.set(0, -0.5, 0.03); arms[1].add(gun); gun.visible = false;
   g.traverse(o => { if (o.isMesh && o !== cone) o.castShadow = true; });
-  return { g, body, legs, arms, cone, tag, phase: 0 };
+  return { g, body, legs, arms, cone, tag, gun, phase: 0 };
 }
 function updateAvatars(dt) {
   const k = Math.min(1, dt * 12), hunterMe = NET.myRole === 'hunter';
@@ -2731,6 +3495,8 @@ function updateAvatars(dt) {
       const sw = Math.sin(a.phase) * Math.min(0.75, a.spd * 0.22);
       a.legs[0].rotation.x = sw; a.legs[1].rotation.x = -sw; a.arms[0].rotation.x = -sw * 0.8; a.arms[1].rotation.x = sw * 0.8;
       a.cone.visible = !!(f & 16); a.tag.visible = !hunterMe;
+      a.gun.visible = isFPS(); if (isFPS()) a.arms[1].rotation.x = -1.3;
+      a.g.position.y = pl.py || 0;
       a.moving = a.spd > 0.4; a.speed = (f & 4) ? 5 : a.spd; a.active = alive;
     }
   }
@@ -2747,6 +3513,7 @@ function loop() {
     if (P.out && NET && NET.started && (state === 'play' || state === 'cams')) updateSpectate(dt);
     computeTargets(); updatePets(dt); updateClone(dt);
     if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt);
+    updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt);
     if (state !== 'scare') updateWorld(dt, t);
     if (NET && NET.started) netTick(dt);
     drawMapArrow();
@@ -2767,8 +3534,8 @@ function loop() {
   }
 }
 resize();
-window.__dk = { get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
-  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
+window.__dk = { FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
