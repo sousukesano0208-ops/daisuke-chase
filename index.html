@@ -38,8 +38,14 @@ canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) co
 #pose.hid{border-color:#7fd36b;color:#a6f19a}
 #pose.blown{border-color:#e0483a;color:#ff9c90}
 #mapwrap{position:fixed;right:calc(14px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));
-  width:192px;height:104px;opacity:.88;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden}
-#map{width:192px;height:104px;display:block}
+  width:240px;height:130px;opacity:.9;border-radius:6px;background:rgba(0,0,0,.55);overflow:hidden;pointer-events:auto;cursor:pointer}
+#map{width:240px;height:130px;display:block}
+#mapHint{position:absolute;left:3px;top:0;font-size:15px;font-weight:700;color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000;pointer-events:none}
+#bigmap{position:fixed;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.62);pointer-events:auto}
+#bigmap .bm{position:relative;width:min(94vw,calc(86vh * 1.846));aspect-ratio:24/13}
+#bigmap canvas{width:100%;height:100%;display:block;border-radius:8px;border:1px solid rgba(255,255,255,.3)}
+#bigmap .ttl{font-size:15px;margin-bottom:8px;color:#e8eef2;text-shadow:0 1px 3px #000}
+#bigmap .ttl b{color:#ffd166}
 #arrow{position:absolute;left:-5px;top:-6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:12px solid #fff;transform-origin:5px 6px;will-change:transform}
 #cross{position:fixed;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(255,255,255,.35)}
 /* panels */
@@ -58,6 +64,8 @@ canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) co
 .seg button{font-family:inherit;font-size:15px;padding:9px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:var(--fg);cursor:pointer;min-width:92px}
 .seg button small{display:block;font-size:11px;color:var(--dim);margin-top:2px}
 .seg button.on{background:#7d0d0a;border-color:#e55}
+#roomMode{font-size:18px;font-weight:700}
+#roomMode .seg button{font-size:17px;padding:10px 18px}
 .seg.mini{margin-top:0}.seg.mini button{min-width:56px;padding:6px 10px}
 .ver{font-size:13px;letter-spacing:.2em;color:var(--dim);margin:-6px 0 8px}
 #invisFx{background:radial-gradient(ellipse at center,rgba(120,180,255,0) 35%,rgba(120,180,255,.45) 100%);opacity:0;transition:opacity .4s}
@@ -185,7 +193,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 #bUse{right:calc(42 * var(--u) + env(safe-area-inset-right));bottom:calc(33 * var(--u) + env(safe-area-inset-bottom));opacity:.55}
 #bUse.ready{opacity:1}
 #bRun{--s:calc(7.5 * var(--u));left:calc(19 * var(--u) + env(safe-area-inset-left));right:auto;bottom:calc(36 * var(--u) + env(safe-area-inset-bottom));transform:translate(-50%,50%);font-size:20px;border-radius:40% 40% 50% 50%}
-#tTop{position:fixed;right:calc(220px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));display:flex;gap:8px;pointer-events:none}
+#tTop{position:fixed;right:calc(266px + env(safe-area-inset-right));top:calc(14px + env(safe-area-inset-top));display:flex;gap:8px;pointer-events:none}
 .tbtn.sm{position:static;--s:44px;font-size:16px}
 .tbtn.on{background:rgba(200,30,20,.55);border-color:#e55}
 .tbtn.ready{background:rgba(90,190,80,.45);border-color:#8f8}
@@ -226,7 +234,8 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <div id="doorState" class="hidden">保健室のドア：閉</div>
   <div id="items"></div>
 </div>
-<div id="mapwrap" class="hidden"><canvas id="map" width="384" height="208"></canvas><div id="ping" class="hidden"></div><div id="tping" class="hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div id="arrow"></div></div>
+<div id="mapwrap" class="hidden"><canvas id="map" width="384" height="208"></canvas><div id="ping" class="hidden"></div><div id="tping" class="hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div class="rdot hidden"></div><div id="arrow"></div><div id="mapHint">⤢</div></div>
+<div id="bigmap" class="hidden"><div class="ttl"></div><div class="bm"><canvas id="bigC" width="1440" height="780"></canvas></div></div>
 <div id="cross" class="hidden"></div>
 <div id="msg"></div>
 <div id="prompt" class="hidden"><span id="promptText"></span><div class="pbar hidden"><i></i></div></div>
@@ -280,7 +289,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.4.1</div>
+  <div class="ver">ver.4.2</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
@@ -301,7 +310,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <p class="keys" id="howto"></p>
   <div id="loading">読み込み中… 0%</div>
   <button id="start" class="btn hidden" type="button">ひとりで遊ぶ</button>
-  <button id="online" class="btn sub hidden" type="button">オンライン対戦（2〜5人）</button>
+  <button id="online" class="btn sub hidden" type="button">オンライン対戦（ホラー・FPS／2〜5人）</button>
   <div class="row hidden" id="navRow">
     <button id="shopBtn" class="btn sub" type="button">購買部（ショップ）</button>
     <button id="gachaBtn" class="btn sub" type="button">ガチャ</button>
@@ -315,15 +324,17 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 </div>
 <div id="lobby" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,48px)">オンライン対戦</h1>
-  <p class="keys">1人が<b>DAISUKE先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたらDAISUKE先生の勝ち。</p>
+  <p class="keys" id="lobbyDesc">1人が<b>DAISUKE先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたらDAISUKE先生の勝ち。</p>
   <div id="lobbyHome">
     <div class="row"><label>名前 <input id="pname" type="text" maxlength="10" autocomplete="off"></label></div>
+    <div class="row">部屋のモード <span class="seg mini" id="nModeSeg"><button type="button" data-m="horror">ホラー（逃げる）</button><button type="button" data-m="fps">FPS（銃で戦う）</button></span></div>
     <button id="mkRoom" class="btn" type="button">部屋を作る</button>
     <div class="row"><label>部屋コード <input id="joinCode" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" style="width:5.5em;text-transform:uppercase"></label><button id="joinRoom" class="btn sub" type="button" style="margin:0">参加する</button></div>
   </div>
   <div id="lobbyRoom" class="hidden">
     <p style="margin-bottom:0">部屋コード</p><div id="roomCode" class="code">----</div>
     <p class="keys" id="roomHint">友だちにこのコードを伝えてください</p>
+    <div id="roomMode" class="row"></div>
     <ul id="roster"></ul>
     <div id="roomCfg" class="row hidden">
       <label>DAISUKE先生（プレイヤー） <select id="cfgHunter"></select></label>
@@ -440,7 +451,7 @@ for (const id of ['sens', 'sens2']) $(id).addEventListener('input', e => { sens 
 $('hq').addEventListener('change', e => { hq = e.target.checked; store.set('dk_hq', hq ? '1' : '0'); applyQuality(); });
 $('howto').innerHTML = IS_TOUCH
   ? '左手でなぞって移動（大きく倒すと走る）／右側をなぞって見回す<br>「しゃがむ」で隠れる（走りながらでスライディング）・「ジャンプ」で机にも乗れる・「使う」でドアやオルゴール・「タブレット」で監視カメラ<br>FPS：「撃つ」を押したままなぞると狙いを動かせる／「ねらう」「リロード」「持ちかえ」'
-  : 'WASD：移動　Shift：走る　Space：ジャンプ（机の上にも乗れる）　C：しゃがむ（走りながらでスライディング）　E：使う（発電機は長押し）　T：タブレット　F：ライト　M：地図　Esc：一時停止<br>FPS：左クリック 撃つ／右クリック ねらう／R リロード／Q・ホイール 持ちかえ';
+  : 'WASD：移動　Shift：走る　M・Tab：大きな地図　Space：ジャンプ（机の上にも乗れる）　C：しゃがむ（走りながらでスライディング）　E：使う（発電機は長押し）　T：タブレット　F：ライト　Esc：一時停止<br>FPS：左クリック 撃つ／右クリック ねらう／R リロード／Q・ホイール 持ちかえ';
 
 // ================================================================== renderer
 const canvas = $('gl');
@@ -2385,7 +2396,7 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyE') doInteract();
     if (e.code === 'KeyT') openTablet();
     if (/^Digit[1-9]$/.test(e.code)) { const it = ITEMS.find(i => i.key === +e.code.slice(5)); if (it) useItem(it.id); }
-    if (e.code === 'KeyM') { showMap = !showMap; $('mapwrap').classList.toggle('hidden', !showMap); }
+    if (e.code === 'KeyM' || e.code === 'Tab') { e.preventDefault(); toggleBigMap(); }
     if (e.code === 'Escape') pause();
   } else if (state === 'cams') {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') switchCam(camIdx + 1);
@@ -2436,7 +2447,7 @@ let runToggle = false;
 function onTouchStart(e) {
   if (state !== 'play') return;
   for (const t of e.changedTouches) {
-    if (t.target.closest && (t.target.closest('.tbtn') || t.target.closest('.islot') || t.target.closest('#wslots'))) continue;
+    if (t.target.closest && (t.target.closest('.tbtn') || t.target.closest('.islot') || t.target.closest('#wslots') || t.target.closest('#mapwrap') || t.target.closest('#bigmap'))) continue;
     if (t.clientX < innerWidth * 0.45 && t.clientY > innerHeight * 0.3 && stick.id === null) {
       const r = $('stickHint').getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       stick.R = r.width * 0.42; stick.id = t.identifier; stick.x = stick.y = 0;
@@ -2998,13 +3009,22 @@ function collectBook(b, who) {
 }
 
 // ================================================================== maps
-const MAPS = 8;  // px per cell on the minimap canvas (drawn at 2x)
+const MAPS = 10;  // px per cell on the minimap (canvas drawn at 16 px per cell)
 function drawZones(g, s, labels) {
   const colorOf = (z) => { if (z === 'C') return 'rgba(200,200,200,.38)'; const r = rooms.find(q => q.id === z);
     return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : 'rgba(150,110,80,.35)'; };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = colorOf(ZONE[y][x]); g.fillRect(x * s, y * s, s - 1, s - 1); }
-  if (labels) { g.fillStyle = 'rgba(255,255,255,.9)'; g.font = `bold ${Math.round(s * 1.3)}px ${JFONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (const r of rooms) if (r.type !== 'class') g.fillText({ shelter: '保', generator: '発', broadcast: '放', staff: '職' }[r.type], (r.x0 + 1.5) * s, (r.y0 + 1.5) * s); }
+  if (labels) {   // every room's name, so you can tell where 2-B or 3-D is
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    for (const r of rooms) {
+      const special = r.type !== 'class', cx = (r.x0 + 1.5) * s, cy = (r.y0 + 1.5) * s;
+      let fs = Math.round(s * (special ? 0.95 : 1.05)); g.font = `bold ${fs}px ${JFONT}`;
+      while (g.measureText(r.name).width > s * 2.8 && fs > 6) { fs--; g.font = `bold ${fs}px ${JFONT}`; }
+      g.lineWidth = Math.max(2, s * 0.22); g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(r.name, cx, cy);
+      g.fillStyle = special ? '#fff' : '#ffe6c2'; g.fillText(r.name, cx, cy);
+    }
+    g.font = `bold ${Math.round(s * 0.75)}px ${JFONT}`; g.fillStyle = '#9dffb0'; g.strokeText('玄関', 23 * s, 12.45 * s); g.fillText('玄関', 23 * s, 12.45 * s);
+  }
   g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4);
 }
 function drawMapBase() { const g = $('map').getContext('2d'); g.clearRect(0, 0, 384, 208); drawZones(g, 16, true); }
@@ -3017,7 +3037,31 @@ function buildCamMap() {
     b.addEventListener('click', () => switchCam(i)); box.appendChild(b);
   });
 }
+let bigOpen = false;
+function toggleBigMap(on) {
+  bigOpen = on === undefined ? !bigOpen : on; $('bigmap').classList.toggle('hidden', !bigOpen);
+  if (bigOpen) { UI.bigT = 0; drawBigMap(); }
+}
+function drawBigMap() {
+  const c = $('bigC'), g = c.getContext('2d'), s = 60; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 0, c.width, c.height);
+  drawZones(g, s, true);
+  const dot = (x, z, col, r = 10) => { g.beginPath(); g.arc(x / CELL * s, z / CELL * s, r, 0, Math.PI * 2); g.fillStyle = col; g.fill(); g.lineWidth = 3; g.strokeStyle = '#000'; g.stroke(); };
+  // teammates and BOTs
+  if (NET && NET.started) for (const p of NET.players.values()) if (p.id !== NET.myId && p.role === 'survivor' && p.alive && !p.escaped && NET.myRole !== 'hunter') dot(p.x || 0, p.z || 0, '#4fc3f7', 11);
+  for (const b of bots) if (b.state !== 'out') dot(b.pos.x, b.pos.z, b.state === 'down' ? '#888' : '#81c784', 9);
+  // you
+  const px = P.pos.x / CELL * s, pz = P.pos.z / CELL * s;
+  g.save(); g.translate(px, pz); g.rotate(-P.yaw); g.beginPath(); g.moveTo(0, -22); g.lineTo(14, 14); g.lineTo(0, 7); g.lineTo(-14, 14); g.closePath();
+  g.fillStyle = '#fff'; g.fill(); g.lineWidth = 4; g.strokeStyle = '#000'; g.stroke(); g.restore();
+  const here = rooms.find(r => { const c2 = toCell(P.pos); return ZONE[c2[1]][c2[0]] === r.id; });
+  $('bigmap').querySelector('.ttl').innerHTML = `いまいる場所：<b>${here ? here.name : '廊下'}</b>　${IS_TOUCH ? 'タップで閉じる' : 'M か Tab で閉じる'}`;
+}
+$('mapwrap').addEventListener('click', () => { if (state === 'play') toggleBigMap(true); });
+$('mapwrap').addEventListener('touchstart', e => { if (state !== 'play') return; e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); toggleBigMap(true); }, { passive: false });
+$('bigmap').addEventListener('click', () => toggleBigMap(false));
+$('bigmap').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); toggleBigMap(false); }, { passive: false });
 function drawMapArrow() {
+  if (bigOpen) { if (state !== 'play') toggleBigMap(false); else { UI.bigT = (UI.bigT || 0) - 1; if (UI.bigT <= 0) { UI.bigT = 6; drawBigMap(); } } }
   if (!showMap || state !== 'play') return;
   const px = P.pos.x / CELL * MAPS, pz = P.pos.z / CELL * MAPS;
   const tr = `translate(${px.toFixed(0)}px,${pz.toFixed(0)}px) rotate(${(-P.yaw).toFixed(2)}rad)`;
@@ -3066,7 +3110,19 @@ function newPeer(id) { if (USE_LOCAL) return new LocalPeer(id); return id ? new 
 const myName = () => ($('pname').value.trim() || 'プレイヤー').slice(0, 10);
 function netStatus(s) { $('netStatus').textContent = s; }
 
+let netMode = MODE;
+const LOBBY_DESC = { horror: '1人が<b>DAISUKE先生</b>になって、ほかの人（最大4人）をつかまえる。<br>逃げる側は教科書をぜんぶ集めて玄関から脱出。つかまった仲間は、そばで「使う」を長押しすると復活できる。全員つかまえたらDAISUKE先生の勝ち。',
+  fps: '<b>FPS</b>：みんな銃を持って戦う（武器はタイトル画面で選んだもの）。<br>全員でAIの先生たちと戦う<b>協力プレイ</b>か、1人がDAISUKE先生になって撃ち合う<b>対戦</b>。教科書を集めて、決められた人数を倒せば逃げる側の勝ち。やられた仲間はそばで長押しで復活。' };
+function setLobbyDesc(m) { $('lobbyDesc').innerHTML = LOBBY_DESC[m === 'fps' ? 'fps' : 'horror']; }
+function setNetMode(m) { netMode = m === 'fps' ? 'fps' : 'horror'; for (const b of $('nModeSeg').children) b.classList.toggle('on', b.dataset.m === netMode); setLobbyDesc(netMode); }
+for (const b of $('nModeSeg').children) b.addEventListener('click', () => setNetMode(b.dataset.m));
+function applyRoomMode(m) {   // host switches the room between horror and FPS
+  if (!NET || !NET.host) return; NET.cfg.mode = m;
+  if (m === 'fps' && !NET.hunterId && !(NET.cfg.ai > 0) && !NET.cfg.teacher) NET.cfg.ai = 1;
+  broadcastRoster();
+}
 function openLobby() {
+  setNetMode(MODE);
   $('title').classList.add('hidden'); $('lobby').classList.remove('hidden');
   $('lobbyRoom').classList.add('hidden'); $('lobbyHome').classList.remove('hidden'); $('startOnline').classList.add('hidden');
   if (!$('pname').value) $('pname').value = CUR || store.get('dk_name', 'プレイヤー' + (10 + Math.floor(Math.random() * 90)));
@@ -3097,8 +3153,8 @@ async function createRoom() {
   const peer = newPeer(NET_PREFIX + code);
   NET = { host: true, code, peer, conns: new Map(), players: new Map(), myId: null, started: false, hunterId: null, sendT: 0, camUsers: new Set(), pingT: 0, chargeAcc: 0 };
   const net = NET;
-  NET.cfg = { ai: 0, teacher: false, mode: MODE, stage: stageIdx, bots: 0 };
-  peer.on('open', id => { if (NET !== net) return; net.myId = id; net.players.set(id, { id, name: myName(), role: 'survivor' }); net.hunterId = id; showRoom(); broadcastRoster(); netStatus(''); });
+  NET.cfg = { ai: netMode === 'fps' ? 1 : 0, teacher: false, mode: netMode, stage: stageIdx, bots: 0 };
+  peer.on('open', id => { if (NET !== net) return; net.myId = id; net.players.set(id, { id, name: myName(), role: 'survivor' }); net.hunterId = net.cfg.mode === 'fps' ? null : id; showRoom(); broadcastRoster(); netStatus(''); });
   peer.on('connection', conn => {
     conn.on('data', d => hostRecv(conn, d));
     conn.on('close', () => hostDrop(conn.peer));
@@ -3161,17 +3217,26 @@ function renderRoster() {
   for (const pl of NET.players.values()) {
     const li = document.createElement('li');
     const who = document.createElement('span'); who.className = 'who'; who.textContent = pl.name + (pl.id === NET.myId ? '（あなた）' : ''); li.appendChild(who);
-    const role = document.createElement('span'); const h = pl.id === NET.hunterId; role.className = 'role' + (h ? ' h' : ''); role.textContent = h ? 'DAISUKE先生' : '逃げる'; li.appendChild(role);
+    const role = document.createElement('span'); const h = pl.id === NET.hunterId; role.className = 'role' + (h ? ' h' : ''); role.textContent = h ? 'DAISUKE先生' : (NET.cfg && NET.cfg.mode === 'fps' ? '戦う' : '逃げる'); li.appendChild(role);
+    if (NET.host && h) { const b = document.createElement('button'); b.type = 'button'; b.textContent = '逃げる側にもどす'; b.addEventListener('click', () => { NET.hunterId = null; if (!(NET.cfg.ai > 0) && !NET.cfg.teacher) NET.cfg.ai = 1; broadcastRoster(); }); li.appendChild(b); }
     if (NET.host && !h) { const b = document.createElement('button'); b.type = 'button'; b.textContent = 'DAISUKE先生にする'; b.addEventListener('click', () => { NET.hunterId = pl.id; broadcastRoster(); }); li.appendChild(b); }
     ul.appendChild(li);
   }
   const cfg = NET.cfg || { ai: 0, teacher: false }, hn = NET.hunterId && NET.players.get(NET.hunterId);
-  $('cfgView').textContent = `モード：${cfg.mode === 'fps' ? 'FPS（銃で戦う）' : 'ホラー（逃げる）'}　ステージ：${STAGES[cfg.stage | 0].name}　DAISUKE先生（プレイヤー）：${hn ? hn.name : 'なし（全員で逃げる）'}　AIのDAISUKE先生：${cfg.ai}人　もう一人の先生：${cfg.teacher ? 'あり' : 'なし'}　味方BOT：${cfg.bots | 0}人`;
+  $('cfgView').textContent = `モード：${cfg.mode === 'fps' ? 'FPS（銃で戦う）' : 'ホラー（逃げる）'}　ステージ：${STAGES[cfg.stage | 0].name}　DAISUKE先生（プレイヤー）：${hn ? hn.name : cfg.mode === 'fps' ? 'なし（全員でAIと戦う）' : 'なし（全員で逃げる）'}　AIのDAISUKE先生：${cfg.ai}人　もう一人の先生：${cfg.teacher ? 'あり' : 'なし'}　味方BOT：${cfg.bots | 0}人`;
   $('roomCfg').classList.toggle('hidden', !NET.host);
+  { const rm = $('roomMode'); rm.textContent = ''; const fps = cfg.mode === 'fps'; setLobbyDesc(cfg.mode);
+    if (NET.host) { const seg = document.createElement('span'); seg.className = 'seg mini';
+      for (const [m, t] of [['horror', 'ホラー（逃げる）'], ['fps', 'FPS（銃で戦う）']]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.classList.toggle('on', (cfg.mode || 'horror') === m); b.addEventListener('click', () => applyRoomMode(m)); seg.appendChild(b); }
+      rm.append('モード ', seg); }
+    else rm.textContent = fps ? 'モード：FPS（銃で戦う）' : 'モード：ホラー（逃げる）';
+    if (fps) { const n = document.createElement('div'); n.className = 'keys'; n.style.width = '100%'; n.style.fontWeight = '400';
+      n.textContent = NET.hunterId ? 'DAISUKE先生役のプレイヤーと撃ち合う対戦。逃げる側は教科書を集めて、決められた人数を倒すと勝ち' : '全員でAIの先生たちと戦う協力プレイ。教科書を集めて、決められた人数を倒せば条件クリア'; rm.appendChild(n); } }
   if (NET.host) {
     const sel = $('cfgHunter'); sel.textContent = '';
     const o0 = document.createElement('option'); o0.value = 'none'; o0.textContent = 'なし（全員で逃げる）'; sel.appendChild(o0);
     for (const pl of NET.players.values()) { const o = document.createElement('option'); o.value = pl.id; o.textContent = pl.name; sel.appendChild(o); }
+    sel.options[0].textContent = cfg.mode === 'fps' ? 'なし（全員でAIと戦う）' : 'なし（全員で逃げる）';
     sel.value = NET.hunterId || 'none';
     for (const o of $('cfgAI').options) o.disabled = !!NET.hunterId && +o.value > 2;
     $('cfgAI').value = String(cfg.ai); $('cfgTeacher').checked = !!cfg.teacher; $('cfgMode').value = cfg.mode || 'horror'; $('cfgStage').value = String(cfg.stage | 0); $('cfgBots').value = String(cfg.bots | 0);
@@ -3434,7 +3499,7 @@ function startOnlineGame() {
   $('camui').classList.add('hidden'); canvas.classList.remove('cam');
   resetGame();
   state = 'play'; showPlayUI(true); goFullscreen(); lockPointer(); initAudio(); setMasterVolume(1);
-  message(NET.myRole === 'hunter' ? 'あなたはDAISUKE先生。逃げる人を全員つかまえろ（10秒後に動ける）' : 'あなたは逃げる側。教科書を集めて玄関から脱出しろ！', 5);
+  message(isFPS() ? (NET.myRole === 'hunter' ? 'あなたはDAISUKE先生。銃で全員を倒せ（10秒後に動ける）' : '教科書を集めて、DAISUKE先生たちを倒せ！ 仲間と協力しよう') : NET.myRole === 'hunter' ? 'あなたはDAISUKE先生。逃げる人を全員つかまえろ（10秒後に動ける）' : 'あなたは逃げる側。教科書を集めて玄関から脱出しろ！', 5);
 }
 function setupOnlineRound() {
   const sd = NET.startData;
