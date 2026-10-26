@@ -298,13 +298,13 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.5.0</div>
+  <div class="ver">ver.5.1</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
   <b>保健室</b>のドアを閉めれば先生は入れない（バッテリー消費）。棚の育毛剤と<b>謎の毛</b>で自分のクローンも作れる。充電は<b>発電室</b>で。<b>放送室</b>のオルゴールで先生を止められる。<br>
   教科書を1冊見つけたら<b>職員室</b>へ――30秒だけ透明になれる。ふつう以上では<b>もう一人の先生</b>も現れる。<br>
-  <b>飛行機ステージ</b>：DAISUKE先生は機械だった。暗号キーを集め、電源・ハッキング・操縦のタスクをこなして先生たちを止めろ。<br>
+  <b>飛行機ステージ</b>：DAISUKE先生は機械だった。ゲートに止まった飛行機と空港を逃げ回りながら暗号キーと電源をそろえて離陸。離陸後はストーリーモード（つかまらない）でハッキングすればEND。<br>
   <b>FPSモード</b>：購買部で買った銃で戦う。先生たちも撃ってくる。教科書を集めて、決められた人数のDAISUKE先生たちを倒せば<b>条件クリア</b>。</p>
   <div class="seg" id="diffSeg" role="radiogroup" aria-label="難易度">
     <button type="button" data-d="easy">かんたん<small>教科書3冊・足おそめ</small></button>
@@ -862,6 +862,7 @@ function makeCams() {
 camsDef.length = 0;
 if (STAGE.plane) {
   camsDef.push({ name: 'CAM1 後方通路', pos: [7.5, 2.4, 19.5], look: [40, 0.6, 19.5] }, { name: 'CAM2 前方通路', pos: [64.5, 2.4, 19.5], look: [30, 0.6, 19.5] }, { name: 'CAM3 中央通路', pos: [33.2, 2.4, 18.2], look: [55, 0.6, 20.5] });
+  camsDef.push({ name: 'CAM4 ゲート待合', pos: [40, 2.45, 30.5], look: [60, 0.6, 36] }, { name: 'CAM5 売店・免税店', pos: [38.5, 2.45, 38.5], look: [12, 0.6, 33] }, { name: 'CAM6 手荷物通路', pos: [5.6, 2.45, 38.5], look: [2, 0.6, 26] }, { name: 'CAM7 搭乗橋', pos: [65.6, 2.45, 29.6], look: [64, 0.6, 24] });
   for (const [t, nm] of [['cargo', 'カーゴ'], ['shelter', 'クルーレスト'], ['avionics', 'アビオニクス室'], ['generator', '電源室'], ['broadcast', 'ギャレー'], ['cockpit', 'コックピット']]) {
     const r = ROOM[t]; if (!r) continue; const top = r.y0 === 5, cx = r.ox + r.w * 1.5, cz = r.oz + r.h * 1.5;
     camsDef.push({ name: `CAM${camsDef.length + 1} ${nm}`, pos: [r.ox + 0.4, 2.35, t === 'cargo' || t === 'cockpit' ? r.oz + 0.6 : top ? r.oz + 0.4 : r.oz + r.h * 3 - 0.4], look: [cx + (t === 'cockpit' ? 1.5 : 0), 0.6, cz] });
@@ -894,7 +895,7 @@ function nearBoxes(x, z, r) {
 }
 let exitOpen = false; const doorsClosed = [false, false];
 const closedCount = () => (doorsClosed[0] ? 1 : 0) + (doorsClosed[1] ? 1 : 0);
-const solid = (b) => b[4] === 'D' ? doorsClosed[b[5]] : b[4] === 'X' ? !exitOpen : b[4] === 'R' ? !rampOpen : true;
+const solid = (b) => b[4] === 'D' ? doorsClosed[b[5]] : b[4] === 'X' ? !exitOpen : b[4] === 'R' ? !rampOpen : b[4] === 'G' ? isStory() : true;
 function collide(p, r, y = 0) {
   for (let iter = 0; iter < 3; iter++) for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
     const b = boxes[i]; if (!solid(b)) continue;
@@ -953,7 +954,7 @@ function nearCover(p, r) {
 const links = new Set();
 function rebuildLinks() {
   links.clear();
-  for (const d of allDoors) { if (d.si !== undefined && doorsClosed[d.si]) continue; links.add(`${d.room[0]},${d.room[1]},${d.cor[0]},${d.cor[1]}`); links.add(`${d.cor[0]},${d.cor[1]},${d.room[0]},${d.room[1]}`); }
+  for (const d of allDoors) { if (d.si !== undefined && doorsClosed[d.si]) continue; if (d.gate && isStory()) continue; links.add(`${d.room[0]},${d.room[1]},${d.cor[0]},${d.cor[1]}`); links.add(`${d.cor[0]},${d.cor[1]},${d.room[0]},${d.room[1]}`); }
 }
 const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
 const passable = (x, y, nx, ny) => inside(nx, ny) && (ZONE[y][x] === ZONE[ny][nx] || links.has(`${x},${y},${nx},${ny}`));
@@ -1037,9 +1038,9 @@ function buildWorld(si) {
   if (tonic) tonic.position.copy(spots.tonic);
   // enemies start in the classrooms farthest from the entrance-side start room
   // where everyone starts depends on the stage
-  if (STAGE.plane) { START.pos.set(16.5, 0, 19.5); START.yaw = -Math.PI / 2; TEACHER_SPAWN.set(64.5, 0, 19.5); SURV_SPAWNS.splice(0, 5, [13.5, 19.0], [15.0, 19.0], [13.5, 20.2], [15.0, 20.2], [12.0, 19.5]); }
+  if (STAGE.plane) { START.pos.set(45, 0, 34.5); START.yaw = -Math.PI / 2; TEACHER_SPAWN.set(3, 0, 31.5); SURV_SPAWNS.splice(0, 5, [43.5, 33.6], [45.5, 33.6], [43.5, 35.4], [45.5, 35.4], [47, 34.5]); }
   else { START.pos.set(12.3, 0, 4.5); START.yaw = Math.PI / 2; TEACHER_SPAWN.set(69, 0, 4.5); SURV_SPAWNS.splice(0, 5, [10.5, 3.0], [13.5, 3.0], [10.5, 6.0], [13.5, 6.0], [12.0, 4.5]); }
-  const far = STAGE.plane ? [61.5, 55.5, 49.5, 43.5, 37.5, 31.5, 25.5, 58.5].map(x => new V3(x, 0, 19.5))
+  const far = STAGE.plane ? [10.5, 16.5, 22.5, 28.5, 34.5, 46.5, 58.5].map(x => new V3(x, 0, 19.5)).concat([new V3(69, 0, 34.5), new V3(12, 0, 34.5)])
     : rooms.filter(r => r.type === 'class' && !(r.ri === 0 && r.x0 === ROOM_COLS[0])).map(r => new V3(r.ox + 4.5, 0, r.oz + 4.5)).sort((a, b) => b.distanceTo(START.pos) - a.distanceTo(START.pos));
   ENEMY_SPAWN.length = 0; ENEMY_SPAWN.push(far[0], far[2], far[4]); HUNTER_SPAWN[0] = far[0].x; HUNTER_SPAWN[1] = far[0].z;
   RESPAWNS.length = 0; for (const v of far.slice(0, 8)) RESPAWNS.push(v);
@@ -1860,6 +1861,7 @@ function respawnEnemy(e) {
 }
 // ---- the teachers shoot back
 function enemyShoot(e, t) {
+  if (isStory()) return;
   const o = gunMuzzleOf(e), aim = new V3(t.pos.x, (t.y || 0) + (t.crouch ? 0.95 : 1.35), t.pos.z);
   const d = Math.hypot(aim.x - o.x, aim.z - o.z);
   let acc = (ENEMY_ACC[diffKey] || 0.42) - d / 70; if (t.moving) acc *= 0.65; if (t.crouch) acc *= 0.75; if (t.hidden) acc *= 0.5; if (NET && NET.started) acc = (ENEMY_ACC.normal) - d / 70;
@@ -1936,7 +1938,7 @@ function updateEnemyGun(e) {
 
 // ---- hurting the player
 function hurtPlayer(dmg, from, byName) {
-  if (state !== 'play' || P.out || P.downed || !isFPS()) return;
+  if (state !== 'play' || P.out || P.downed || !isFPS() || isStory()) return;
   if (NET && NET.started && NET.myRole === 'hunter') { return; }
   P.hp -= dmg; P.hurtT = 0; FP.dmgT = 1;
   if (from) { const ang = Math.atan2(from.x - P.pos.x, from.z - P.pos.z); FP.dmgAng = ang; }
@@ -2031,6 +2033,7 @@ function spawnBots(n, spawnPts) {
 }
 function botTargets() { return bots.filter(b => b.state !== 'down' && b.state !== 'out').map(b => ({ id: 'bot' + b.idx, pos: b.pos, yaw: b.yaw, crouch: b.crouch, hidden: b.hidden, blown: false, invis: false, light: true, noise: b.spd > 4 ? D.hear : 0, spray: false, local: false, bot: b, moving: b.spd > 1 })); }
 function hurtBot(b, dmg, byName) {
+  if (isStory()) return;
   if (b.state === 'down' || b.state === 'out') return;
   b.hp -= dmg; b.hurtT = 0; if (b.hp <= 0) downBot(b, byName);
 }
@@ -2187,9 +2190,13 @@ const PLANE_ROOMS = [
   ['エコノミーA', 'class', 2, 5, 3, 1], ['エコノミーB', 'class', 5, 5, 3, 1], ['ギャレー', 'broadcast', 8, 5, 3, 1], ['クルーレスト', 'shelter', 11, 5, 3, 1],
   ['ビジネスA', 'class', 14, 5, 3, 1], ['ファーストA', 'class', 17, 5, 3, 1], ['ラウンジ', 'class', 20, 5, 2, 1],
   ['電源室', 'generator', 2, 7, 2, 1], ['エコノミーC', 'class', 4, 7, 4, 1], ['エコノミーD', 'class', 8, 7, 3, 1], ['アビオニクス室', 'avionics', 11, 7, 3, 1],
-  ['ビジネスB', 'class', 14, 7, 3, 1], ['パーサー室', 'staff', 17, 7, 2, 1], ['ファーストB', 'class', 19, 7, 3, 1],
+  ['ビジネスB', 'class', 14, 7, 3, 1], ['パーサー室', 'staff', 17, 7, 2, 1], ['ファーストB', 'class', 19, 7, 2, 1],
   ['コックピット', 'cockpit', 22, 5, 2, 3],
+  // on the ground the plane is parked at gate 23: front door -> boarding bridge -> terminal; cargo door -> baggage corridor -> terminal
+  ['搭乗橋', 'bridge', 21, 8, 1, 2], ['手荷物通路', 'service', 0, 8, 2, 5],
+  ['免税店', 'shop', 2, 10, 5, 3], ['売店', 'shop', 7, 10, 6, 3], ['ゲート待合', 'terminal', 13, 10, 11, 3],
 ];
+const AIRPORT_TYPES = ['bridge', 'service', 'shop', 'terminal'];
 const PLANE_DOORS = { 'ギャレー': [9], 'クルーレスト': [11, 13], '電源室': [3], 'アビオニクス室': [12], 'パーサー室': [17] };
 const PLANE_EDGES = new Map();
 const ek = (x1, y1, x2, y2) => (x1 < x2 || (x1 === x2 && y1 < y2)) ? `${x1},${y1},${x2},${y2}` : `${x2},${y2},${x1},${y1}`;
@@ -2199,6 +2206,7 @@ function layoutPlane() {
   for (const row of ZONE) row.fill('X');
   rooms.length = 0; zid = 0; PLANE_EDGES.clear();
   for (let x = 2; x <= 21; x++) ZONE[6][x] = 'C';
+  ZONE[7][21] = 'C';   // front door vestibule
   for (const [name, type, x0, y0, w, h] of PLANE_ROOMS) {
     const id = String.fromCharCode(97 + zid++);
     const r = { id, name, type, x0, y0, w, h, ri: y0 === 5 ? 0 : 2, ox: x0 * CELL, oz: y0 * CELL, doors: [], plane: true };
@@ -2206,7 +2214,7 @@ function layoutPlane() {
     rooms.push(r);
   }
   for (const k in ROOM) delete ROOM[k];
-  for (const r of rooms) ROOM[r.type === 'class' ? r.name : r.type] = r;
+  for (const r of rooms) ROOM[r.type === 'class' || r.type === 'shop' ? r.name : r.type] = r;
   allDoors.length = 0; shDoors.length = 0;
   const addDoor = (r, a, b, extra) => { const d = Object.assign({ room: a, cor: b, r }, extra); r.doors.push(d); allDoors.push(d); return d; };
   for (const r of rooms) {
@@ -2217,6 +2225,12 @@ function layoutPlane() {
   }
   addDoor(ROOM.cargo, [1, 6], [2, 6], { vert: true }); PLANE_EDGES.set(ek(1, 6, 2, 6), 'vdoor');
   addDoor(ROOM.cockpit, [22, 6], [21, 6], { vert: true }); PLANE_EDGES.set(ek(21, 6, 22, 6), 'vdoor');
+  // the airport (closed off once the plane departs)
+  addDoor(ROOM.bridge, [21, 8], [21, 7], { gate: true }); PLANE_EDGES.set(ek(21, 7, 21, 8), 'gate');
+  addDoor(ROOM.service, [1, 8], [1, 7], { gate: true }); PLANE_EDGES.set(ek(1, 7, 1, 8), 'gate');
+  addDoor(ROOM.bridge, [21, 9], [21, 10], {}); PLANE_EDGES.set(ek(21, 9, 21, 10), 'open');
+  addDoor(ROOM.service, [1, 11], [2, 11], { vert: true }); PLANE_EDGES.set(ek(1, 11, 2, 11), 'vdoor');
+  for (let y = 10; y <= 12; y++) { addDoor(ROOM['免税店'], [6, y], [7, y], {}); PLANE_EDGES.set(ek(6, y, 7, y), 'open'); addDoor(ROOM['売店'], [12, y], [13, y], {}); PLANE_EDGES.set(ek(12, y, 13, y), 'open'); }
   ROOM.shelter.doors.forEach((d, i) => { d.si = i; shDoors.push(d); });
 }
 function planeMats() {
@@ -2230,7 +2244,9 @@ function planeMats() {
     carpet: M({ map: carpet, roughness: 0.95 }), cock: M({ color: 0x23262c, roughness: 0.5, metalness: 0.3 }),
     rack: M({ color: 0x1a1d24, roughness: 0.4, metalness: 0.5 }), crate: M({ map: T.wood, color: 0x9a8a6a, roughness: 0.8 }),
     ledC: M({ color: 0x40e0ff, emissive: 0x40e0ff, emissiveIntensity: 1.4 }),
+    gate: M({ map: canvasTex(512, 96, (g, w, h) => { g.fillStyle = '#10213a'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffd24a'; g.font = `bold 52px ${JFONT}`; g.textBaseline = 'middle'; g.fillText('23', 18, 50); g.fillStyle = '#fff'; g.font = `bold 34px ${JFONT}`; g.fillText('DSK777便　出発準備中', 110, 50); }), emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0.4 }),
   });
+  MATS.gate.emissiveMap = MATS.gate.map;
 }
 function skyTexture() {
   return canvasTex(1024, 512, (g, w, h) => {
@@ -2240,14 +2256,14 @@ function skyTexture() {
     for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.8})`; g.fillRect(Math.random() * w, Math.random() * h * 0.35, 2, 2); }
   });
 }
-let skyTex = null, windshield = null, hatch = null, outside = null, rampOpen = false;
+let skyTex = null, groundTex = null, windshield = null, hatch = null, outside = null, rampOpen = false; const gatePanels = [];
 function buildPlane() {
   planeMats();
   const level = new THREE.Group();
   // floors / ceilings
   for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
     const z = ZONE[cy][cx]; if (z === 'X') continue; const x0 = cx * CELL, z0 = cy * CELL; const r = rooms.find(q => q.id === z);
-    const fk = r && ['cargo', 'generator', 'avionics'].includes(r.type) ? 'floorM' : r && r.type === 'cockpit' ? 'cock' : 'carpet';
+    const fk = r && ['cargo', 'generator', 'avionics', 'service', 'bridge'].includes(r.type) ? 'floorM' : r && r.type === 'cockpit' ? 'cock' : r && (r.type === 'terminal' || r.type === 'shop') ? 'floorC' : 'carpet';
     face(fk, 'py', x0, -0.01, z0, x0 + CELL, 0, z0 + CELL, [x0 / 3, z0 / 3, (x0 + CELL) / 3, (z0 + CELL) / 3]);
     face('pceil', 'ny', x0, PCEIL, z0, x0 + CELL, PCEIL + 0.01, z0 + CELL);
   }
@@ -2265,11 +2281,13 @@ function buildPlane() {
     const outer = a === 'X' || b === 'X';
     if (ny !== cy) {   // horizontal wall line z = ny*3, x from cx*3
       const L = ny * CELL, s0 = cx * CELL, s1 = s0 + CELL;
-      if (typ === 'door') { wallH(L, s0, s0 + 0.8); wallH(L, s0 + 2.2, s1); box('pwall', s0 + 0.8, 2.15, L - 0.1, s0 + 2.2, PCEIL, L + 0.1); box('frame', s0 + 0.74, 0, L - 0.13, s0 + 0.8, 2.15, L + 0.13); box('frame', s0 + 2.2, 0, L - 0.13, s0 + 2.26, 2.15, L + 0.13); }
+      if (typ === 'gate') { wallH(L, s0, s0 + 0.8); wallH(L, s0 + 2.2, s1); box('pwall', s0 + 0.8, 2.15, L - 0.1, s0 + 2.2, PCEIL, L + 0.1); box('frame', s0 + 0.74, 0, L - 0.13, s0 + 0.8, 2.15, L + 0.13); box('frame', s0 + 2.2, 0, L - 0.13, s0 + 2.26, 2.15, L + 0.13); addCol(s0 + 0.8, L - 0.12, s0 + 2.2, L + 0.12, 'G'); }
+      else if (typ === 'door') { wallH(L, s0, s0 + 0.8); wallH(L, s0 + 2.2, s1); box('pwall', s0 + 0.8, 2.15, L - 0.1, s0 + 2.2, PCEIL, L + 0.1); box('frame', s0 + 0.74, 0, L - 0.13, s0 + 0.8, 2.15, L + 0.13); box('frame', s0 + 2.2, 0, L - 0.13, s0 + 2.26, 2.15, L + 0.13); }
       else wallH(L, s0, s1, outer);
-      if (outer) {   // windows on the outer skin
-        const inZ = a === 'X' ? L + 0.11 : L - 0.11, nm = a === 'X' ? 'pz' : 'nz';
-        for (const wx of [0.75, 2.25]) face('win', nm, s0 + wx - 0.18, 1.0, inZ, s0 + wx + 0.18, 1.5, inZ);
+      if (outer) {   // windows on the outer skin (big glass in the terminal)
+        const inZ = a === 'X' ? L + 0.11 : L - 0.11, nm = a === 'X' ? 'pz' : 'nz', rin = rooms.find(q => q.id === (a === 'X' ? b : a));
+        if (rin && (rin.type === 'terminal' || rin.type === 'shop')) { face('win', nm, s0 + 0.12, 0.35, inZ, s0 + 2.88, 2.4, inZ); box('frame', s0 + 1.47, 0.3, Math.min(inZ, L) - 0.02, s0 + 1.53, 2.45, Math.max(inZ, L) + 0.02); }
+        else for (const wx of [0.75, 2.25]) face('win', nm, s0 + wx - 0.18, 1.0, inZ, s0 + wx + 0.18, 1.5, inZ);
       }
     } else {           // vertical wall line x = nx*3
       const L = nx * CELL, s0 = cy * CELL, s1 = s0 + CELL;
@@ -2283,6 +2301,11 @@ function buildPlane() {
   box('pwall', -0.2, 2.4, 16.5, 0, PCEIL, 22.5);
   for (const r of rooms) furnishPlane(r);
   spots.exit = new V3(1.2, 0, 19.5);
+  // airport lights
+  for (const r of rooms) if (AIRPORT_TYPES.includes(r.type)) for (let x = r.x0; x < r.x0 + r.w; x += 2) for (let y = r.y0; y < r.y0 + r.h; y += 2) {
+    box('lamp', x * CELL + 0.9, PCEIL - 0.05, y * CELL + 0.9, x * CELL + 2.1, PCEIL, y * CELL + 2.1);
+    lightCands.push({ pos: new V3(x * CELL + 1.5, PCEIL - 0.3, y * CELL + 1.5), color: r.type === 'service' ? 0xffd8a0 : 0xfff4e0, intensity: r.type === 'service' ? 2.6 : 3.8, dist: 9, flicker: r.type === 'service' && Math.random() < 0.4 });
+  }
   buildMeshes(level);
   return level;
 }
@@ -2344,6 +2367,27 @@ function furnishPlane(r) {
     lightCands.push({ pos: new V3(ox + 2.0, 2.1, oz + 4.5), color: 0xb8d0ff, intensity: 4.2, dist: 8, special: true });
     for (const [a1, b1] of [[1.8, 2.1], [6.9, 7.2]]) B('ledC', 4.05, 1.02, a1 + 0.2, 5.5, 1.03, b1 + 0.2);
     spots.pilot = new V3(ox + 2.7, 0, oz + 3.2); interact.push({ id: 'pilot', pos: new V3(ox + 2.3, 0, oz + 3.2), r: 1.25 });
+  } else if (type === 'terminal') {   // gate 23: rows of seats, the gate desk, pillars
+    deskTops[name] = []; r.keyRoom = true;
+    for (const zr of [1.6, 3.6, 5.8, 7.8]) for (let x0 = 1.2; x0 < w * 3 - 4; x0 += 5.2) {
+      if (x0 > 20 && zr < 4) continue;   // keep the way from the boarding bridge clear
+      const facing = zr === 1.6 || zr === 5.8 ? 1 : -1;
+      B('metal', x0, 0, zr - 0.25, x0 + 3.6, 0.4, zr + 0.25); B('seat', x0, 0.4, zr - 0.28, x0 + 3.6, 0.47, zr + 0.28); B('seat', x0, 0.47, zr - facing * 0.3, x0 + 3.6, 0.95, zr - facing * 0.22);
+      for (let k = 0; k <= 6; k++) B('metal', x0 + k * 0.6 - 0.02, 0.47, zr - 0.26, x0 + k * 0.6 + 0.02, 0.6, zr + 0.26);
+      F(x0, zr - 0.3, x0 + 3.6, zr + 0.3, 0.47);
+      for (let k = 0; k < 6; k++) deskTops[name].push({ x: ox + x0 + 0.3 + k * 0.6, z: oz + zr, y: 0.47 });
+    }
+    B('wood', 18, 0, 0.25, 21.6, 1.05, 1.0); B('dark', 18, 1.05, 0.25, 21.6, 1.1, 1.0); F(18, 0.25, 21.6, 1.0, 1.1);
+    face('gate', 'pz', ox + 17.8, 1.7, oz + 0.12, ox + 22, 2.4, oz + 0.12);
+    for (const px of [10.5, 21.0]) { B('pwall', px, 0, 4.2, px + 0.6, PCEIL, 4.8); F(px, 4.2, px + 0.6, 4.8); }
+  } else if (type === 'shop') {
+    deskTops[name] = []; r.keyRoom = true;
+    for (let x = 0.4; x < w * 3 - 0.6; x += 1.3) { B('metal', x, 0, 8.25, x + 1.2, 1.9, 8.85); for (let y = 0.35; y < 1.8; y += 0.45) B(Math.random() < 0.5 ? 'red' : Math.random() < 0.5 ? 'paper' : 'ledB', x + 0.1, y, 8.3, x + 1.1, y + 0.25, 8.6); }
+    F(0.4, 8.25, w * 3 - 0.5, 8.85);
+    for (const cx of [w * 1.5 - 1.6, w * 1.5 + 0.4]) { B('wood', cx, 0, 3.8, cx + 1.2, 0.95, 5.2); F(cx, 3.8, cx + 1.2, 5.2, 0.95); deskTops[name].push({ x: ox + cx + 0.6, z: oz + 4.5, y: 0.95 }); deskTops[name].push({ x: ox + cx + 0.6, z: oz + 4.0, y: 0.95 }); }
+  } else if (type === 'service') {   // baggage corridor
+    for (const [z0, z1] of [[2.4, 3.6], [6.6, 7.8], [12.8, 14.0]]) { B('metal', 2.0, 0, z0, 3.4, 0.55, z1); B('crate', 2.1, 0.55, z0 + 0.1, 3.0, 1.1, z0 + 0.7); F(2.0, z0, 3.4, z1, 0.55); }
+    B('dark', 0.15, 0, 1.0, 0.9, 0.7, 14.5); F(0.15, 1.0, 0.9, 14.5, 0.7);
   } else if (type === 'cargo') {
     for (const [x0, z0, x1, z1, hh] of [[0.6, 0.3, 2.0, 1.6, 1.3], [3.4, 0.4, 5.6, 1.5, 1.0], [0.6, 7.3, 2.2, 8.7, 1.5], [3.6, 7.6, 5.4, 8.7, 1.1]]) { B('crate', x0, 0, z0, x1, hh, z1); F(x0, z0, x1, z1, hh); }
     for (let x = 0.4; x < 6; x += 0.5) { B('metal', x, 0.01, 0.2, x + 0.04, 0.02, 8.8); }
@@ -2361,6 +2405,15 @@ function buildPlaneExtras() {   // live sky in the windshield, the cargo ramp, t
   const frameG = new THREE.Group(); for (const [z0, z1] of [[1.5, 1.9], [4.3, 4.7], [7.1, 7.5]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.3, z1 - z0), fm); m.position.set(ck.ox + 5.62, 1.65, ck.oz + (z0 + z1) / 2); frameG.add(m); }
   const sill = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 6), fm); sill.position.set(ck.ox + 5.6, 1.02, ck.oz + 4.5); frameG.add(sill);
   out.push(frameG);
+  if (!groundTex) groundTex = canvasTex(1024, 512, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h * 0.55); gr.addColorStop(0, '#5f97d6'); gr.addColorStop(1, '#cfe2f2'); g.fillStyle = gr; g.fillRect(0, 0, w, h * 0.55);
+    g.fillStyle = '#8a929c'; g.fillRect(0, h * 0.34, w, h * 0.21); for (let x = 10; x < w; x += 46) { g.fillStyle = '#2c4a66'; g.fillRect(x, h * 0.38, 30, h * 0.12); }
+    g.fillStyle = '#5c6066'; g.fillRect(0, h * 0.55, w, h * 0.45); g.strokeStyle = '#e8c53a'; g.lineWidth = 8; g.beginPath(); g.moveTo(w / 2, h); g.lineTo(w / 2, h * 0.56); g.stroke();
+    g.strokeStyle = '#fff'; g.lineWidth = 4; for (let y = h * 0.6; y < h; y += 40) { g.beginPath(); g.moveTo(w * 0.2, y); g.lineTo(w * 0.28, y); g.stroke(); }
+  });
+  windshield.material.map = isStory() ? skyTex : groundTex;
+  gatePanels.length = 0;
+  for (const [x0, z] of [[63.8, 24], [3.8, 24]]) { const gp = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.15, 0.08), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.5, roughness: 0.4 })); gp.position.set(x0 + 0.7, 1.075, z); gp.visible = isStory(); gatePanels.push(gp); out.push(gp); }
   hatch = new THREE.Group(); hatch.position.set(0, 0, 19.5);
   const hp = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.4, 6), new THREE.MeshStandardMaterial({ color: 0x7c848e, metalness: 0.6, roughness: 0.4 })); hp.position.set(-0.1, 1.2, 0); hatch.add(hp);
   for (let i = -2; i <= 2; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 5.6), new THREE.MeshStandardMaterial({ color: 0xd8b020, roughness: 0.6 })); st.position.set(-0.02, 1.2 + i * 0.45, 0); hatch.add(st); }
@@ -2374,28 +2427,43 @@ function buildPlaneExtras() {   // live sky in the windshield, the cargo ramp, t
 }
 
 // ---- tasks (the order matters)
-const TASK = { power: 0, hack: 0, fly: 0 };
-const TASK_NEED = { power: 4, hack: 8, fly: 15 };
+const TASK = { power: 0, takeoff: 0, hack: 0 };
+const TASK_NEED = { power: 4, takeoff: 3, hack: 8 };
+const isStory = () => !!(STAGE.plane && TASK.takeoff >= TASK_NEED.takeoff);   // after take-off nobody can be caught or shot
+function inPlaneArea(p) { const c = toCell(p), z = ZONE[c[1]][c[0]]; if (z === 'C') return true; const r = rooms.find(q => q.id === z); return !!r && !AIRPORT_TYPES.includes(r.type); }
+function depart() {
+  if (UI.departed) return; UI.departed = true;
+  rebuildLinks(); for (const gp of gatePanels) gp.visible = true;
+  if (windshield) windshield.material.map = skyTex; MATS.win.emissive.setHex(STAGE.look.win);
+  if (!P.out && !inPlaneArea(P.pos)) { P.pos.set(57, 0, 19.5); P.jumpY = 0; P.vel.set(0, 0, 0); }
+  if (!NET || !NET.started || NET.host) {
+    for (const e of enemies) if (e.active && !e.remote && !inPlaneArea(e.pos)) { e.pos.set(20 + Math.random() * 30, 0, 19.5); e.route = []; }
+    for (const b of bots) if (!inPlaneArea(b.pos)) { b.pos.set(50 + Math.random() * 6, 0, 19.5); b.route = []; }
+  }
+  UI.shakeT = 4; message('離陸！ ここからはストーリーモード――もうつかまらない。アビオニクス室でハッキングしろ', 6);
+  drawMapBase(); updateCount();
+}
 const keysDone = () => books.length === 0 && collected > 0;
-function taskStep() { if (!keysDone()) return 'keys'; if (TASK.power < TASK_NEED.power) return 'power'; if (TASK.hack < TASK_NEED.hack) return 'hack'; if (TASK.fly < TASK_NEED.fly) return 'fly'; return 'done'; }
-function taskReady(t) { return t === 'power' ? keysDone() : t === 'hack' ? keysDone() && TASK.power >= TASK_NEED.power : keysDone() && TASK.power >= TASK_NEED.power && TASK.hack >= TASK_NEED.hack; }
+function taskStep() { if (!keysDone()) return 'keys'; if (TASK.power < TASK_NEED.power) return 'power'; if (TASK.takeoff < TASK_NEED.takeoff) return 'takeoff'; if (TASK.hack < TASK_NEED.hack) return 'hack'; return 'done'; }
+function taskReady(t) { return t === 'power' ? keysDone() : t === 'takeoff' ? keysDone() && TASK.power >= TASK_NEED.power : keysDone() && TASK.power >= TASK_NEED.power && TASK.takeoff >= TASK_NEED.takeoff; }
 function addTask(t, dt) {
   if (NET && NET.started && !NET.host) { NET.taskAcc = NET.taskAcc || {}; NET.taskAcc[t] = (NET.taskAcc[t] || 0) + dt; if (NET.taskAcc[t] > 0.3) { act('task', { tk: t, dt: NET.taskAcc[t] }); NET.taskAcc[t] = 0; } return; }
   hostTask(t, dt);
 }
-const TASK_MSG = { power: 'システム電源が復旧した！ 次はアビオニクス室でハッキングだ', hack: 'ハッキング成功！ 機械のDAISUKE先生たちのシステムに侵入した――コックピットで自動操縦を切れ', fly: '操縦成功！ 機体が安定した――先生たちに制御コマンドを送信…' };
+const TASK_MSG = { power: 'システム電源が入った！ コックピットの操縦席で離陸しよう', takeoff: '', hack: 'ハッキング成功！ 機械のDAISUKE先生たちに制御コマンドを送信…' };
 function hostTask(t, dt) {
   if (!TASK_NEED[t] || !taskReady(t) || TASK[t] >= TASK_NEED[t] || END) return;
   TASK[t] = Math.min(TASK_NEED[t], TASK[t] + clamp(dt, 0, 0.6)); if (TASK[t] > TASK_NEED[t] - 0.02) TASK[t] = TASK_NEED[t];
   if (TASK[t] >= TASK_NEED[t]) {
+    if (t === 'takeoff') { if (NET && NET.started) netEvent({ k: 'depart' }); else depart(); return; }
     if (NET && NET.started) netEvent({ k: 'task', t, text: TASK_MSG[t] }); else { message(TASK_MSG[t], 4.5); drawMapBase(); updateCount(); }
-    if (t === 'fly') { if (NET && NET.started) netEvent({ k: 'ending' }); else startEnding(); }
+    if (t === 'hack') { if (NET && NET.started) netEvent({ k: 'ending' }); else startEnding(); }
   }
 }
 function taskLines() {
-  return [[`暗号キーを集める　${collected} / ${collected + books.length}`, keysDone()], ['電源室でシステム電源を入れる', TASK.power >= TASK_NEED.power], ['アビオニクス室でハッキングする', TASK.hack >= TASK_NEED.hack], ['コックピットで操縦して機体を安定させる', TASK.fly >= TASK_NEED.fly]];
+  return [[`暗号キーを集める（機内と空港）　${collected} / ${collected + books.length}`, keysDone()], ['電源室でシステム電源を入れる', TASK.power >= TASK_NEED.power], ['コックピットで離陸する（長押し）', TASK.takeoff >= TASK_NEED.takeoff], ['【ストーリー】アビオニクス室でハッキング', TASK.hack >= TASK_NEED.hack]];
 }
-const TASK_ROOM = { power: 'generator', hack: 'avionics', fly: 'cockpit' };
+const TASK_ROOM = { power: 'generator', takeoff: 'cockpit', hack: 'avionics' };
 
 // ---- the teachers are machines here
 function setRobotLook(e, on) {
@@ -2432,7 +2500,7 @@ function enterFly() {
   state = 'fly'; FLY.roll = 0; FLY.pitch = 0; FLY.tt = 0; FP.firing = false; FP.ads = false;
   showPlayUI(false); $('flyHud').classList.remove('hidden'); document.body.classList.add('flying'); if (IS_TOUCH) $('touch').classList.remove('hidden');
   P.pos.set(spots.pilot.x, 0, spots.pilot.z); P.yaw = -Math.PI / 2; P.pitch = 0; P.vel.set(0, 0, 0);
-  message(taskReady('fly') ? '自動操縦を切った！ 機体を水平に保て（15秒）' : '操縦席に座った。まだシステムに侵入していないので、ここでは何も起きない…', 4);
+  message('操縦席に座った。自由に飛ばせる（W/S・A/D、iPadはスティック）', 3.5); $('flyProg').parentElement.style.display = 'none';
 }
 function exitFly(silent) {
   if (state !== 'fly') return;
@@ -2447,7 +2515,6 @@ function updateFly(dt) {
   FLY.tt -= dt; if (FLY.tt <= 0) { FLY.tt = 0.8 + Math.random() * 1.4; FLY.tr = (Math.random() - 0.5) * 0.7; FLY.tp = (Math.random() - 0.5) * 0.35; }
   FLY.roll = clamp(FLY.roll + (ix * 0.75 + FLY.tr) * dt, -1.1, 1.1); FLY.pitch = clamp(FLY.pitch + (iy * 0.4 + FLY.tp) * dt, -0.5, 0.5);
   FLY.ok = Math.abs(FLY.roll) < 0.17 && Math.abs(FLY.pitch) < 0.09;
-  if (FLY.ok && taskReady('fly')) addTask('fly', dt);
   camera.position.set(P.pos.x, 1.25, P.pos.z); camera.rotation.set(-FLY.pitch * 0.25, -Math.PI / 2, -FLY.roll * 0.3, 'YXZ');
   if (windshield) { windshield.rotation.set(0, -Math.PI / 2, 0); windshield.rotateZ(FLY.roll); windshield.position.y = 1.6 + FLY.pitch * 6; }
   if (skyTex) skyTex.offset.x = (skyTex.offset.x + dt * 0.02) % 1;
@@ -2463,9 +2530,8 @@ function drawFlyHud() {
   g.restore();
   g.strokeStyle = FLY.ok ? '#6dff8a' : '#ffd24a'; g.lineWidth = 4; g.beginPath(); g.moveTo(w / 2 - 50, h / 2); g.lineTo(w / 2 - 15, h / 2); g.lineTo(w / 2, h / 2 + 12); g.lineTo(w / 2 + 15, h / 2); g.lineTo(w / 2 + 50, h / 2); g.stroke();
   g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 3; g.beginPath(); g.arc(w / 2, h / 2, R, 0, Math.PI * 2); g.stroke();
-  const ready = taskReady('fly');
-  $('flyProg').style.transform = `scaleX(${TASK.fly / TASK_NEED.fly})`;
-  $('flyMsg').textContent = !ready ? 'まだシステムに侵入していない（アビオニクス室のハッキングが先）' : FLY.ok ? '安定している――このまま！' : '機体が傾いている！ 水平にもどせ';
+  const ready = true;
+  $('flyMsg').textContent = FLY.ok ? '水平飛行中' : '機体が傾いている';
 }
 
 // ---- the ending: the hacked teachers walk to the cargo ramp and jump
@@ -2557,17 +2623,19 @@ function resetGame() {
     e.pos.copy(isT ? TEACHER_SPAWN : ENEMY_SPAWN[i]); e.yaw = isT ? 0 : i === 0 ? Math.PI : 0; e.state = 'wait'; e.timer = isT ? D.start + 4 : D.start + i * 6;
     e.route = []; e.sees = e.raw = false; e.alert = false; e.lurk = 0; e.moving = false; e.noticeT = 0; e.susp = false;
     e.cfg = isT ? { patrol: 1.15, search: 1.9, chase: D.fastChase || 6, sightMul: 0.75, notice: D.fastNotice || 1.5 } : { patrol: D.patrol, search: D.search, chase: D.chase, sightMul: 1, notice: 0 };
+    if (STAGE.plane) { e.cfg.patrol *= 0.85; e.cfg.search *= 0.85; e.cfg.chase *= 0.82; }
     if (MODE === 'fps') e.cfg = isT ? { patrol: 1.3, search: 1.9, chase: 2.7, sightMul: 0.9, notice: 0.5 } : { patrol: 1.3, search: 1.8, chase: 2.3, sightMul: 1, notice: 0 };   // they walk and shoot instead of sprinting
     e.maxHp = (ENEMY_HP[diffKey] || 100) * (isT ? 1.3 : 1); e.hp = e.maxHp; e.chp = e.maxHp; e.dead = false; e.ndead = false; e.deadT = 0; e.fireCd = 1.5 + Math.random(); e.meleeCd = 0; attachEnemyGun(e);
     if (isT && D.sab) e.sabT = D.sab[0] + Math.random() * (D.sab[1] - D.sab[0]);
   });
   let plan;
   if (on) plan = NET.startData.books;
-  else plan = makeBookPlan(D.books);
+  else plan = makeBookPlan(STAGE.plane ? 3 : D.books);
   for (const bp of plan) spawnBook(bp);
   if (on) setupOnlineRound(); else clearAvatars();
   P.hp = 100; P.hurtT = 9; P.downed = false; P.downT = 0; FP.firing = false; FP.ads = false;
-  TASK.power = TASK.hack = TASK.fly = 0; END = null; rampOpen = false; if (hatch) hatch.rotation.z = 0; if (outside) outside.visible = false;
+  TASK.power = TASK.takeoff = TASK.hack = 0; UI.departed = false; END = null;
+  if (STAGE.plane) { MATS.win.emissive.setHex(0x9cb4d0); if (windshield) windshield.material.map = groundTex; for (const gp of gatePanels) gp.visible = false; rebuildLinks(); } rampOpen = false; if (hatch) hatch.rotation.z = 0; if (outside) outside.visible = false;
   if (windshield) { windshield.rotation.set(0, -Math.PI / 2, 0); windshield.position.y = 1.6; }
   $('flyHud').classList.add('hidden'); document.body.classList.remove('flying');
   for (const e of enemies) { e.group.rotation.x = 0; setRobotLook(e, !!STAGE.plane); }
@@ -2579,7 +2647,7 @@ function resetGame() {
   updateCount(); flashOn = true; $('bLight').classList.add('on'); $('bCrouch').classList.remove('on'); renderItems();
 }
 function makeBookPlan(n) {
-  const classes = rooms.filter(r => r.type === 'class' && r.name !== '2-A').map(r => r.name).sort(() => Math.random() - 0.5).slice(0, n);
+  const classes = rooms.filter(r => (r.type === 'class' || r.keyRoom) && r.name !== '2-A').map(r => r.name).sort(() => Math.random() - 0.5).slice(0, n);
   const subs = SUBJECTS.map((s, i) => i).sort(() => Math.random() - 0.5);
   return classes.map((rn, i) => ({ id: i, room: rn, di: Math.floor(Math.random() * deskTops[rn].length), sub: subs[i % subs.length] }));
 }
@@ -2945,8 +3013,8 @@ function toTitle() {
 function interactLabel(it) {
   switch (it.id) {
     case 'door': return doorsClosed[it.di] ? `${shelterName()}の${shDoorName(it.di)}ドアを開ける` : `${shelterName()}の${shDoorName(it.di)}ドアを閉める`;
-    case 'hack': return TASK.hack >= TASK_NEED.hack ? 'ハッキング済み' : !keysDone() ? 'サーバー端末（暗号キーを全部集めてから）' : TASK.power < TASK_NEED.power ? 'サーバー端末（先に電源室でシステム電源を入れる）' : 'サーバーをハッキングする（長押し・音が出る）';
-    case 'pilot': return TASK.fly >= TASK_NEED.fly ? '操縦席' : taskReady('fly') ? '操縦席に座って自動操縦を切る' : '操縦席に座る';
+    case 'hack': return TASK.hack >= TASK_NEED.hack ? 'ハッキング済み' : !isStory() ? 'サーバー端末（離陸してから）' : 'サーバーをハッキングする（長押し）';
+    case 'pilot': return isStory() ? '操縦席に座る（自由に操縦）' : taskReady('takeoff') ? '離陸する（長押し）' : '操縦席（暗号キーと電源が先）';
     case 'tonic': return NET ? '棚の育毛剤（ひとりで遊ぶときだけ使える）' : tonicUsed ? '育毛剤の棚（もう空っぽ）' : itemCount('hair') > 0 ? '育毛剤に謎の毛をひたして、自分のクローンを作る' : '棚の育毛剤…（SSRの「謎の毛」があれば何か起きそう）';
     case 'revive': return `${it.name}を助け起こす（長押し）`;
     case 'gen': if (STAGE.plane && taskReady('power') && TASK.power < TASK_NEED.power && !genBroken) return 'システム電源を入れる（長押し）';
@@ -2970,7 +3038,7 @@ function doInteract() {
   if (it.id === 'door') toggleDoor(it.di);
   else if (it.id === 'invis') useInvis();
   else if (it.id === 'tonic') useTonic();
-  else if (it.id === 'pilot') enterFly();
+  else if (it.id === 'pilot') { if (isStory()) enterFly(); else if (!taskReady('takeoff')) message('離陸するには、暗号キーを全部集めて電源室でシステム電源を入れること', 3); }
   else if (it.id === 'music') { if (NET) { if (musicCd > 0) message(`オルゴールのゼンマイがまだ戻らない…（あと${Math.ceil(musicCd)}秒）`, 2); else { act('music'); unlock('music'); } } else playMusic(); }
 }
 function enterCams(spect) {
@@ -3084,7 +3152,8 @@ function updatePlayer(dt) {
   P.taskT = null;
   if (STAGE.plane && curInteract && holding && !genBroken) {
     if (curInteract.id === 'gen' && taskReady('power') && TASK.power < TASK_NEED.power) { addTask('power', dt); P.taskT = 'power'; P.noise = Math.max(P.noise, 14); }
-    if (curInteract.id === 'hack' && taskReady('hack') && TASK.hack < TASK_NEED.hack) { addTask('hack', dt); P.taskT = 'hack'; P.noise = Math.max(P.noise, 22); }
+    if (curInteract.id === 'hack' && taskReady('hack') && TASK.hack < TASK_NEED.hack) { addTask('hack', dt); P.taskT = 'hack'; }
+    if (curInteract.id === 'pilot' && taskReady('takeoff') && TASK.takeoff < TASK_NEED.takeoff) { addTask('takeoff', dt); P.taskT = 'takeoff'; }
   }
   P.charging = !!(curInteract && curInteract.id === 'gen' && !genBroken && holding && P.battery < 100 && !P.taskT);
   if (P.charging) {
@@ -3153,6 +3222,7 @@ function seesTarget(e, t) {
 }
 function pushBack(e, t) { const dx = e.pos.x - t.pos.x, dz = e.pos.z - t.pos.z, d = Math.hypot(dx, dz) || 1; e.pos.x += dx / d * 1.0; e.pos.z += dz / d * 1.0; }
 function doCatch(e, t) {
+  if (isStory()) return;   // story mode after take-off
   if (t.decoy) { cloneCaught(e); return; }
   if (isFPS()) { if (e.meleeCd > 0) return; e.meleeCd = 1.0; hitTarget(t, 15, e.pos, enemyName(e)); return; }   // FPS: a shove instead of a catch
   if (t.bot) { downBot(t.bot); e.stunT = 2; e.route = []; e.state = 'patrol'; return; }
@@ -3333,6 +3403,7 @@ function updatePool(view, t, dt) {
 }
 function updateWorld(dt, t) {
   playT += dt;
+  if (UI.shakeT > 0) { UI.shakeT -= dt; const a = Math.min(1, UI.shakeT / 2) * 0.035; camera.position.x += (Math.random() - 0.5) * a; camera.position.y += (Math.random() - 0.5) * a; }
   const hunter = !!(NET && NET.started && NET.myRole === 'hunter');
   const canCollect = !hunter && !P.out && state !== 'scare';
   for (let i = books.length - 1; i >= 0; i--) {
@@ -3371,7 +3442,7 @@ function updateWorld(dt, t) {
   const pt = state === 'play' && curInteract ? (IS_TOUCH ? '「使う」' : '[E] ') + interactLabel(curInteract) : '';
   if (pt !== UI.pt) { UI.pt = pt; $('prompt').classList.toggle('hidden', !pt); $('promptText').textContent = pt; $('bUse').classList.toggle('ready', !!pt); }
   const isRev = !!(curInteract && curInteract.id === 'revive');
-  const taskBar = STAGE.plane && curInteract && ((curInteract.id === 'gen' && taskReady('power') && TASK.power < TASK_NEED.power) || (curInteract.id === 'hack' && taskReady('hack'))) ? (curInteract.id === 'gen' ? 'power' : 'hack') : null;
+  const taskBar = STAGE.plane && curInteract ? (curInteract.id === 'gen' && taskReady('power') && TASK.power < TASK_NEED.power ? 'power' : curInteract.id === 'hack' && taskReady('hack') ? 'hack' : curInteract.id === 'pilot' && taskReady('takeoff') && !isStory() ? 'takeoff' : null) : null;
   const showBar = P.charging || (curInteract && curInteract.id === 'gen') || isRev || !!taskBar;
   $('prompt').querySelector('.pbar').classList.toggle('hidden', !showBar);
   if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${taskBar ? TASK[taskBar] / TASK_NEED[taskBar] : isRev ? Math.min(1, (P.revive || 0) / 3) : genBroken ? (P.repair || 0) / 4 : P.battery / 100})`;
@@ -3414,7 +3485,7 @@ const MAPS = 10;  // px per cell on the minimap (canvas drawn at 16 px per cell)
 let MAPZ = 0;     // first grid row shown on the minimap (the plane only uses a few rows)
 function drawZones(g, s, labels) {
   const colorOf = (z) => { if (z === 'C') return 'rgba(200,200,200,.38)'; if (z === 'X') return null; const r = rooms.find(q => q.id === z);
-    return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : r.type === 'avionics' ? 'rgba(60,210,255,.5)' : r.type === 'cockpit' ? 'rgba(120,230,140,.5)' : r.type === 'cargo' ? 'rgba(170,170,170,.45)' : r.type === 'staff' ? 'rgba(200,170,90,.5)' : 'rgba(150,110,80,.35)'; };
+    return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : r.type === 'avionics' ? 'rgba(60,210,255,.5)' : r.type === 'cockpit' ? 'rgba(120,230,140,.5)' : r.type === 'cargo' ? 'rgba(170,170,170,.45)' : r.type === 'staff' ? 'rgba(200,170,90,.5)' : r.type === 'terminal' ? 'rgba(110,160,220,.38)' : r.type === 'shop' ? 'rgba(220,170,110,.4)' : r.type === 'service' ? 'rgba(150,150,150,.4)' : r.type === 'bridge' ? 'rgba(170,210,255,.45)' : 'rgba(150,110,80,.35)'; };
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = colorOf(ZONE[y][x]); if (!c) continue; g.fillStyle = c; g.fillRect(x * s, y * s, s - 1, s - 1); }
   if (STAGE.plane) {   // highlight where the next task is
     const nt = taskStep(), r = TASK_ROOM[nt] && ROOM[TASK_ROOM[nt]];
@@ -3434,7 +3505,7 @@ function drawZones(g, s, labels) {
   if (!STAGE.plane) { g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4); }
 }
 function drawMapBase() {
-  const c = $('map'), rows = STAGE.plane ? 5 : H; MAPZ = STAGE.plane ? 4 : 0;
+  const c = $('map'), rows = STAGE.plane ? 9 : H; MAPZ = STAGE.plane ? 4 : 0;
   if (c.height !== rows * 16) { c.height = rows * 16; c.style.height = rows * MAPS + 'px'; $('mapwrap').style.height = rows * MAPS + 'px'; }
   const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); g.save(); g.translate(0, -MAPZ * 16); drawZones(g, 16, true); g.restore();
 }
@@ -3453,7 +3524,7 @@ function toggleBigMap(on) {
   if (bigOpen) { UI.bigT = 0; drawBigMap(); }
 }
 function drawBigMap() {
-  const c = $('bigC'), g = c.getContext('2d'), s = 60, rows = STAGE.plane ? 5 : H, oy = STAGE.plane ? 4 : 0;
+  const c = $('bigC'), g = c.getContext('2d'), s = 60, rows = STAGE.plane ? 9 : H, oy = STAGE.plane ? 4 : 0;
   if (c.height !== rows * s) { c.height = rows * s; $('bigmap').querySelector('.bm').style.aspectRatio = `24/${rows}`; }
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 0, c.width, c.height); g.translate(0, -oy * s);
   drawZones(g, s, true);
@@ -3694,7 +3765,7 @@ function hostStart() {
   const roster = [...NET.players.values()];
   const survivors = roster.filter(p => p.id !== NET.hunterId).length;
   if ((NET.cfg.stage | 0) !== stageIdx) { const keep = store.get('dk_stage', '0'); buildWorld(NET.cfg.stage | 0); store.set('dk_stage', keep); }   // textbook spots come from the room's stage
-  const plan = makeBookPlan(clamp(survivors + 2, 3, 5));
+  const plan = makeBookPlan(STAGE.plane ? 3 : clamp(survivors + 2, 3, 5));
   if (!(NET.hunterId || NET.cfg.ai > 0 || NET.cfg.teacher)) return;
   NET.startData = { t: 'start', roster: roster.map(p => ({ id: p.id, name: p.name })), hunterId: NET.hunterId || null, books: plan, cfg: { ai: Math.min(NET.cfg.ai | 0, NET.hunterId ? 2 : 3), teacher: !!NET.cfg.teacher, mode: NET.cfg.mode === 'fps' ? 'fps' : 'horror', stage: NET.cfg.stage | 0, bots: NET.cfg.bots | 0 } };
   sendAll(NET.startData);
@@ -3765,7 +3836,7 @@ function hostTick(dt) {
   if (hunterHold > 0) hunterHold = Math.max(0, hunterHold - dt);
   const h = NET.hunterId && NET.players.get(NET.hunterId);
   if (NET.hunterStunT > 0) NET.hunterStunT -= dt;
-  if (h && !isFPS() && hunterHold <= 0 && freezeT <= 0 && !(NET.hunterStunT > 0)) for (const p of NET.players.values()) {
+  if (h && !isFPS() && !isStory() && hunterHold <= 0 && freezeT <= 0 && !(NET.hunterStunT > 0)) for (const p of NET.players.values()) {
     if (p.role !== 'survivor' || !p.alive || p.escaped) continue;
     if (!(p.f & 32) && Math.hypot(p.x - h.x, p.z - h.z) < 1.1) {
       const now = performance.now();
@@ -3795,7 +3866,7 @@ function hostTick(dt) {
     const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0), +(pl.pt || 0).toFixed(2), pl.dx == null ? null : +pl.dx.toFixed(2), pl.dz == null ? null : +pl.dz.toFixed(2), +(pl.py || 0).toFixed(2)]);
     const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0, e.allyT > 0 ? 1 : 0, Math.round(e.hp ?? 0), e.dead ? 1 : 0]);
     const bo = bots.map(b => [b.idx, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.yaw.toFixed(2), (b.crouch ? 1 : 0) | (b.state === 'down' ? 2 : 0) | (b.state === 'out' ? 4 : 0) | (b.spd > 0.4 ? 8 : 0), Math.round(b.hp)]);
-    sendAll({ t: 's', p, ai, bo, k: FP.kills, hhp: NET.hunterHP, tk: [Math.floor(TASK.power * 100) / 100, Math.floor(TASK.hack * 100) / 100, Math.floor(TASK.fly * 100) / 100], gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
+    sendAll({ t: 's', p, ai, bo, k: FP.kills, hhp: NET.hunterHP, tk: [Math.floor(TASK.power * 100) / 100, Math.floor(TASK.takeoff * 100) / 100, Math.floor(TASK.hack * 100) / 100], gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
   }
 }
 function hostResult(reason) {
@@ -3832,7 +3903,7 @@ function applySnap(d) {
   P.battery = d.bt; musicCd = d.mc; hunterHold = d.hh; freezeT = d.fz; genBroken = !!d.gb;
   for (const [bi, x, z, yaw, f, hp] of (d.bo || [])) { const b = bots[bi]; if (!b) continue; b.tx = x; b.tz = z; b.tyaw = yaw; b.crouch = !!(f & 1); b.state = f & 4 ? 'out' : f & 2 ? 'down' : 'go'; b.hp = hp; b.nmov = !!(f & 8); }
   if (d.k !== undefined && d.k !== FP.kills) { FP.kills = d.k; updateCount(); }
-  if (d.tk) { TASK.power = d.tk[0]; TASK.hack = d.tk[1]; TASK.fly = d.tk[2]; }
+  if (d.tk) { TASK.power = d.tk[0]; TASK.takeoff = Math.max(TASK.takeoff, d.tk[1]); TASK.hack = d.tk[2]; if (isStory() && !UI.departed) depart(); }
   if (d.hhp !== undefined && NET.myRole === 'hunter') P.hp = d.hhp / 2.5;
   { const he = enemies[2]; if (he && he.remote && !he.netAI && d.hhp !== undefined) he.chp = d.hhp; }
   for (const [i, x, z, yaw, sp, dn, al, hp, dead] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (hp !== undefined) e.chp = hp;
@@ -3883,6 +3954,7 @@ function onEvent(ev) {
     case 'ach': unlock(ev.id); break;
     case 'task': message(ev.text, 4.5); drawMapBase(); updateCount(); break;
     case 'ending': startEnding(); break;
+    case 'depart': TASK.takeoff = TASK_NEED.takeoff; depart(); break;
     case 'hdown': if (hunter) { P.stunT = 10; P.pos.set(ev.x, 0, ev.z); FP.firing = false; message(`${ev.by}に倒された…10秒後に復活`, 4); } else message(`${ev.by}がDAISUKE先生（プレイヤー）を倒した！ 10秒間動けない`, 3); break;
     case 'revive': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = true; pl.dx = pl.dz = null; }
       if (ev.byId === me) unlock('revive');
@@ -4104,7 +4176,7 @@ function loop() {
   }
 }
 resize();
-window.__dk = { FLY, TASK, startEnding, get END() { return END; }, stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+window.__dk = { isStory, inPlaneArea, bfs, toCell, FLY, TASK, startEnding, get END() { return END; }, stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
   step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'ending') { updateEnding(dt); continue; } if (state === 'play' || state === 'cams' || state === 'fly') { if (state === 'play' && !P.out) updatePlayer(dt); if (state === 'fly') updateFly(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
