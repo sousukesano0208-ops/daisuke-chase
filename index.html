@@ -114,6 +114,13 @@ body.fps #stam{bottom:calc(6px + env(safe-area-inset-bottom));width:clamp(160px,
 #downFx{position:fixed;left:50%;top:62%;transform:translateX(-50%);font-size:18px;padding:6px 14px;background:rgba(120,0,0,.6);border-radius:8px;white-space:nowrap}
 body.touch #pose{left:50%;transform:translateX(-50%);bottom:auto;top:calc(50px + env(safe-area-inset-top))}
 .fpsOnly{display:none!important}body.fps .fpsOnly{display:flex!important}
+#flyHud{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:5;pointer-events:none}
+#flyHud .fl{display:flex;gap:14px;align-items:center;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 14px}
+#flyAtt{width:clamp(110px,18vmin,170px);height:clamp(110px,18vmin,170px)}
+#flyHud .fi{width:clamp(200px,34vmin,320px);font-size:14px;line-height:1.5;pointer-events:auto}
+#flyHud .fbar{height:8px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;margin:6px 0}#flyProg{display:block;height:100%;background:#6dff8a;transform-origin:left;transform:scaleX(0)}
+#flyHud small{display:block;color:var(--dim)}#flyHud button{margin-top:6px;font-family:inherit;font-size:15px;padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;touch-action:none}
+body.flying .tbtn{display:none!important}
 #spectBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;pointer-events:auto;z-index:6;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 8px;font-size:15px;white-space:nowrap}
 #spectBar button{font-family:inherit;font-size:16px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;cursor:pointer;touch-action:none}
 #spectBar small{display:block;font-size:11px;color:var(--dim);text-align:center}
@@ -268,6 +275,8 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
   <div id="tTop"><div id="bPause" class="tbtn sm">Ⅱ</div><div id="bLight" class="tbtn sm on"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><rect x="8.5" y="18.2" width="7" height="1.8" rx=".6"/><rect x="9.5" y="21" width="5" height="1.6" rx=".6"/></svg></div><div id="bTab" class="tbtn sm"><svg class="st" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="11" r="3.2"/><path d="M9 17h6"/></svg></div></div>
   <div id="bSwap" class="hidden"></div>
 </div>
+<div id="flyHud" class="hidden"><div class="fl"><canvas id="flyAtt" width="260" height="260"></canvas>
+  <div class="fi"><b>操縦中</b><div id="flyMsg"></div><div class="fbar"><i id="flyProg"></i></div><small id="flyKeys"></small><button id="flyExit" type="button">席を立つ</button></div></div></div>
 <div id="spectBar" class="hidden"><button id="spPrev" type="button">◀</button><div><div id="spName">観戦中</div><small>仲間の視点</small></div><button id="spNext" type="button">▶</button></div>
 
 <div id="camui" class="hidden">
@@ -289,12 +298,13 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.4.2</div>
+  <div class="ver">ver.5.0</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
   <b>保健室</b>のドアを閉めれば先生は入れない（バッテリー消費）。棚の育毛剤と<b>謎の毛</b>で自分のクローンも作れる。充電は<b>発電室</b>で。<b>放送室</b>のオルゴールで先生を止められる。<br>
   教科書を1冊見つけたら<b>職員室</b>へ――30秒だけ透明になれる。ふつう以上では<b>もう一人の先生</b>も現れる。<br>
+  <b>飛行機ステージ</b>：DAISUKE先生は機械だった。暗号キーを集め、電源・ハッキング・操縦のタスクをこなして先生たちを止めろ。<br>
   <b>FPSモード</b>：購買部で買った銃で戦う。先生たちも撃ってくる。教科書を集めて、決められた人数のDAISUKE先生たちを倒せば<b>条件クリア</b>。</p>
   <div class="seg" id="diffSeg" role="radiogroup" aria-label="難易度">
     <button type="button" data-d="easy">かんたん<small>教科書3冊・足おそめ</small></button>
@@ -303,7 +313,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
     <button type="button" data-d="super">スーパー<small>DAISUKE先生2人・最速</small></button>
   </div>
   <div class="row" id="modeRow">モード <span class="seg mini" id="modeSeg"><button type="button" data-m="horror">ホラー（逃げる）</button><button type="button" data-m="fps">FPS（戦う）</button></span></div>
-  <div class="row">ステージ <span class="seg mini" id="stageSeg"><button type="button" data-s="0">夜の校舎</button><button type="button" data-s="1">夕方の校舎</button><button type="button" data-s="2">旧校舎</button></span></div>
+  <div class="row">ステージ <span class="seg mini" id="stageSeg"><button type="button" data-s="0">夜の校舎</button><button type="button" data-s="1">夕方の校舎</button><button type="button" data-s="2">旧校舎</button><button type="button" data-s="3">飛行機</button></span></div>
   <div class="row">味方BOT <span class="seg mini" id="botSeg"><button type="button" data-b="0">なし</button><button type="button" data-b="1">1人</button><button type="button" data-b="2">2人</button><button type="button" data-b="3">3人</button></span>
     <label id="wpnRow" class="hidden">武器 <select id="wpnSel"></select></label></div>
   <div class="row" id="cntRow">DAISUKE先生の人数 <span class="seg mini" id="cntSeg"><button type="button" data-n="1">1人</button><button type="button" data-n="2">2人</button><button type="button" data-n="3">3人</button></span></div>
@@ -341,7 +351,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
       <label>AIのDAISUKE先生 <select id="cfgAI"><option value="0">0人</option><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option></select></label>
       <label><input id="cfgTeacher" type="checkbox"> もう一人の先生</label>
       <label>モード <select id="cfgMode"><option value="horror">ホラー</option><option value="fps">FPS</option></select></label>
-      <label>ステージ <select id="cfgStage"><option value="0">夜の校舎</option><option value="1">夕方の校舎</option><option value="2">旧校舎</option></select></label>
+      <label>ステージ <select id="cfgStage"><option value="0">夜の校舎</option><option value="1">夕方の校舎</option><option value="2">旧校舎</option><option value="3">飛行機</option></select></label>
       <label>味方BOT <select id="cfgBots"><option value="0">なし</option><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option></select></label>
     </div>
     <p id="cfgView" class="keys"></p>
@@ -607,6 +617,8 @@ const STAGES = [
     look: { amb: 0xffc497, ambI: 0.85, hemiSky: 0xffa45c, hemiI: 0.7, fog: 0.03, fogCol: 0x2a1408, sun: 0xffa05a, sunI: 1.1, win: 0x9a4a14, lamp: 0.6, flicker: 0 } },
   { name: '旧校舎', desc: '古い校舎・配置がちがう', layout: [['2-A', '2-B', '発電室', '2-C', '2-D', '2-E'], ['1-A', '1-B', '1-C', '1-D', '保健室', '職員室'], ['3-A', '放送室', '3-B', '3-C', '3-D', '3-E']],
     look: { amb: 0x7a4a40, ambI: 0.24, hemiSky: 0x3a2020, hemiI: 0.25, fog: 0.08, fogCol: 0x050000, sun: 0x804040, sunI: 0.08, win: 0x1a0606, lamp: 0.8, flicker: 0.8 } },
+  { name: '飛行機', desc: '大型旅客機の中・タスクをこなしてDAISUKE先生を止める', plane: true, layout: null,
+    look: { amb: 0x8a94c8, ambI: 0.4, hemiSky: 0x40508a, hemiI: 0.32, fog: 0.035, fogCol: 0x05070f, sun: 0x8aa0ff, sunI: 0.1, win: 0x3a6cc0, lamp: 0.95, flicker: 0.12 } },
 ];
 let stageIdx = clamp(parseInt(store.get('dk_stage', '0')) || 0, 0, STAGES.length - 1);
 let STAGE = STAGES[stageIdx];
@@ -848,6 +860,14 @@ MATS.onair = M({ map: onAirTex, emissive: 0xffffff, emissiveMap: onAirTex, emiss
 // cameras (CCTV)
 function makeCams() {
 camsDef.length = 0;
+if (STAGE.plane) {
+  camsDef.push({ name: 'CAM1 後方通路', pos: [7.5, 2.4, 19.5], look: [40, 0.6, 19.5] }, { name: 'CAM2 前方通路', pos: [64.5, 2.4, 19.5], look: [30, 0.6, 19.5] }, { name: 'CAM3 中央通路', pos: [33.2, 2.4, 18.2], look: [55, 0.6, 20.5] });
+  for (const [t, nm] of [['cargo', 'カーゴ'], ['shelter', 'クルーレスト'], ['avionics', 'アビオニクス室'], ['generator', '電源室'], ['broadcast', 'ギャレー'], ['cockpit', 'コックピット']]) {
+    const r = ROOM[t]; if (!r) continue; const top = r.y0 === 5, cx = r.ox + r.w * 1.5, cz = r.oz + r.h * 1.5;
+    camsDef.push({ name: `CAM${camsDef.length + 1} ${nm}`, pos: [r.ox + 0.4, 2.35, t === 'cargo' || t === 'cockpit' ? r.oz + 0.6 : top ? r.oz + 0.4 : r.oz + r.h * 3 - 0.4], look: [cx + (t === 'cockpit' ? 1.5 : 0), 0.6, cz] });
+  }
+  return;
+}
 camsDef.push(
   { name: 'CAM1 西ホール',   pos: [1.0, 2.75, 1.0],    look: [4.0, 0.6, 20] },
   { name: 'CAM2 北廊下・西', pos: [2.0, 2.75, 9.6],    look: [40, 0.8, 13] },
@@ -874,7 +894,7 @@ function nearBoxes(x, z, r) {
 }
 let exitOpen = false; const doorsClosed = [false, false];
 const closedCount = () => (doorsClosed[0] ? 1 : 0) + (doorsClosed[1] ? 1 : 0);
-const solid = (b) => b[4] === 'D' ? doorsClosed[b[5]] : b[4] === 'X' ? !exitOpen : true;
+const solid = (b) => b[4] === 'D' ? doorsClosed[b[5]] : b[4] === 'X' ? !exitOpen : b[4] === 'R' ? !rampOpen : true;
 function collide(p, r, y = 0) {
   for (let iter = 0; iter < 3; iter++) for (const i of nearBoxes(p.x, p.z, r + 0.2)) {
     const b = boxes[i]; if (!solid(b)) continue;
@@ -994,13 +1014,14 @@ function makeEnemy(gltf, idx) {
 let worldExtras = [];
 function buildWorld(si) {
   stageIdx = si; STAGE = STAGES[si]; store.set('dk_stage', String(si));
-  layoutRooms(STAGE.layout);
+  if (STAGE.plane) layoutPlane(); else layoutRooms(STAGE.layout);
   boxes.length = 0; covers.length = 0; lightCands.length = 0; interact.length = 0;
   for (const k in spots) delete spots[k]; for (const k in deskTops) delete deskTops[k]; for (const k in GB) delete GB[k];
   if (level) { scene.remove(level); level.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   for (const o of worldExtras) scene.remove(o); worldExtras = [];
-  level = buildLevel(); scene.add(level);
+  level = STAGE.plane ? buildPlane() : buildLevel(); scene.add(level);
   MATS.win.emissive.setHex(STAGE.look.win);
+  if (STAGE.plane) for (const o of buildPlaneExtras()) worldExtras.push(o); else { windshield = hatch = outside = null; }
   // shelter doors (closable)
   for (const d of shDoors) {
     const L = d.line * CELL, gc = d.cx * CELL + 1.5, rs = -d.side;
@@ -1015,7 +1036,11 @@ function buildWorld(si) {
   if (musicBox) musicBox.position.copy(spots.musicbox);
   if (tonic) tonic.position.copy(spots.tonic);
   // enemies start in the classrooms farthest from the entrance-side start room
-  const far = rooms.filter(r => r.type === 'class' && !(r.ri === 0 && r.x0 === ROOM_COLS[0])).map(r => new V3(r.ox + 4.5, 0, r.oz + 4.5)).sort((a, b) => b.distanceTo(START.pos) - a.distanceTo(START.pos));
+  // where everyone starts depends on the stage
+  if (STAGE.plane) { START.pos.set(16.5, 0, 19.5); START.yaw = -Math.PI / 2; TEACHER_SPAWN.set(64.5, 0, 19.5); SURV_SPAWNS.splice(0, 5, [13.5, 19.0], [15.0, 19.0], [13.5, 20.2], [15.0, 20.2], [12.0, 19.5]); }
+  else { START.pos.set(12.3, 0, 4.5); START.yaw = Math.PI / 2; TEACHER_SPAWN.set(69, 0, 4.5); SURV_SPAWNS.splice(0, 5, [10.5, 3.0], [13.5, 3.0], [10.5, 6.0], [13.5, 6.0], [12.0, 4.5]); }
+  const far = STAGE.plane ? [61.5, 55.5, 49.5, 43.5, 37.5, 31.5, 25.5, 58.5].map(x => new V3(x, 0, 19.5))
+    : rooms.filter(r => r.type === 'class' && !(r.ri === 0 && r.x0 === ROOM_COLS[0])).map(r => new V3(r.ox + 4.5, 0, r.oz + 4.5)).sort((a, b) => b.distanceTo(START.pos) - a.distanceTo(START.pos));
   ENEMY_SPAWN.length = 0; ENEMY_SPAWN.push(far[0], far[2], far[4]); HUNTER_SPAWN[0] = far[0].x; HUNTER_SPAWN[1] = far[0].z;
   RESPAWNS.length = 0; for (const v of far.slice(0, 8)) RESPAWNS.push(v);
   for (const p of pool) p.cand = null; poolT = 0;
@@ -1211,6 +1236,7 @@ const ACHS = [
   { id: 'caught10', name: 'また会ったね', desc: '合計10回つかまる', p: 3 },
   { id: 'clone', name: 'もう一人の自分', desc: '保健室の育毛剤と謎の毛でクローンを作る', p: 5 },
   { id: 'ally', name: '先生と仲直り', desc: 'なかまの腕章でDAISUKE先生を味方にする', p: 3 },
+  { id: 'plane_end', name: 'フライト・エンド', desc: '飛行機ステージでDAISUKE先生たちを降機させる', p: 10 },
   { id: 'fps_clear', name: '条件クリア', desc: 'FPSモードで条件クリアする', p: 5 },
   { id: 'headshot', name: 'ヘッドショット', desc: 'FPSモードで頭に命中させる', p: 2 },
   { id: 'revive', name: '助け合い', desc: 'オンライン対戦でつかまった仲間を助け起こす', p: 3 },
@@ -1403,7 +1429,7 @@ function updateRadar(dt) {
   if (!(P.radarT > 0)) { if (UI.radarOn) { UI.radarOn = false; dots.forEach(d => d.classList.add('hidden')); } return; }
   radarT2 -= dt; if (radarT2 > 0) return; radarT2 = 0.5; UI.radarOn = true;
   const list = enemies.filter(e => e.active);
-  dots.forEach((d, i) => { const e = list[i]; if (!e) { d.classList.add('hidden'); return; } d.classList.remove('hidden'); d.style.transform = `translate(${(e.pos.x / CELL * MAPS).toFixed(0)}px,${(e.pos.z / CELL * MAPS).toFixed(0)}px)`; });
+  dots.forEach((d, i) => { const e = list[i]; if (!e) { d.classList.add('hidden'); return; } d.classList.remove('hidden'); d.style.transform = `translate(${(e.pos.x / CELL * MAPS).toFixed(0)}px,${((e.pos.z / CELL - MAPZ) * MAPS).toFixed(0)}px)`; });
 }
 
 // ---- クローン (offline): 保健室の育毛剤 + 謎の毛. Follows you; when a teacher closes in it runs off as a decoy
@@ -1500,9 +1526,9 @@ function allyCandidate(x, z) {
   return best;
 }
 function setAllyLook(e, on) {
-  if (!e.eyeMat) return;
-  e.eyeMat.color.setHex(on ? 0x30ff60 : 0xff2010); e.eyeLight.color.setHex(on ? 0x30ff50 : 0xff1a08);
-  for (const g of e.glows) g.material.color.setHex(on ? 0x40ff70 : 0xff2a1a);
+  if (!e.eyeMat) return; const base = e.baseEye;
+  e.eyeMat.color.setHex(on ? 0x30ff60 : base || 0xff2010); e.eyeLight.color.setHex(on ? 0x30ff50 : base || 0xff1a08);
+  for (const g of e.glows) g.material.color.setHex(on ? 0x40ff70 : base || 0xff2a1a);
 }
 function makeAlly(e, owner) {
   e.allyT = 45; e.owner = owner; e.state = 'ally'; e.route = []; e.sees = false; e.stunT = 0; e.arp = 0; e.lurk = 0;
@@ -1934,6 +1960,7 @@ function fpsGameOver(byName) {
 }
 function checkObjectives() {
   if (!isFPS() || state !== 'play') return;
+  if (STAGE.plane) { updateCount(); return; }   // the plane ends through its tasks
   updateCount();
   if (books.length === 0 && FP.kills >= FP.killsNeed) {
     if (NET && NET.started) { if (NET.host) hostResult('条件クリア！'); }
@@ -2094,7 +2121,7 @@ function updateBots(dt) {
       } else {
         const book = nearestBook(b.pos);
         if (book) { botPathTo(b, book); speed = 2.9; }
-        else if (exitOpen) { botPathTo(b, spots.exit); speed = 3.4; if (b.pos.z > 37.8 && b.pos.x > 67.5 && b.pos.x < 70.5) { b.state = 'out'; b.g.visible = false; message(`${b.name}が脱出した！`, 2.5); } }
+        else if (exitOpen && !STAGE.plane) { botPathTo(b, spots.exit); speed = 3.4; if (b.pos.z > 37.8 && b.pos.x > 67.5 && b.pos.x < 70.5) { b.state = 'out'; b.g.visible = false; message(`${b.name}が脱出した！`, 2.5); } }
         else { const lead = botLeader(); if (lead && Math.hypot(lead.x - b.pos.x, lead.z - b.pos.z) > 5) { botPathTo(b, lead); speed = 2.6; } else b.route = []; }
       }
     }
@@ -2151,6 +2178,343 @@ function botRevive(b, help) {
   else if (help.pl && NET && NET.host) hostRevivePlayer(help.pl, b.name, null);
 }
 
+// ================================================================== 飛行機ステージ (a wide-body jet; the aisle runs nose to tail)
+const isPlane = () => !!STAGE.plane;
+const PCEIL = 2.6;
+// [name, type, x0, y0, w, h] in grid cells; the aisle is row 6, the cabin rows 5 and 7
+const PLANE_ROOMS = [
+  ['カーゴ', 'cargo', 0, 5, 2, 3],
+  ['エコノミーA', 'class', 2, 5, 3, 1], ['エコノミーB', 'class', 5, 5, 3, 1], ['ギャレー', 'broadcast', 8, 5, 3, 1], ['クルーレスト', 'shelter', 11, 5, 3, 1],
+  ['ビジネスA', 'class', 14, 5, 3, 1], ['ファーストA', 'class', 17, 5, 3, 1], ['ラウンジ', 'class', 20, 5, 2, 1],
+  ['電源室', 'generator', 2, 7, 2, 1], ['エコノミーC', 'class', 4, 7, 4, 1], ['エコノミーD', 'class', 8, 7, 3, 1], ['アビオニクス室', 'avionics', 11, 7, 3, 1],
+  ['ビジネスB', 'class', 14, 7, 3, 1], ['パーサー室', 'staff', 17, 7, 2, 1], ['ファーストB', 'class', 19, 7, 3, 1],
+  ['コックピット', 'cockpit', 22, 5, 2, 3],
+];
+const PLANE_DOORS = { 'ギャレー': [9], 'クルーレスト': [11, 13], '電源室': [3], 'アビオニクス室': [12], 'パーサー室': [17] };
+const PLANE_EDGES = new Map();
+const ek = (x1, y1, x2, y2) => (x1 < x2 || (x1 === x2 && y1 < y2)) ? `${x1},${y1},${x2},${y2}` : `${x2},${y2},${x1},${y1}`;
+const shelterName = () => isPlane() ? 'クルーレスト' : '保健室';
+const shDoorName = (i) => isPlane() ? (i ? '前' : '後ろ') : (i ? '南' : '北');
+function layoutPlane() {
+  for (const row of ZONE) row.fill('X');
+  rooms.length = 0; zid = 0; PLANE_EDGES.clear();
+  for (let x = 2; x <= 21; x++) ZONE[6][x] = 'C';
+  for (const [name, type, x0, y0, w, h] of PLANE_ROOMS) {
+    const id = String.fromCharCode(97 + zid++);
+    const r = { id, name, type, x0, y0, w, h, ri: y0 === 5 ? 0 : 2, ox: x0 * CELL, oz: y0 * CELL, doors: [], plane: true };
+    for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) ZONE[y][x] = id;
+    rooms.push(r);
+  }
+  for (const k in ROOM) delete ROOM[k];
+  for (const r of rooms) ROOM[r.type === 'class' ? r.name : r.type] = r;
+  allDoors.length = 0; shDoors.length = 0;
+  const addDoor = (r, a, b, extra) => { const d = Object.assign({ room: a, cor: b, r }, extra); r.doors.push(d); allDoors.push(d); return d; };
+  for (const r of rooms) {
+    if (r.type === 'class') for (let x = r.x0; x < r.x0 + r.w; x++) { if (ZONE[6][x] !== 'C') continue; PLANE_EDGES.set(ek(x, r.y0, x, 6), 'open'); addDoor(r, [x, r.y0], [x, 6], { open: true }); }
+    for (const cx of PLANE_DOORS[r.name] || []) {
+      const top = r.y0 === 5; addDoor(r, [cx, r.y0], [cx, 6], { line: top ? 6 : 7, cx, side: top ? 1 : -1 }); PLANE_EDGES.set(ek(cx, r.y0, cx, 6), 'door');
+    }
+  }
+  addDoor(ROOM.cargo, [1, 6], [2, 6], { vert: true }); PLANE_EDGES.set(ek(1, 6, 2, 6), 'vdoor');
+  addDoor(ROOM.cockpit, [22, 6], [21, 6], { vert: true }); PLANE_EDGES.set(ek(21, 6, 22, 6), 'vdoor');
+  ROOM.shelter.doors.forEach((d, i) => { d.si = i; shDoors.push(d); });
+}
+function planeMats() {
+  if (MATS.seat) return;
+  const carpet = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#2c3360'; g.fillRect(0, 0, w, h); for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(${150 + Math.random() * 100},${150 + Math.random() * 60},255,${Math.random() * 0.12})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+    g.strokeStyle = 'rgba(160,170,255,.18)'; g.lineWidth = 3; for (let x = 0; x < w; x += 64) { g.beginPath(); g.arc(x + 32, 64, 18, 0, 6.3); g.stroke(); g.beginPath(); g.arc(x, 192, 18, 0, 6.3); g.stroke(); } });
+  carpet.wrapS = carpet.wrapT = THREE.RepeatWrapping;
+  Object.assign(MATS, {
+    seat: M({ color: 0x4664b8, roughness: 0.9 }), seatB: M({ color: 0x9a3448, roughness: 0.85 }), seatF: M({ color: 0x7a6248, roughness: 0.7 }),
+    pwall: M({ color: 0xdfe3ea, roughness: 0.55 }), pceil: M({ color: 0xeef1f5, roughness: 0.6 }), bin: M({ color: 0xe9ecf1, roughness: 0.45 }),
+    carpet: M({ map: carpet, roughness: 0.95 }), cock: M({ color: 0x23262c, roughness: 0.5, metalness: 0.3 }),
+    rack: M({ color: 0x1a1d24, roughness: 0.4, metalness: 0.5 }), crate: M({ map: T.wood, color: 0x9a8a6a, roughness: 0.8 }),
+    ledC: M({ color: 0x40e0ff, emissive: 0x40e0ff, emissiveIntensity: 1.4 }),
+  });
+}
+function skyTexture() {
+  return canvasTex(1024, 512, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#0b1a3e'); gr.addColorStop(0.45, '#2b5aa0'); gr.addColorStop(0.55, '#f0a46a'); gr.addColorStop(0.62, '#b8c8e0'); gr.addColorStop(1, '#e8eef6');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 160; i++) { const x = Math.random() * w, y = h * 0.6 + Math.random() * h * 0.4, r = 20 + Math.random() * 70; const c = g.createRadialGradient(x, y, 0, x, y, r); c.addColorStop(0, 'rgba(255,255,255,.75)'); c.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = c; g.fillRect(x - r, y - r, r * 2, r * 2); }
+    for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,255,255,${Math.random() * 0.8})`; g.fillRect(Math.random() * w, Math.random() * h * 0.35, 2, 2); }
+  });
+}
+let skyTex = null, windshield = null, hatch = null, outside = null, rampOpen = false;
+function buildPlane() {
+  planeMats();
+  const level = new THREE.Group();
+  // floors / ceilings
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) {
+    const z = ZONE[cy][cx]; if (z === 'X') continue; const x0 = cx * CELL, z0 = cy * CELL; const r = rooms.find(q => q.id === z);
+    const fk = r && ['cargo', 'generator', 'avionics'].includes(r.type) ? 'floorM' : r && r.type === 'cockpit' ? 'cock' : 'carpet';
+    face(fk, 'py', x0, -0.01, z0, x0 + CELL, 0, z0 + CELL, [x0 / 3, z0 / 3, (x0 + CELL) / 3, (z0 + CELL) / 3]);
+    face('pceil', 'ny', x0, PCEIL, z0, x0 + CELL, PCEIL + 0.01, z0 + CELL);
+  }
+  // aisle lights
+  for (let x = 2; x <= 21; x++) {
+    box('lamp', x * CELL + 0.2, PCEIL - 0.04, 19.2, x * CELL + 2.8, PCEIL, 19.8);
+    if (x % 2 === 0) lightCands.push({ pos: new V3(x * CELL + 1.5, PCEIL - 0.3, 19.5), color: 0xc8d4ff, intensity: 3.4 * STAGE.look.lamp, dist: 8, flicker: Math.random() < STAGE.look.flicker });
+  }
+  // walls between different areas (open cabins, doorways, solid bulkheads, the outer skin)
+  const wallH = (L, s0, s1, outer) => { box(outer ? 'pwall' : 'pwall', s0, 0, L - 0.1, s1, PCEIL, L + 0.1, 3); addCol(s0, L - 0.1, s1, L + 0.1, 'W'); };
+  const wallV = (L, s0, s1) => { box('pwall', L - 0.1, 0, s0, L + 0.1, PCEIL, s1, 3); addCol(L - 0.1, s0, L + 0.1, s1, 'W'); };
+  for (let cy = 0; cy < H; cy++) for (let cx = 0; cx < W; cx++) for (const [nx, ny] of [[cx + 1, cy], [cx, cy + 1]]) {
+    const a = ZONE[cy][cx], b = zoneAt(nx, ny) ?? 'X'; if (a === b || (a === 'X' && b === 'X')) continue;
+    const typ = PLANE_EDGES.get(ek(cx, cy, nx, ny)); if (typ === 'open') continue;
+    const outer = a === 'X' || b === 'X';
+    if (ny !== cy) {   // horizontal wall line z = ny*3, x from cx*3
+      const L = ny * CELL, s0 = cx * CELL, s1 = s0 + CELL;
+      if (typ === 'door') { wallH(L, s0, s0 + 0.8); wallH(L, s0 + 2.2, s1); box('pwall', s0 + 0.8, 2.15, L - 0.1, s0 + 2.2, PCEIL, L + 0.1); box('frame', s0 + 0.74, 0, L - 0.13, s0 + 0.8, 2.15, L + 0.13); box('frame', s0 + 2.2, 0, L - 0.13, s0 + 2.26, 2.15, L + 0.13); }
+      else wallH(L, s0, s1, outer);
+      if (outer) {   // windows on the outer skin
+        const inZ = a === 'X' ? L + 0.11 : L - 0.11, nm = a === 'X' ? 'pz' : 'nz';
+        for (const wx of [0.75, 2.25]) face('win', nm, s0 + wx - 0.18, 1.0, inZ, s0 + wx + 0.18, 1.5, inZ);
+      }
+    } else {           // vertical wall line x = nx*3
+      const L = nx * CELL, s0 = cy * CELL, s1 = s0 + CELL;
+      if (typ === 'vdoor') { wallV(L, s0, s0 + 0.75); wallV(L, s0 + 2.25, s1); box('pwall', L - 0.1, 2.15, s0 + 0.75, L + 0.1, PCEIL, s0 + 2.25); box('frame', L - 0.13, 0, s0 + 0.69, L + 0.13, 2.15, s0 + 0.75); box('frame', L - 0.13, 0, s0 + 2.25, L + 0.13, 2.15, s0 + 2.31); }
+      else if (nx === W) { box('cock', L - 0.1, 0, s0, L + 0.1, 1.0, s1); box('cock', L - 0.1, 2.3, s0, L + 0.1, PCEIL, s1); addCol(L - 0.1, s0, L + 0.1, s1, 'W'); }   // the windshield
+      else wallV(L, s0, s1);
+    }
+  }
+  // tail: the cargo ramp (solid until the ending)
+  box('pwall', -0.2, 0, 15, 0, PCEIL, 16.5); box('pwall', -0.2, 0, 22.5, 0, PCEIL, 24); addCol(-0.2, 15, 0, 16.5, 'W'); addCol(-0.2, 22.5, 0, 24, 'W'); addCol(-0.25, 16.5, 0, 22.5, 'R');
+  box('pwall', -0.2, 2.4, 16.5, 0, PCEIL, 22.5);
+  for (const r of rooms) furnishPlane(r);
+  spots.exit = new V3(1.2, 0, 19.5);
+  buildMeshes(level);
+  return level;
+}
+function furnishPlane(r) {
+  const { ox, oz, type, name, w, h } = r; const top = r.y0 === 5;
+  const B = (k, x0, y0, z0, x1, y1, z1, ts = 1) => box(k, ox + x0, y0, oz + z0, ox + x1, y1, oz + z1, ts);
+  const F = (x0, z0, x1, z1, topY = 9, cover = true) => { addCol(ox + x0, oz + z0, ox + x1, oz + z1, 'F', topY); if (cover) covers.push([ox + x0, oz + z0, ox + x1, oz + z1]); };
+  // overhead bins along the outer wall
+  if (type === 'class') { if (top) B('bin', 0, 1.95, 0.1, w * 3, 2.55, 0.75); else B('bin', 0, 1.95, 2.25, w * 3, 2.55, 2.9); }
+  if (type === 'class') {
+    const biz = name.startsWith('ビジネス'), first = name.startsWith('ファースト') || name === 'ラウンジ';
+    const pitch = first ? 1.9 : biz ? 1.35 : 0.9, nSeat = first ? 1 : biz ? 2 : 3, sw = first ? 0.9 : biz ? 0.72 : 0.52, mat = first ? 'seatF' : biz ? 'seatB' : 'seat';
+    const z0 = top ? 0.2 : 3 - 0.2 - nSeat * sw, z1 = z0 + nSeat * sw;
+    deskTops[name] = [];
+    for (let x = 0.75; x < w * 3 - 0.3; x += pitch) {
+      B('metal', x - 0.22, 0, z0 + 0.05, x + 0.18, 0.38, z0 + 0.1); B('metal', x - 0.22, 0, z1 - 0.1, x + 0.18, 0.38, z1 - 0.05);
+      B(mat, x - 0.26, 0.38, z0, x + 0.26, 0.5, z1); B(mat, x - 0.36, 0.45, z0, x - 0.26, 1.2, z1);
+      for (let k = 0; k <= nSeat; k++) { const zb = z0 + k * sw; B('metal', x - 0.26, 0.5, zb - 0.025, x + 0.18, 0.64, zb + 0.025); }
+      for (let k = 0; k < nSeat; k++) { const zc = z0 + (k + 0.5) * sw; B('dark', x - 0.37, 1.0, zc - sw * 0.35, x - 0.36, 1.12, zc + sw * 0.35); deskTops[name].push({ x: ox + x + 0.02, z: oz + zc, y: 0.5 }); }
+      if (first) { B('seatF', x + 0.35, 0.0, top ? z1 : z0 - 0.08, x + 0.95, 1.1, top ? z1 + 0.08 : z0); B('wood', x + 0.45, 0.6, z0 + 0.1, x + 0.9, 0.66, z1 - 0.1); }
+      F(x - 0.36, z0, x + 0.26, z1, 0.5);
+    }
+  } else if (type === 'shelter') {   // crew rest: bunks, first-aid shelf
+    for (const x0 of [0.3, 3.3]) { B('metal', x0, 0, top ? 0.15 : 2.0, x0 + 2.2, 0.55, top ? 1.0 : 2.85); B('paper', x0 + 0.05, 0.55, top ? 0.2 : 2.05, x0 + 2.15, 0.65, top ? 0.95 : 2.8); B('metal', x0, 1.35, top ? 0.15 : 2.0, x0 + 2.2, 1.45, top ? 1.0 : 2.85); F(x0, top ? 0.15 : 2.0, x0 + 2.2, top ? 1.0 : 2.85, 0.65); }
+    B('metal', 6.9, 0, 0.1, 8.3, 1.2, 0.6); B('red', 7.3, 0.9, 0.1, 7.9, 1.2, 0.62); F(6.9, 0.1, 8.3, 0.6, 1.2);
+    lightCands.push({ pos: new V3(ox + 4.5, 2.2, oz + 1.5), color: 0xffe2b8, intensity: 2.8, dist: 7, special: true });
+    spots.shDoor = []; spots.shelter = new V3(ox + 4.5, 0, oz + 1.5);
+    spots.tonic = new V3(ox + 7.6, 1.2, oz + 0.35); interact.push({ id: 'tonic', pos: new V3(ox + 7.6, 0, oz + 1.3), r: 1.2 });
+    for (const d of shDoors) { const gc = d.cx * CELL + 1.5, L = d.line * CELL, rs = -d.side; interact.push({ id: 'door', di: d.si, pos: new V3(gc - 1.3, 0, L + rs * 0.9), r: 1.5 }); spots.shDoor[d.si] = new V3(gc, 0, L); }
+  } else if (type === 'generator') {   // APU / power room
+    B('gen', 1.0, 0, 1.6, 3.4, 1.5, 2.85); B('dark', 1.3, 0.9, 1.58, 2.4, 1.3, 1.6); B('ledR', 1.5, 1.1, 1.57, 1.6, 1.2, 1.58); B('led', 1.7, 1.1, 1.57, 1.8, 1.2, 1.58);
+    for (let x = 4.0; x < 5.8; x += 0.6) B('metal', x, 0, 2.3, x + 0.5, 2.2, 2.9);
+    F(1.0, 1.6, 3.4, 2.85, 1.5); F(4.0, 2.3, 5.9, 2.9);
+    lightCands.push({ pos: new V3(ox + 3, 2.2, oz + 1.2), color: 0xff8a2a, intensity: 3.5, dist: 7, special: true, flicker: true, gen: true });
+    spots.genFront = new V3(ox + 2.2, 0, oz + 0.8); interact.push({ id: 'gen', pos: new V3(ox + 2.2, 0, oz + 1.0), r: 1.6 });
+  } else if (type === 'broadcast') {   // galley: counters, carts, the PA handset (and the music box)
+    B('metal', 0.3, 0, 0.1, 8.7, 0.95, 0.75); B('dark', 0.3, 0.95, 0.1, 8.7, 0.98, 0.75); F(0.3, 0.1, 8.7, 0.75, 0.98);
+    for (const x of [1.0, 2.0]) { B('metal', x, 0, 1.3, x + 0.8, 1.0, 1.75); F(x, 1.3, x + 0.8, 1.75, 1.0); }
+    face('onair', 'pz', ox + 3.9, 1.6, oz + 0.12, ox + 5.1, 1.9, oz + 0.12);
+    lightCands.push({ pos: new V3(ox + 4.5, 2.2, oz + 1.6), color: 0xff2a2a, intensity: 1.2, dist: 6, special: true, onair: true });
+    spots.musicbox = new V3(ox + 4.5, 0.98, oz + 0.45); spots.broadcast = new V3(ox + 4.5, 0, oz + 1.6);
+    interact.push({ id: 'music', pos: new V3(ox + 4.5, 0, oz + 1.3), r: 1.6 });
+  } else if (type === 'avionics') {   // the teachers' control servers
+    for (let x = 0.3; x < 8.6; x += 0.9) { B('rack', x, 0, 2.25, x + 0.8, 2.3, 2.9); for (let y = 0.3; y < 2.1; y += 0.25) B(Math.random() < 0.3 ? 'ledR' : 'ledC', x + 0.1, y, 2.24, x + 0.16, y + 0.03, 2.25); }
+    F(0.3, 2.25, 8.6, 2.9);
+    B('dark', 3.6, 0, 0.6, 5.4, 0.8, 1.2); B('screen', 3.9, 0.85, 0.75, 5.1, 1.5, 0.8); F(3.6, 0.6, 5.4, 1.2, 0.8);
+    lightCands.push({ pos: new V3(ox + 4.5, 2.2, oz + 1.5), color: 0x40e0ff, intensity: 2.6, dist: 7, special: true });
+    spots.hack = new V3(ox + 4.5, 0, oz + 1.6); interact.push({ id: 'hack', pos: new V3(ox + 4.5, 0, oz + 1.65), r: 1.4 });
+  } else if (type === 'staff') {   // purser's office (the secret drawer)
+    B('wood', 1.0, 0.72, 1.6, 3.2, 0.77, 2.6); B('metal', 1.05, 0, 1.65, 3.15, 0.72, 2.55); B('ledB', 2.0, 0.77, 2.0, 2.2, 0.87, 2.2); F(1.0, 1.6, 3.2, 2.6, 0.77);
+    interact.push({ id: 'invis', pos: new V3(ox + 3, 0, oz + 1.0), r: 1.6 });
+  } else if (type === 'cockpit') {
+    // nose taper, instrument panel, two seats; the windshield is a live sky (added in buildWorld)
+    B('cock', 4.6, 0, 0, 6, PCEIL, 1.6); B('cock', 4.6, 0, 7.4, 6, PCEIL, 9); addCol(ox + 4.6, oz, ox + 6, oz + 1.6, 'W'); addCol(ox + 4.6, oz + 7.4, ox + 6, oz + 9, 'W');
+    B('cock', 4.2, 0, 1.6, 5.6, 1.0, 7.4); B('cock', 4.0, 0.95, 1.6, 5.6, 1.02, 7.4); for (const [a, b2] of [[2.2, 3.0], [3.3, 4.1], [4.9, 5.7], [6.0, 6.8]]) B('screen', 4.15, 0.55, a, 4.2, 0.92, b2); addCol(ox + 4.2, oz + 1.6, ox + 5.6, oz + 7.4, 'W');
+    for (const zc of [3.2, 5.8]) { B('cock', 2.4, 0.4, zc - 0.35, 3.0, 0.55, zc + 0.35); B('cock', 2.25, 0.55, zc - 0.35, 2.4, 1.4, zc + 0.35); B('metal', 3.4, 0.6, zc - 0.05, 3.5, 0.95, zc + 0.05); F(2.25, zc - 0.35, 3.0, zc + 0.35, 0.55); }
+    B('cock', 3.0, 0, 4.2, 4.2, 0.85, 4.8); for (let i = 0; i < 8; i++) B(i % 2 ? 'led' : 'ledC', 3.1 + i * 0.13, 0.85, 4.4, 3.16 + i * 0.13, 0.86, 4.6);
+    B('cock', 0, 2.25, 0, 6, PCEIL, 9);
+    lightCands.push({ pos: new V3(ox + 2.0, 2.1, oz + 4.5), color: 0xb8d0ff, intensity: 4.2, dist: 8, special: true });
+    for (const [a1, b1] of [[1.8, 2.1], [6.9, 7.2]]) B('ledC', 4.05, 1.02, a1 + 0.2, 5.5, 1.03, b1 + 0.2);
+    spots.pilot = new V3(ox + 2.7, 0, oz + 3.2); interact.push({ id: 'pilot', pos: new V3(ox + 2.3, 0, oz + 3.2), r: 1.25 });
+  } else if (type === 'cargo') {
+    for (const [x0, z0, x1, z1, hh] of [[0.6, 0.3, 2.0, 1.6, 1.3], [3.4, 0.4, 5.6, 1.5, 1.0], [0.6, 7.3, 2.2, 8.7, 1.5], [3.6, 7.6, 5.4, 8.7, 1.1]]) { B('crate', x0, 0, z0, x1, hh, z1); F(x0, z0, x1, z1, hh); }
+    for (let x = 0.4; x < 6; x += 0.5) { B('metal', x, 0.01, 0.2, x + 0.04, 0.02, 8.8); }
+    lightCands.push({ pos: new V3(ox + 3, 2.3, oz + 4.5), color: 0xffd2a0, intensity: 3, dist: 9, special: true, flicker: true });
+  }
+}
+function buildPlaneExtras() {   // live sky in the windshield, the cargo ramp, the sky behind it
+  const out = [];
+  if (!skyTex) { skyTex = skyTexture(); skyTex.wrapS = THREE.RepeatWrapping; }
+  const ck = ROOM.cockpit;
+  windshield = new THREE.Mesh(new THREE.PlaneGeometry(18, 9), new THREE.MeshBasicMaterial({ map: skyTex, fog: false }));
+  windshield.position.set(ck.ox + 9.5, 1.6, ck.oz + 4.5); windshield.rotation.y = -Math.PI / 2; out.push(windshield);
+  // window frame mullions in front of it
+  const fm = new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.5 });
+  const frameG = new THREE.Group(); for (const [z0, z1] of [[1.5, 1.9], [4.3, 4.7], [7.1, 7.5]]) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.3, z1 - z0), fm); m.position.set(ck.ox + 5.62, 1.65, ck.oz + (z0 + z1) / 2); frameG.add(m); }
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 6), fm); sill.position.set(ck.ox + 5.6, 1.02, ck.oz + 4.5); frameG.add(sill);
+  out.push(frameG);
+  hatch = new THREE.Group(); hatch.position.set(0, 0, 19.5);
+  const hp = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.4, 6), new THREE.MeshStandardMaterial({ color: 0x7c848e, metalness: 0.6, roughness: 0.4 })); hp.position.set(-0.1, 1.2, 0); hatch.add(hp);
+  for (let i = -2; i <= 2; i++) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 5.6), new THREE.MeshStandardMaterial({ color: 0xd8b020, roughness: 0.6 })); st.position.set(-0.02, 1.2 + i * 0.45, 0); hatch.add(st); }
+  out.push(hatch);
+  outside = new THREE.Group(); outside.visible = false;
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(160, 80), new THREE.MeshBasicMaterial({ map: skyTex, fog: false })); back.position.set(-45, -10, 19.5); back.rotation.y = Math.PI / 2; outside.add(back);
+  const floorC = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshBasicMaterial({ color: 0xe6edf6, fog: false })); floorC.rotation.x = -Math.PI / 2; floorC.position.set(-60, -40, 19.5); outside.add(floorC);
+  out.push(outside);
+  for (const o of out) scene.add(o);
+  return out;
+}
+
+// ---- tasks (the order matters)
+const TASK = { power: 0, hack: 0, fly: 0 };
+const TASK_NEED = { power: 4, hack: 8, fly: 15 };
+const keysDone = () => books.length === 0 && collected > 0;
+function taskStep() { if (!keysDone()) return 'keys'; if (TASK.power < TASK_NEED.power) return 'power'; if (TASK.hack < TASK_NEED.hack) return 'hack'; if (TASK.fly < TASK_NEED.fly) return 'fly'; return 'done'; }
+function taskReady(t) { return t === 'power' ? keysDone() : t === 'hack' ? keysDone() && TASK.power >= TASK_NEED.power : keysDone() && TASK.power >= TASK_NEED.power && TASK.hack >= TASK_NEED.hack; }
+function addTask(t, dt) {
+  if (NET && NET.started && !NET.host) { NET.taskAcc = NET.taskAcc || {}; NET.taskAcc[t] = (NET.taskAcc[t] || 0) + dt; if (NET.taskAcc[t] > 0.3) { act('task', { tk: t, dt: NET.taskAcc[t] }); NET.taskAcc[t] = 0; } return; }
+  hostTask(t, dt);
+}
+const TASK_MSG = { power: 'システム電源が復旧した！ 次はアビオニクス室でハッキングだ', hack: 'ハッキング成功！ 機械のDAISUKE先生たちのシステムに侵入した――コックピットで自動操縦を切れ', fly: '操縦成功！ 機体が安定した――先生たちに制御コマンドを送信…' };
+function hostTask(t, dt) {
+  if (!TASK_NEED[t] || !taskReady(t) || TASK[t] >= TASK_NEED[t] || END) return;
+  TASK[t] = Math.min(TASK_NEED[t], TASK[t] + clamp(dt, 0, 0.6)); if (TASK[t] > TASK_NEED[t] - 0.02) TASK[t] = TASK_NEED[t];
+  if (TASK[t] >= TASK_NEED[t]) {
+    if (NET && NET.started) netEvent({ k: 'task', t, text: TASK_MSG[t] }); else { message(TASK_MSG[t], 4.5); drawMapBase(); updateCount(); }
+    if (t === 'fly') { if (NET && NET.started) netEvent({ k: 'ending' }); else startEnding(); }
+  }
+}
+function taskLines() {
+  return [[`暗号キーを集める　${collected} / ${collected + books.length}`, keysDone()], ['電源室でシステム電源を入れる', TASK.power >= TASK_NEED.power], ['アビオニクス室でハッキングする', TASK.hack >= TASK_NEED.hack], ['コックピットで操縦して機体を安定させる', TASK.fly >= TASK_NEED.fly]];
+}
+const TASK_ROOM = { power: 'generator', hack: 'avionics', fly: 'cockpit' };
+
+// ---- the teachers are machines here
+function setRobotLook(e, on) {
+  on = false;   // the teachers' 3D models stay exactly as they are (only the story says they are machines)
+  if (!!e.robotOn === on) return; e.robotOn = on;
+  e.group.traverse(o => { if (!o.isMesh || !o.material || o.userData.robotPart) return; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) {
+    if (!m.isMeshStandardMaterial) continue; const u = m.userData; if (!u.rob) u.rob = { c: m.color.getHex(), mt: m.metalness, r: m.roughness };
+    if (on) { m.color.setHex(u.rob.c).lerp(new THREE.Color(0xc4ccd6), 0.7); m.metalness = 0.35; m.roughness = 0.32; } else { m.color.setHex(u.rob.c); m.metalness = u.rob.mt; m.roughness = u.rob.r; }
+    if (e.brightOn) { m.emissive.copy(m.color).multiplyScalar(0.55); } } });
+  if (!e.robotParts && on) {
+    const parts = new THREE.Group(); let head = null, chest = null;
+    e.group.traverse(o => { if (o.isBone && o.name === 'head') head = o; if (o.isBone && o.name === 'chest') chest = o; });
+    const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.userData.robotPart = true; return m; };
+    const metal = new THREE.MeshStandardMaterial({ color: 0x8c96a2, metalness: 0.9, roughness: 0.3 }), glow = new THREE.MeshStandardMaterial({ color: 0x40e0ff, emissive: 0x40e0ff, emissiveIntensity: 1.6 });
+    const ant = mk(new THREE.CylinderGeometry(0.006, 0.006, 0.16, 6), metal), bulb = mk(new THREE.SphereGeometry(0.018, 10, 8), new THREE.MeshStandardMaterial({ color: 0xff3020, emissive: 0xff3020, emissiveIntensity: 2 }));
+    const pack = mk(new THREE.BoxGeometry(0.26, 0.32, 0.1), metal), stripe = mk(new THREE.BoxGeometry(0.2, 0.02, 0.105), glow), stripe2 = mk(new THREE.BoxGeometry(0.2, 0.02, 0.105), glow);
+    if (e.limbs) {   // the jointed teacher
+      ant.position.set(0.05, 0.98, -0.02); bulb.position.set(0.05, 1.07, -0.02); pack.position.set(0, 0.32, -0.18); stripe.position.set(0, 0.38, -0.232); stripe2.position.set(0, 0.26, -0.232);
+      for (const m of [ant, bulb, pack, stripe, stripe2]) e.limbs.chest.add(m); parts.userData.list = [ant, bulb, pack, stripe, stripe2];
+    } else {   // the model faces +z, so its back is -z
+      ant.position.set(0.05, 1.83, -0.02); bulb.position.set(0.05, 1.92, -0.02); pack.position.set(0, 1.28, -0.2); stripe.position.set(0, 1.34, -0.252); stripe2.position.set(0, 1.22, -0.252);
+      for (const m of [ant, bulb, pack, stripe, stripe2]) e.group.add(m); parts.userData.list = [ant, bulb, pack, stripe, stripe2];
+    }
+    e.robotParts = parts;
+  }
+  if (e.robotParts) for (const m of e.robotParts.userData.list) m.visible = on;
+  e.baseEye = on ? 0x40e0ff : null; if (e.eyeMat && !(e.allyT > 0) && !e.nally) setAllyLook(e, false);
+}
+
+// ---- flying the plane from the cockpit
+const FLY = { roll: 0, pitch: 0, tr: 0, tp: 0, tt: 0, ok: false };
+function enterFly() {
+  if (state !== 'play' || !spots.pilot) return;
+  state = 'fly'; FLY.roll = 0; FLY.pitch = 0; FLY.tt = 0; FP.firing = false; FP.ads = false;
+  showPlayUI(false); $('flyHud').classList.remove('hidden'); document.body.classList.add('flying'); if (IS_TOUCH) $('touch').classList.remove('hidden');
+  P.pos.set(spots.pilot.x, 0, spots.pilot.z); P.yaw = -Math.PI / 2; P.pitch = 0; P.vel.set(0, 0, 0);
+  message(taskReady('fly') ? '自動操縦を切った！ 機体を水平に保て（15秒）' : '操縦席に座った。まだシステムに侵入していないので、ここでは何も起きない…', 4);
+}
+function exitFly(silent) {
+  if (state !== 'fly') return;
+  state = 'play'; $('flyHud').classList.add('hidden'); document.body.classList.remove('flying');
+  if (!silent) { showPlayUI(true); lockPointer(); }
+}
+function updateFly(dt) {
+  let ix = 0, iy = 0;
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1; if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) iy -= 1; if (keys.has('KeyS') || keys.has('ArrowDown')) iy += 1;
+  if (stick.id !== null) { ix = stick.x; iy = stick.y; }
+  FLY.tt -= dt; if (FLY.tt <= 0) { FLY.tt = 0.8 + Math.random() * 1.4; FLY.tr = (Math.random() - 0.5) * 0.7; FLY.tp = (Math.random() - 0.5) * 0.35; }
+  FLY.roll = clamp(FLY.roll + (ix * 0.75 + FLY.tr) * dt, -1.1, 1.1); FLY.pitch = clamp(FLY.pitch + (iy * 0.4 + FLY.tp) * dt, -0.5, 0.5);
+  FLY.ok = Math.abs(FLY.roll) < 0.17 && Math.abs(FLY.pitch) < 0.09;
+  if (FLY.ok && taskReady('fly')) addTask('fly', dt);
+  camera.position.set(P.pos.x, 1.25, P.pos.z); camera.rotation.set(-FLY.pitch * 0.25, -Math.PI / 2, -FLY.roll * 0.3, 'YXZ');
+  if (windshield) { windshield.rotation.set(0, -Math.PI / 2, 0); windshield.rotateZ(FLY.roll); windshield.position.y = 1.6 + FLY.pitch * 6; }
+  if (skyTex) skyTex.offset.x = (skyTex.offset.x + dt * 0.02) % 1;
+  drawFlyHud();
+}
+function drawFlyHud() {
+  const c = $('flyAtt'), g = c.getContext('2d'), w = c.width, h = c.height, R = w / 2 - 6;
+  g.clearRect(0, 0, w, h); g.save(); g.beginPath(); g.arc(w / 2, h / 2, R, 0, Math.PI * 2); g.clip();
+  g.translate(w / 2, h / 2); g.rotate(-FLY.roll); g.translate(0, FLY.pitch * 220);
+  g.fillStyle = '#2f74c8'; g.fillRect(-w, -h * 2, w * 2, h * 2); g.fillStyle = '#8a5a2c'; g.fillRect(-w, 0, w * 2, h * 2);
+  g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.moveTo(-w, 0); g.lineTo(w, 0); g.stroke();
+  for (const p of [-0.2, -0.1, 0.1, 0.2]) { g.beginPath(); g.moveTo(-20, p * 220); g.lineTo(20, p * 220); g.stroke(); }
+  g.restore();
+  g.strokeStyle = FLY.ok ? '#6dff8a' : '#ffd24a'; g.lineWidth = 4; g.beginPath(); g.moveTo(w / 2 - 50, h / 2); g.lineTo(w / 2 - 15, h / 2); g.lineTo(w / 2, h / 2 + 12); g.lineTo(w / 2 + 15, h / 2); g.lineTo(w / 2 + 50, h / 2); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 3; g.beginPath(); g.arc(w / 2, h / 2, R, 0, Math.PI * 2); g.stroke();
+  const ready = taskReady('fly');
+  $('flyProg').style.transform = `scaleX(${TASK.fly / TASK_NEED.fly})`;
+  $('flyMsg').textContent = !ready ? 'まだシステムに侵入していない（アビオニクス室のハッキングが先）' : FLY.ok ? '安定している――このまま！' : '機体が傾いている！ 水平にもどせ';
+}
+
+// ---- the ending: the hacked teachers walk to the cargo ramp and jump
+let END = null;
+function startEnding() {
+  if (END) return;
+  if (state === 'fly') exitFly(true);
+  if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook(); }
+  $('pause').classList.add('hidden'); $('spectBar').classList.add('hidden'); toggleBigMap(false);
+  state = 'ending'; showPlayUI(false); unlockPointer(); FP.firing = false; P.downed = false;
+  const d = enemies[0], t = enemies.find(e => e.kind === 'fast');
+  const actors = [];
+  for (const e of enemies) { if (e.gun) e.gun.visible = false; if (e.tag) e.tag.visible = false; if (e !== d && e !== t) e.group.visible = false; }
+  [[d, 13.5, 0], [t, 17, 1.2]].forEach(([e, x, delay]) => {
+    if (!e) return; e.active = true; scene.add(e.group); e.group.visible = true; e.dead = false; e.downT = 0; e.allyT = 0; lieDown(e, false);
+    e.pos.set(x, 0, 19.5); e.yaw = -Math.PI / 2; e.group.rotation.set(0, e.yaw, 0); actors.push({ e, delay, fall: 0, gone: false });
+  });
+  END = { t: 0, actors, said: 0 };
+  if (outside) outside.visible = true; rampOpen = true;
+  message('ハッキング成功――機械のDAISUKE先生たちの制御を奪った', 3.5);
+}
+function updateEnding(dt) {
+  END.t += dt; const T = END.t;
+  const k = clamp((T - 1) / 2.5, 0, 1); if (hatch) hatch.rotation.z = k * 1.45;
+  if (T > 3.6 && END.said === 0) { END.said = 1; message('システム命令：「後部ハッチから降機せよ」', 3.5); }
+  for (const a of END.actors) {
+    const e = a.e; if (a.gone) continue;
+    if (T < 3 + a.delay) { setAnim(e, 0, dt); continue; }
+    if (e.pos.x > 0.2 && !a.fall) { e.pos.x -= 2.3 * dt; setAnim(e, 2.3, dt); }
+    else { a.fall += dt; e.pos.x -= 4.5 * dt; e.pos.y = -0.5 * 9.8 * a.fall * a.fall; e.group.rotation.x = Math.min(1.4, a.fall * 1.2); setAnim(e, 0, dt); if (e.pos.y < -18) { a.gone = true; e.group.visible = false; } }
+  }
+  if (END.actors.every(a => a.gone) && END.said === 1) { END.said = 2; END.doneT = T; message('DAISUKE先生ともう一人の先生は、機械の体のまま雲の中へ消えていった……', 4.5); }
+  // camera: in the cargo hold, watching the ramp
+  const shake = T > 1 && T < 4 ? (Math.random() - 0.5) * 0.02 : 0;
+  camera.position.set(5.3 + shake, 1.95, 15.7); camera.lookAt(-0.5, 0.7 + shake, 20.2);
+  if (skyTex) skyTex.offset.x = (skyTex.offset.x + dt * 0.04) % 1;
+  if (END.doneT !== undefined && T > END.doneT + 3.5 && !END.fin) { END.fin = true; finishEnding(); }
+}
+function finishEnding() {
+  if (NET && NET.started) { if (NET.host) hostResult('条件クリア！'); return; }
+  state = 'end'; showPlayUI(false); setMasterVolume(0);
+  const got = CLEAR_PTS[diffKey] + 6; addPoints(got); unlock('plane_end'); unlock('first_clear');
+  addHist({ mode: isFPS() ? 'FPS・飛行機' : 'ひとり・飛行機', diff: D.label, res: 'END', time: playT, pts: got });
+  $('endTitle').textContent = 'END'; $('endTitle').style.color = '#7de08a';
+  $('endText').innerHTML = `機械だったDAISUKE先生ともう一人の先生は、ハッキングされて飛行機から飛び降りた。<br>ステージ：${STAGE.name}　難易度：${D.label}　タイム：${fmtTime(playT)}`;
+  $('earned').textContent = `+${got}P（合計 ${points}P）`;
+  $('end').classList.remove('hidden');
+}
+
 // ---- title options: mode / stage / bots / weapon
 function setMode(m) { MODE = m; store.set('dk_mode', m); for (const b of $('modeSeg').children) b.classList.toggle('on', b.dataset.m === m); $('wpnRow').classList.toggle('hidden', m !== 'fps'); renderWpnSel(); document.body.classList.toggle('fps', m === 'fps'); if (enemies.length && state === 'title') { resetGame(); } }
 function setStage(i) { for (const b of $('stageSeg').children) b.classList.toggle('on', +b.dataset.s === i); if (i !== stageIdx || !level) { if (enemies.length) { buildWorld(i); resetGame(); } else { stageIdx = i; STAGE = STAGES[i]; store.set('dk_stage', String(i)); } } }
@@ -2171,7 +2535,7 @@ const P = { pos: new V3(), vel: new V3(), slideDir: new V3(), slideT: 0, yaw: 0,
 let state = 'title', collected = 0, msgT = 0, showMap = true, freezeT = 0, musicCd = 0, bonus = 0, playT = 0, camIdx = 0, camSwT = 0;
 let curInteract = null, useHeld = false, hunterHold = 0, genBroken = false, invisUsed = 0, revT = 5, sawReveal = false, tonicUsed = false;
 const SPECT = { id: null };
-const START = { pos: new V3(12.3, 0, 4.5), yaw: Math.PI / 2 };
+const START = { pos: new V3(12.3, 0, 4.5), yaw: Math.PI / 2 };   // moved per stage in buildWorld
 const ENEMY_SPAWN = [new V3(61.5, 0, 34.5), new V3(61.5, 0, 19.5), new V3(19.5, 0, 34.5)], RESPAWNS = [];
 const TEACHER_SPAWN = new V3(69, 0, 4.5);
 
@@ -2203,6 +2567,10 @@ function resetGame() {
   for (const bp of plan) spawnBook(bp);
   if (on) setupOnlineRound(); else clearAvatars();
   P.hp = 100; P.hurtT = 9; P.downed = false; P.downT = 0; FP.firing = false; FP.ads = false;
+  TASK.power = TASK.hack = TASK.fly = 0; END = null; rampOpen = false; if (hatch) hatch.rotation.z = 0; if (outside) outside.visible = false;
+  if (windshield) { windshield.rotation.set(0, -Math.PI / 2, 0); windshield.position.y = 1.6; }
+  $('flyHud').classList.add('hidden'); document.body.classList.remove('flying');
+  for (const e of enemies) { e.group.rotation.x = 0; setRobotLook(e, !!STAGE.plane); }
   if (isFPS()) fpsResetLoadout(); VM.visible = false; vmLight.visible = isFPS();
   if (!on) spawnBots(state === 'starting' ? botCount : 0, [[START.pos.x, START.pos.z]]);
   document.body.classList.toggle('fps', isFPS()); camera.fov = baseFov; camera.updateProjectionMatrix();
@@ -2215,10 +2583,18 @@ function makeBookPlan(n) {
   const subs = SUBJECTS.map((s, i) => i).sort(() => Math.random() - 0.5);
   return classes.map((rn, i) => ({ id: i, room: rn, di: Math.floor(Math.random() * deskTops[rn].length), sub: subs[i % subs.length] }));
 }
+const KEY_NAMES = ['暗号キーα', '暗号キーβ', '暗号キーγ', '暗号キーδ', '暗号キーε'];
 function spawnBook(bp) {
   const d = deskTops[bp.room][bp.di];
   const [sname, col] = SUBJECTS[bp.sub];
-  const g = new THREE.Group(); g.position.set(d.x, 0.735, d.z);
+  if (STAGE.plane) {   // a glowing USB key on a seat
+    const g = new THREE.Group(); g.position.set(d.x, d.y ?? 0.5, d.z);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 0.06), new THREE.MeshStandardMaterial({ color: 0x1b1e26, metalness: 0.5, roughness: 0.4, emissive: 0x0a3a4a })); m.position.y = 0.02; m.rotation.y = Math.random() * 3; g.add(m);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.025, 0.045), new THREE.MeshStandardMaterial({ color: 0xc8ccd2, metalness: 0.9, roughness: 0.3 })); tip.position.set(Math.cos(m.rotation.y) * 0.1, 0.02, -Math.sin(m.rotation.y) * 0.1); g.add(tip);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x60e8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); s.scale.set(0.7, 0.7, 1); s.position.y = 0.1; g.add(s);
+    scene.add(g); books.push({ g, name: KEY_NAMES[bp.id % KEY_NAMES.length], room: bp.room, s, id: bp.id }); return;
+  }
+  const g = new THREE.Group(); g.position.set(d.x, d.y ?? 0.735, d.z);
   const side = new THREE.MeshStandardMaterial({ color: 0xf1ece0, roughness: 0.9 }), cover = new THREE.MeshStandardMaterial({ map: bookCover(sname, col), roughness: 0.6, emissive: 0x222222 });
   const m = new THREE.Mesh(new THREE.BoxGeometry(0.29, 0.025, 0.21), [side, side, cover, side, side, side]); m.position.y = 0.013; m.rotation.y = Math.random() * 0.6 - 0.3; g.add(m);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xfff1b0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
@@ -2229,9 +2605,10 @@ function updateCount() {
   if (NET && NET.started && NET.myRole === 'hunter') {
     const left = [...NET.players.values()].filter(p => p.role === 'survivor' && p.alive && !p.escaped).length;
     $('count').textContent = `逃げる人 残り ${left}人`;
-    $('hint').textContent = hunterHold > 0 ? `あと${Math.ceil(hunterHold)}秒で動ける…` : freezeT > 0 ? 'オルゴールの音で動けない…' : exitOpen ? '教科書がそろった。玄関を見張れ！' : `教科書 ${collected} / ${collected + books.length} が回収された`;
+    $('hint').textContent = hunterHold > 0 ? `あと${Math.ceil(hunterHold)}秒で動ける…` : freezeT > 0 ? 'オルゴールの音で動けない…' : STAGE.plane ? `生徒たちのタスク：${taskLines().filter(x => x[1]).length} / 4（ハッキングされる前に止めろ）` : exitOpen ? '教科書がそろった。玄関を見張れ！' : `教科書 ${collected} / ${collected + books.length} が回収された`;
     return;
   }
+  if (STAGE.plane) { const L = taskLines(); $('count').textContent = `タスク ${L.filter(x => x[1]).length} / ${L.length}`; $('hint').innerHTML = L.map(([t, ok]) => `${ok ? '✓' : '□'} ${t}`).join('<br>'); return; }
   if (isFPS()) { const [a, b] = fpsObjText(); $('count').textContent = a; $('hint').textContent = b; return; }
   $('count').textContent = `教科書 ${collected} / ${books.length + collected}`;
   $('hint').textContent = exitOpen ? '玄関（東側ホールの南）へ急げ！' : '教室の机の上を探せ';
@@ -2246,8 +2623,8 @@ function setDoor(i, closed, silent) {
   doorsClosed[i] = closed; rebuildLinks();
   if (shLeds[i]) shLeds[i].material = closed ? MATS.ledR : MATS.led;
   const n = closedCount();
-  $('doorState').classList.toggle('hidden', !n); $('doorState').textContent = `保健室のドア：${n === 2 ? '2枚とも' : doorsClosed[0] ? '北' : '南'} 閉（バッテリー消費中）`;
-  $('camDoor').textContent = `保健室 北：${doorsClosed[0] ? '閉' : '開'}／南：${doorsClosed[1] ? '閉' : '開'}`;
+  $('doorState').classList.toggle('hidden', !n); $('doorState').textContent = `${shelterName()}のドア：${n === 2 ? '2枚とも' : shDoorName(doorsClosed[0] ? 0 : 1)} 閉（バッテリー消費中）`;
+  $('camDoor').textContent = `${shelterName()} ${shDoorName(0)}：${doorsClosed[0] ? '閉' : '開'}／${shDoorName(1)}：${doorsClosed[1] ? '閉' : '開'}`;
   $('camDoor0').textContent = doorsClosed[0] ? '北ドアを開ける' : '北ドアを閉める';
   $('camDoor1').textContent = doorsClosed[1] ? '南ドアを開ける' : '南ドアを閉める';
   for (const e of enemies) if (e.active && !e.remote && e.state !== 'wait') { if (e.state === 'chase') e.repath = 0; else if (e.state === 'search') routeTo(e, e.lastKnown); else if (e.state !== 'sabotage') newPatrol(e); }
@@ -2398,6 +2775,8 @@ addEventListener('keydown', e => {
     if (/^Digit[1-9]$/.test(e.code)) { const it = ITEMS.find(i => i.key === +e.code.slice(5)); if (it) useItem(it.id); }
     if (e.code === 'KeyM' || e.code === 'Tab') { e.preventDefault(); toggleBigMap(); }
     if (e.code === 'Escape') pause();
+  } else if (state === 'fly') {
+    if (e.code === 'KeyE' || e.code === 'Escape') exitFly();
   } else if (state === 'cams') {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') switchCam(camIdx + 1);
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') switchCam(camIdx - 1);
@@ -2445,7 +2824,8 @@ function goFullscreen() { if (!IS_TOUCH) return; const el = document.documentEle
 const stick = { id: null, ox: 0, oy: 0, x: 0, y: 0 }, look = { id: null, lx: 0, ly: 0 };
 let runToggle = false;
 function onTouchStart(e) {
-  if (state !== 'play') return;
+  if (state !== 'play' && state !== 'fly') return;
+  if (e.target.closest && e.target.closest('#flyHud button')) return;
   for (const t of e.changedTouches) {
     if (t.target.closest && (t.target.closest('.tbtn') || t.target.closest('.islot') || t.target.closest('#wslots') || t.target.closest('#mapwrap') || t.target.closest('#bigmap'))) continue;
     if (t.clientX < innerWidth * 0.45 && t.clientY > innerHeight * 0.3 && stick.id === null) {
@@ -2519,6 +2899,8 @@ $('camNext').addEventListener('click', () => switchCam(camIdx + 1));
 $('camDoor0').addEventListener('click', () => toggleDoor(0));
 $('camDoor1').addEventListener('click', () => toggleDoor(1));
 $('camClose').addEventListener('click', exitCams);
+$('flyExit').addEventListener('click', () => exitFly());
+$('flyExit').addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); exitFly(); }, { passive: false });
 
 function showPlayUI(on) {
   const hunter = !!(NET && NET.started && NET.myRole === 'hunter');
@@ -2535,7 +2917,7 @@ function startGame() {
   state = 'starting'; resetGame();
   $('title').classList.add('hidden'); state = 'play'; showPlayUI(true);
   goFullscreen(); lockPointer(); initAudio(); setMasterVolume(1);
-  message('…静かだ。教科書を探そう。', 3.5);
+  message(STAGE.plane ? '…機内は静かだ。座席のどこかにある暗号キーを探そう。' : '…静かだ。教科書を探そう。', 3.5);
 }
 function pause() {
   if (!(state === 'play' || (state === 'cams' && P.out))) return;
@@ -2562,11 +2944,14 @@ function toTitle() {
 // ================================================================== interaction
 function interactLabel(it) {
   switch (it.id) {
-    case 'door': return doorsClosed[it.di] ? `保健室の${it.di ? '南' : '北'}ドアを開ける` : `保健室の${it.di ? '南' : '北'}ドアを閉める`;
+    case 'door': return doorsClosed[it.di] ? `${shelterName()}の${shDoorName(it.di)}ドアを開ける` : `${shelterName()}の${shDoorName(it.di)}ドアを閉める`;
+    case 'hack': return TASK.hack >= TASK_NEED.hack ? 'ハッキング済み' : !keysDone() ? 'サーバー端末（暗号キーを全部集めてから）' : TASK.power < TASK_NEED.power ? 'サーバー端末（先に電源室でシステム電源を入れる）' : 'サーバーをハッキングする（長押し・音が出る）';
+    case 'pilot': return TASK.fly >= TASK_NEED.fly ? '操縦席' : taskReady('fly') ? '操縦席に座って自動操縦を切る' : '操縦席に座る';
     case 'tonic': return NET ? '棚の育毛剤（ひとりで遊ぶときだけ使える）' : tonicUsed ? '育毛剤の棚（もう空っぽ）' : itemCount('hair') > 0 ? '育毛剤に謎の毛をひたして、自分のクローンを作る' : '棚の育毛剤…（SSRの「謎の毛」があれば何か起きそう）';
     case 'revive': return `${it.name}を助け起こす（長押し）`;
-    case 'gen': return genBroken ? '発電機が壊されている！（長押しで修理）' : P.battery >= 100 ? 'バッテリーは満タン' : '発電機を回して充電（長押し）';
-    case 'music': return musicCd > 0 ? `オルゴール（あと${Math.ceil(musicCd)}秒）` : 'オルゴールを回して校内放送で流す';
+    case 'gen': if (STAGE.plane && taskReady('power') && TASK.power < TASK_NEED.power && !genBroken) return 'システム電源を入れる（長押し）';
+      return genBroken ? `${STAGE.plane ? '電源パネル' : '発電機'}が壊されている！（長押しで修理）` : P.battery >= 100 ? 'バッテリーは満タン' : STAGE.plane ? '電源パネルで充電（長押し）' : '発電機を回して充電（長押し）';
+    case 'music': return musicCd > 0 ? `オルゴール（あと${Math.ceil(musicCd)}秒）` : STAGE.plane ? 'オルゴールを機内放送で流す' : 'オルゴールを回して校内放送で流す';
     case 'invis': return P.invisT > 0 ? `透明化中（あと${Math.ceil(P.invisT)}秒）` : invisCharges() > 0 ? `秘密の引き出し：透明になる（30秒・残り${invisCharges()}回）` : '秘密の引き出し（教科書を1冊見つけてから）';
   }
 }
@@ -2585,6 +2970,7 @@ function doInteract() {
   if (it.id === 'door') toggleDoor(it.di);
   else if (it.id === 'invis') useInvis();
   else if (it.id === 'tonic') useTonic();
+  else if (it.id === 'pilot') enterFly();
   else if (it.id === 'music') { if (NET) { if (musicCd > 0) message(`オルゴールのゼンマイがまだ戻らない…（あと${Math.ceil(musicCd)}秒）`, 2); else { act('music'); unlock('music'); } } else playMusic(); }
 }
 function enterCams(spect) {
@@ -2694,7 +3080,13 @@ function updatePlayer(dt) {
     else if (P.repair >= 4) { genBroken = false; P.repair = 0; message('発電機を修理した！ また充電できる', 2.5); if (NET && NET.started) netEvent({ k: 'msg', text: '発電機が修理された！' }, true); }
   }
   if (P.invisT > 0) { P.invisT = Math.max(0, P.invisT - dt); if (P.invisT === 0) message('透明化が切れた！', 2.5); }
-  P.charging = !!(curInteract && curInteract.id === 'gen' && !genBroken && holding && P.battery < 100);
+  // plane tasks done by holding "use"
+  P.taskT = null;
+  if (STAGE.plane && curInteract && holding && !genBroken) {
+    if (curInteract.id === 'gen' && taskReady('power') && TASK.power < TASK_NEED.power) { addTask('power', dt); P.taskT = 'power'; P.noise = Math.max(P.noise, 14); }
+    if (curInteract.id === 'hack' && taskReady('hack') && TASK.hack < TASK_NEED.hack) { addTask('hack', dt); P.taskT = 'hack'; P.noise = Math.max(P.noise, 22); }
+  }
+  P.charging = !!(curInteract && curInteract.id === 'gen' && !genBroken && holding && P.battery < 100 && !P.taskT);
   if (P.charging) {
     if (!NET) P.battery = Math.min(100, P.battery + 9 * dt);
     else if (NET.host) { P.battery = Math.min(100, P.battery + 9 * dt); genPing(); }
@@ -2723,6 +3115,7 @@ function newPatrol(e) {
     let x, y;
     if (Math.random() < D.hunt && AIT.length) { const pc = toCell(AIT[Math.floor(Math.random() * AIT.length)].pos); x = clamp(pc[0] + Math.round((Math.random() - 0.5) * 8), 0, W - 1); y = clamp(pc[1] + Math.round((Math.random() - 0.5) * 8), 0, H - 1); }
     else { x = Math.floor(Math.random() * W); y = Math.floor(Math.random() * H); }
+    if (ZONE[y][x] === 'X') continue;
     const p = bfs(toCell(e.pos), [x, y]); if (p && p.length) { e.route = p.map(cellCenter); return; }
   }
   e.route = [];
@@ -2739,7 +3132,7 @@ function aimAssist(dt) {   // touch screens: nudge the aim toward a teacher that
 function localTarget() { return { id: NET ? NET.myId : 'me', pos: P.pos, y: P.jumpY, moving: Math.hypot(P.vel.x, P.vel.z) > 2.5 || P.slideT > 0, yaw: P.yaw, crouch: P.crouch, hidden: P.hidden, blown: P.hideBlown, invis: P.invisT > 0, light: flashOn && state === 'play', noise: P.noise, spray: itemCount('spray') > 0, local: true }; }
 function computeTargets() {
   AIT = [];
-  if (!NET || !NET.started) { if (!P.out && !P.downed && (state === 'play' || state === 'cams')) { AIT.push(localTarget()); if (clone) AIT.push(cloneTarget()); } for (const t of botTargets()) AIT.push(t); return; }
+  if (!NET || !NET.started) { if (!P.out && !P.downed && (state === 'play' || state === 'cams' || state === 'fly')) { AIT.push(localTarget()); if (clone) AIT.push(cloneTarget()); } for (const t of botTargets()) AIT.push(t); return; }
   for (const p of NET.players.values()) {
     if (p.role !== 'survivor' || !p.alive || p.escaped) continue;
     if (p.id === NET.myId) { if (!P.out && state !== 'scare') AIT.push(localTarget()); continue; }
@@ -2764,7 +3157,7 @@ function doCatch(e, t) {
   if (isFPS()) { if (e.meleeCd > 0) return; e.meleeCd = 1.0; hitTarget(t, 15, e.pos, enemyName(e)); return; }   // FPS: a shove instead of a catch
   if (t.bot) { downBot(t.bot); e.stunT = 2; e.route = []; e.state = 'patrol'; return; }
   if (!NET || !NET.started) {
-    if (state !== 'play' && state !== 'cams') return;
+    if (state !== 'play' && state !== 'cams' && state !== 'fly') return;
     if (t.spray) { consumeItem('spray'); unlock('spray'); e.stunT = 5; e.route = []; pushBack(e, t); message('撃退スプレー！ 先生がひるんだ――今のうちに逃げろ！', 3); return; }
     caught(e); return;
   }
@@ -2877,6 +3270,7 @@ function setAnim(e, speed, dt) {
 // ================================================================== scare / win
 let scareT = 0, scarer = null;
 function caught(e) {
+  if (state === 'fly') { exitFly(true); state = 'play'; }
   if (NET && UI.camAct) { act('cams', { on: 0 }); UI.camAct = false; }
   if (state === 'cams') { $('camui').classList.add('hidden'); canvas.classList.remove('cam'); applyRoleLook();
     P.yaw = Math.atan2(-(e.pos.x - P.pos.x), -(e.pos.z - P.pos.z)); camera.position.set(P.pos.x, P.eye, P.pos.z); camera.rotation.set(0, P.yaw, 0, 'YXZ'); }
@@ -2949,7 +3343,7 @@ function updateWorld(dt, t) {
     }
   }
   for (const p of exitPanels) p.position.x += ((exitOpen ? p.userData.open : p.userData.closed) - p.position.x) * Math.min(1, dt * 3);
-  if (exitOpen && canCollect && !isFPS() && P.pos.z > 38.2 && P.pos.x > 67.5 && P.pos.x < 70.5) { if (NET) { if (!P.escReq) { P.escReq = 1; act('esc'); } } else win(); }
+  if (exitOpen && canCollect && !isFPS() && !STAGE.plane && P.pos.z > 38.2 && P.pos.x > 67.5 && P.pos.x < 70.5) { if (NET) { if (!P.escReq) { P.escReq = 1; act('esc'); } } else win(); }
   shPanels.forEach((pn, i) => { pn.position.x += ((doorsClosed[i] ? pn.userData.closed : pn.userData.open) - pn.position.x) * Math.min(1, dt * 8); });
   if (!NET || NET.host) {
     const camsN = NET ? NET.camUsers.size : (state === 'cams' ? 1 : 0);
@@ -2977,9 +3371,11 @@ function updateWorld(dt, t) {
   const pt = state === 'play' && curInteract ? (IS_TOUCH ? '「使う」' : '[E] ') + interactLabel(curInteract) : '';
   if (pt !== UI.pt) { UI.pt = pt; $('prompt').classList.toggle('hidden', !pt); $('promptText').textContent = pt; $('bUse').classList.toggle('ready', !!pt); }
   const isRev = !!(curInteract && curInteract.id === 'revive');
-  const showBar = P.charging || (curInteract && curInteract.id === 'gen') || isRev;
+  const taskBar = STAGE.plane && curInteract && ((curInteract.id === 'gen' && taskReady('power') && TASK.power < TASK_NEED.power) || (curInteract.id === 'hack' && taskReady('hack'))) ? (curInteract.id === 'gen' ? 'power' : 'hack') : null;
+  const showBar = P.charging || (curInteract && curInteract.id === 'gen') || isRev || !!taskBar;
   $('prompt').querySelector('.pbar').classList.toggle('hidden', !showBar);
-  if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${isRev ? Math.min(1, (P.revive || 0) / 3) : genBroken ? (P.repair || 0) / 4 : P.battery / 100})`;
+  if (showBar) $('prompt').querySelector('.pbar i').style.transform = `scaleX(${taskBar ? TASK[taskBar] / TASK_NEED[taskBar] : isRev ? Math.min(1, (P.revive || 0) / 3) : genBroken ? (P.repair || 0) / 4 : P.battery / 100})`;
+  if (taskBar && UI.tkDraw !== Math.floor(TASK[taskBar])) { UI.tkDraw = Math.floor(TASK[taskBar]); updateCount(); }
   const iv = P.invisT > 0 ? Math.ceil(P.invisT) : 0;
   if (iv !== UI.iv) { UI.iv = iv; $('invisHud').classList.toggle('hidden', !iv || state !== 'play'); $('invisHud').textContent = `透明 あと${iv}秒`; $('invisFx').style.opacity = iv ? 1 : 0; }
   // the other teacher shows up on the map every 5 seconds
@@ -2997,12 +3393,17 @@ function updateWorld(dt, t) {
 function batteryEmpty() {
   if (state === 'cams' && !P.out) exitCams();
   resetDoors();
-  message('バッテリー切れ！ 保健室のドアが開いた――', 3);
+  message(`バッテリー切れ！ ${shelterName()}のドアが開いた――`, 3);
   if (NET) netEvent({ k: 'batt0' }, true);
 }
 function collectBook(b, who) {
   collected++; if (!isFPS()) bonus += 0.12;
   const total = collected + books.length;
+  if (STAGE.plane) {
+    if (!books.length) { exitOpen = true; message(who ? `${who}が最後の暗号キーを見つけた！ 次は電源室でシステム電源を入れろ` : '暗号キーがそろった！ 次は電源室でシステム電源を入れろ', 5); }
+    else message(who ? `${who}が${b.name}を見つけた（${collected}/${total}）` : `${b.name}を手に入れた（${collected}/${total}）`, 3);
+    updateCount(); drawMapBase(); return;
+  }
   if (!books.length) { exitOpen = true; message(who ? `${who}が最後の教科書を回収！ 玄関が開いた――急げ！` : '教科書がぜんぶそろった！ 玄関へ――急げ！', 5); }
   else message(who ? `${who}が教科書「${b.name}」を回収（${collected}/${total}）` : `教科書「${b.name}」を回収（${collected}/${total}）`, 3);
   updateCount(); if (isFPS()) checkObjectives();
@@ -3010,24 +3411,33 @@ function collectBook(b, who) {
 
 // ================================================================== maps
 const MAPS = 10;  // px per cell on the minimap (canvas drawn at 16 px per cell)
+let MAPZ = 0;     // first grid row shown on the minimap (the plane only uses a few rows)
 function drawZones(g, s, labels) {
-  const colorOf = (z) => { if (z === 'C') return 'rgba(200,200,200,.38)'; const r = rooms.find(q => q.id === z);
-    return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : 'rgba(150,110,80,.35)'; };
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { g.fillStyle = colorOf(ZONE[y][x]); g.fillRect(x * s, y * s, s - 1, s - 1); }
+  const colorOf = (z) => { if (z === 'C') return 'rgba(200,200,200,.38)'; if (z === 'X') return null; const r = rooms.find(q => q.id === z);
+    return r.type === 'shelter' ? 'rgba(90,140,255,.55)' : r.type === 'generator' ? 'rgba(255,150,60,.55)' : r.type === 'broadcast' ? 'rgba(255,80,80,.55)' : r.type === 'avionics' ? 'rgba(60,210,255,.5)' : r.type === 'cockpit' ? 'rgba(120,230,140,.5)' : r.type === 'cargo' ? 'rgba(170,170,170,.45)' : r.type === 'staff' ? 'rgba(200,170,90,.5)' : 'rgba(150,110,80,.35)'; };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = colorOf(ZONE[y][x]); if (!c) continue; g.fillStyle = c; g.fillRect(x * s, y * s, s - 1, s - 1); }
+  if (STAGE.plane) {   // highlight where the next task is
+    const nt = taskStep(), r = TASK_ROOM[nt] && ROOM[TASK_ROOM[nt]];
+    if (r) { g.strokeStyle = '#ffd24a'; g.lineWidth = Math.max(2, s * 0.18); g.strokeRect(r.x0 * s + 1, r.y0 * s + 1, r.w * s - 3, r.h * s - 3); }
+  }
   if (labels) {   // every room's name, so you can tell where 2-B or 3-D is
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
     for (const r of rooms) {
-      const special = r.type !== 'class', cx = (r.x0 + 1.5) * s, cy = (r.y0 + 1.5) * s;
-      let fs = Math.round(s * (special ? 0.95 : 1.05)); g.font = `bold ${fs}px ${JFONT}`;
-      while (g.measureText(r.name).width > s * 2.8 && fs > 6) { fs--; g.font = `bold ${fs}px ${JFONT}`; }
+      const rw = r.w || 3, rh = r.h || 3, special = r.type !== 'class', cx = (r.x0 + rw / 2) * s, cy = (r.y0 + rh / 2) * s;
+      let fs = Math.round(s * Math.min(special ? 0.95 : 1.05, rh * 0.62)); g.font = `bold ${fs}px ${JFONT}`;
+      while (g.measureText(r.name).width > s * (rw - 0.2) && fs > 6) { fs--; g.font = `bold ${fs}px ${JFONT}`; }
       g.lineWidth = Math.max(2, s * 0.22); g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(r.name, cx, cy);
       g.fillStyle = special ? '#fff' : '#ffe6c2'; g.fillText(r.name, cx, cy);
     }
-    g.font = `bold ${Math.round(s * 0.75)}px ${JFONT}`; g.fillStyle = '#9dffb0'; g.strokeText('玄関', 23 * s, 12.45 * s); g.fillText('玄関', 23 * s, 12.45 * s);
+    if (!STAGE.plane) { g.font = `bold ${Math.round(s * 0.75)}px ${JFONT}`; g.fillStyle = '#9dffb0'; g.strokeText('玄関', 23 * s, 12.45 * s); g.fillText('玄関', 23 * s, 12.45 * s); }
   }
-  g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4);
+  if (!STAGE.plane) { g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4); }
 }
-function drawMapBase() { const g = $('map').getContext('2d'); g.clearRect(0, 0, 384, 208); drawZones(g, 16, true); }
+function drawMapBase() {
+  const c = $('map'), rows = STAGE.plane ? 5 : H; MAPZ = STAGE.plane ? 4 : 0;
+  if (c.height !== rows * 16) { c.height = rows * 16; c.style.height = rows * MAPS + 'px'; $('mapwrap').style.height = rows * MAPS + 'px'; }
+  const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); g.save(); g.translate(0, -MAPZ * 16); drawZones(g, 16, true); g.restore();
+}
 function buildCamMap() {
   const c = $('camMapC'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); drawZones(g, 24, true);
   const box = $('camMap'); for (const b of [...box.querySelectorAll('.cbtn')]) b.remove();
@@ -3043,7 +3453,9 @@ function toggleBigMap(on) {
   if (bigOpen) { UI.bigT = 0; drawBigMap(); }
 }
 function drawBigMap() {
-  const c = $('bigC'), g = c.getContext('2d'), s = 60; g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 0, c.width, c.height);
+  const c = $('bigC'), g = c.getContext('2d'), s = 60, rows = STAGE.plane ? 5 : H, oy = STAGE.plane ? 4 : 0;
+  if (c.height !== rows * s) { c.height = rows * s; $('bigmap').querySelector('.bm').style.aspectRatio = `24/${rows}`; }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, 0, c.width, c.height); g.translate(0, -oy * s);
   drawZones(g, s, true);
   const dot = (x, z, col, r = 10) => { g.beginPath(); g.arc(x / CELL * s, z / CELL * s, r, 0, Math.PI * 2); g.fillStyle = col; g.fill(); g.lineWidth = 3; g.strokeStyle = '#000'; g.stroke(); };
   // teammates and BOTs
@@ -3054,7 +3466,8 @@ function drawBigMap() {
   g.save(); g.translate(px, pz); g.rotate(-P.yaw); g.beginPath(); g.moveTo(0, -22); g.lineTo(14, 14); g.lineTo(0, 7); g.lineTo(-14, 14); g.closePath();
   g.fillStyle = '#fff'; g.fill(); g.lineWidth = 4; g.strokeStyle = '#000'; g.stroke(); g.restore();
   const here = rooms.find(r => { const c2 = toCell(P.pos); return ZONE[c2[1]][c2[0]] === r.id; });
-  $('bigmap').querySelector('.ttl').innerHTML = `いまいる場所：<b>${here ? here.name : '廊下'}</b>　${IS_TOUCH ? 'タップで閉じる' : 'M か Tab で閉じる'}`;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  $('bigmap').querySelector('.ttl').innerHTML = `いまいる場所：<b>${here ? here.name : STAGE.plane ? '通路' : '廊下'}</b>　${IS_TOUCH ? 'タップで閉じる' : 'M か Tab で閉じる'}`;
 }
 $('mapwrap').addEventListener('click', () => { if (state === 'play') toggleBigMap(true); });
 $('mapwrap').addEventListener('touchstart', e => { if (state !== 'play') return; e.preventDefault(); e.stopPropagation(); lastTouch = performance.now(); toggleBigMap(true); }, { passive: false });
@@ -3063,7 +3476,7 @@ $('bigmap').addEventListener('touchstart', e => { e.preventDefault(); e.stopProp
 function drawMapArrow() {
   if (bigOpen) { if (state !== 'play') toggleBigMap(false); else { UI.bigT = (UI.bigT || 0) - 1; if (UI.bigT <= 0) { UI.bigT = 6; drawBigMap(); } } }
   if (!showMap || state !== 'play') return;
-  const px = P.pos.x / CELL * MAPS, pz = P.pos.z / CELL * MAPS;
+  const px = P.pos.x / CELL * MAPS, pz = (P.pos.z / CELL - MAPZ) * MAPS;
   const tr = `translate(${px.toFixed(0)}px,${pz.toFixed(0)}px) rotate(${(-P.yaw).toFixed(2)}rad)`;
   if (tr !== UI.tr) { UI.tr = tr; $('arrow').style.transform = tr; }
   if (exitOpen !== UI.exitDrawn) { UI.exitDrawn = exitOpen; drawMapBase(); }
@@ -3280,6 +3693,7 @@ function hostStart() {
   if (!NET || !NET.host || NET.players.size < 2) return;
   const roster = [...NET.players.values()];
   const survivors = roster.filter(p => p.id !== NET.hunterId).length;
+  if ((NET.cfg.stage | 0) !== stageIdx) { const keep = store.get('dk_stage', '0'); buildWorld(NET.cfg.stage | 0); store.set('dk_stage', keep); }   // textbook spots come from the room's stage
   const plan = makeBookPlan(clamp(survivors + 2, 3, 5));
   if (!(NET.hunterId || NET.cfg.ai > 0 || NET.cfg.teacher)) return;
   NET.startData = { t: 'start', roster: roster.map(p => ({ id: p.id, name: p.name })), hunterId: NET.hunterId || null, books: plan, cfg: { ai: Math.min(NET.cfg.ai | 0, NET.hunterId ? 2 : 3), teacher: !!NET.cfg.teacher, mode: NET.cfg.mode === 'fps' ? 'fps' : 'horror', stage: NET.cfg.stage | 0, bots: NET.cfg.bots | 0 } };
@@ -3319,6 +3733,7 @@ function hostAct(id, d) {
       const amt = clamp(+d.dmg || 0, 0, 300); if (tg.id === NET.myId) hurtPlayer(amt, { x: +d.x, z: +d.z }, pl.name); else sendTo(tg.id, { t: 'ev', k: 'dmg', amt, x: +d.x, z: +d.z, by: pl.name }); break; }
     case 'bhit': { if (id !== NET.hunterId) return; const b = bots[d.i | 0]; if (b) hurtBot(b, clamp(+d.dmg || 0, 0, 300), pl.name); break; }
     case 'dead': { if (!surv) return; pl.alive = false; pl.dx = pl.x; pl.dz = pl.z; pl.revAcc = 0; NET.camUsers.delete(id); netEvent({ k: 'caught', id, name: pl.name, by: -1, x: pl.x, z: pl.z, why: String(d.by || '') }); break; }
+    case 'task': { if (!surv) return; hostTask(String(d.tk), +d.dt || 0); break; }
     case 'ally': { if (!surv) return; const e = enemies[d.i | 0]; if (!e || !e.active || !e.netAI || e.kind === 'fast' || e.allyT > 0 || e.downT > 0) return;
       const rx = id === NET.myId ? P.pos.x : pl.x, rz = id === NET.myId ? P.pos.z : pl.z;
       if (Math.hypot(e.pos.x - rx, e.pos.z - rz) > 12) return;
@@ -3380,7 +3795,7 @@ function hostTick(dt) {
     const p = []; for (const pl of NET.players.values()) p.push([pl.id, +(pl.x || 0).toFixed(2), +(pl.z || 0).toFixed(2), +(pl.yaw || 0).toFixed(2), pl.f | 0, (pl.alive ? 1 : 0) | (pl.escaped ? 2 : 0), +(pl.pt || 0).toFixed(2), pl.dx == null ? null : +pl.dx.toFixed(2), pl.dz == null ? null : +pl.dz.toFixed(2), +(pl.py || 0).toFixed(2)]);
     const ai = enemies.filter(e => e.active && e.netAI).map(e => [enemies.indexOf(e), +e.pos.x.toFixed(2), +e.pos.z.toFixed(2), +e.yaw.toFixed(2), e.moving ? +e.speed.toFixed(1) : 0, e.downT > 0 ? 1 : 0, e.allyT > 0 ? 1 : 0, Math.round(e.hp ?? 0), e.dead ? 1 : 0]);
     const bo = bots.map(b => [b.idx, +b.pos.x.toFixed(2), +b.pos.z.toFixed(2), +b.yaw.toFixed(2), (b.crouch ? 1 : 0) | (b.state === 'down' ? 2 : 0) | (b.state === 'out' ? 4 : 0) | (b.spd > 0.4 ? 8 : 0), Math.round(b.hp)]);
-    sendAll({ t: 's', p, ai, bo, k: FP.kills, hhp: NET.hunterHP, gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
+    sendAll({ t: 's', p, ai, bo, k: FP.kills, hhp: NET.hunterHP, tk: [Math.floor(TASK.power * 100) / 100, Math.floor(TASK.hack * 100) / 100, Math.floor(TASK.fly * 100) / 100], gb: genBroken ? 1 : 0, b: books.map(b => b.id), ex: exitOpen ? 1 : 0, dc: (doorsClosed[0] ? 1 : 0) | (doorsClosed[1] ? 2 : 0), bt: +P.battery.toFixed(1), fz: +freezeT.toFixed(2), mc: +musicCd.toFixed(1), hh: +hunterHold.toFixed(1) });
   }
 }
 function hostResult(reason) {
@@ -3417,6 +3832,7 @@ function applySnap(d) {
   P.battery = d.bt; musicCd = d.mc; hunterHold = d.hh; freezeT = d.fz; genBroken = !!d.gb;
   for (const [bi, x, z, yaw, f, hp] of (d.bo || [])) { const b = bots[bi]; if (!b) continue; b.tx = x; b.tz = z; b.tyaw = yaw; b.crouch = !!(f & 1); b.state = f & 4 ? 'out' : f & 2 ? 'down' : 'go'; b.hp = hp; b.nmov = !!(f & 8); }
   if (d.k !== undefined && d.k !== FP.kills) { FP.kills = d.k; updateCount(); }
+  if (d.tk) { TASK.power = d.tk[0]; TASK.hack = d.tk[1]; TASK.fly = d.tk[2]; }
   if (d.hhp !== undefined && NET.myRole === 'hunter') P.hp = d.hhp / 2.5;
   { const he = enemies[2]; if (he && he.remote && !he.netAI && d.hhp !== undefined) he.chp = d.hhp; }
   for (const [i, x, z, yaw, sp, dn, al, hp, dead] of (d.ai || [])) { const e = enemies[i]; if (!e) continue; e.ndown = !!dn; if (hp !== undefined) e.chp = hp;
@@ -3447,7 +3863,7 @@ function onEvent(ev) {
       else { message(isFPS() ? `${ev.name}がやられた！ そばで長押しで助け起こせる` : hunter && (ev.by ?? 2) === 2 ? `${ev.name}をつかまえた！` : `${ev.name}がつかまった…`, 3); if (hunter && (ev.by ?? 2) === 2 && !isFPS()) playVoice(); }
       updateCount(); break; }
     case 'book': { const i = books.findIndex(b => b.id === ev.id); if (i < 0) break; const b = books[i]; scene.remove(b.g); books.splice(i, 1); collectBook(b, ev.by === me ? null : ev.name); break; }
-    case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}が保健室の${ev.i ? '南' : '北'}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
+    case 'door': if (doorsClosed[ev.i] !== ev.closed) setDoor(ev.i, ev.closed, true); if (!hunter) message(`${ev.name}が${shelterName()}の${shDoorName(ev.i)}ドアを${ev.closed ? '閉めた' : '開けた'}`, 2); break;
     case 'music': freezeT = 10; audioMusic(true); message(hunter ? 'オルゴールの音…体が動かない！' : `${ev.name}がオルゴールを流した――DAISUKE先生が止まった`, 4); break;
     case 'musicEnd': freezeT = 0; audioMusic(false); if (NET.host) aiToBroadcast();
       if (hunter) { message('音が止んだ。放送室に誰かいたはずだ…', 3.5); showPing(spots.broadcast.x, spots.broadcast.z); }
@@ -3457,7 +3873,7 @@ function onEvent(ev) {
       if (ev.id === me) { P.out = true; $('pause').classList.add('hidden'); message('脱出成功！ 仲間の視点で観戦中', 4); state = 'play'; startSpectate(); }
       else message(`${ev.name}が脱出した！`, 3);
       updateCount(); break; }
-    case 'batt0': if (state === 'cams' && !P.out) exitCams(); resetDoors(); message('バッテリー切れ！ 保健室のドアが開いた――', 3); break;
+    case 'batt0': if (state === 'cams' && !P.out) exitCams(); resetDoors(); message(`バッテリー切れ！ ${shelterName()}のドアが開いた――`, 3); break;
     case 'msg': message(ev.text, 2.5); break;
     case 'kill': addKillfeed(ev.text); if (ev.kills !== undefined) FP.kills = ev.kills; if (ev.by === me) { FP.score += 100; showHitmarker(true); } updateCount(); if (NET.host) checkObjectives(); break;
     case 'psh': if (ev.id === me) break; { const a = new V3(ev.x, ev.y, ev.z), b = new V3(ev.ex, ev.ey, ev.ez); drawTracer(a, b); worldFlash(a, 0.4); const w = WEAPONS[ev.w] || WEAPONS.pistol; playSfxAt(w.snd, a, w.vol * 1.1, w.rate); } break;
@@ -3465,6 +3881,8 @@ function onEvent(ev) {
     case 'bsh': if (NET.host) break; { const a = new V3(ev.x, ev.y, ev.z), b = new V3(ev.ex, ev.ey, ev.ez); drawTracer(a, b, 0x9fe0ff); worldFlash(a, 0.35, 0xffd080); playSfxAt('gun_pistol', a, 0.45, 1.15); } break;
     case 'dmg': hurtPlayer(ev.amt, { x: ev.x, z: ev.z }, ev.by); break;
     case 'ach': unlock(ev.id); break;
+    case 'task': message(ev.text, 4.5); drawMapBase(); updateCount(); break;
+    case 'ending': startEnding(); break;
     case 'hdown': if (hunter) { P.stunT = 10; P.pos.set(ev.x, 0, ev.z); FP.firing = false; message(`${ev.by}に倒された…10秒後に復活`, 4); } else message(`${ev.by}がDAISUKE先生（プレイヤー）を倒した！ 10秒間動けない`, 3); break;
     case 'revive': { const pl = NET.players.get(ev.id); if (pl) { pl.alive = true; pl.dx = pl.dz = null; }
       if (ev.byId === me) unlock('revive');
@@ -3482,11 +3900,11 @@ function onEvent(ev) {
 let pingTimer = 0;
 let tpingTimer = 0;
 function showTPing(x, z) {
-  const el = $('tping'); el.classList.remove('hidden'); el.style.transform = `translate(${(x / CELL * MAPS).toFixed(0)}px,${(z / CELL * MAPS).toFixed(0)}px)`;
+  const el = $('tping'); el.classList.remove('hidden'); el.style.transform = `translate(${(x / CELL * MAPS).toFixed(0)}px,${((z / CELL - MAPZ) * MAPS).toFixed(0)}px)`;
   clearTimeout(tpingTimer); tpingTimer = setTimeout(() => el.classList.add('hidden'), 1500);
 }
 function showPing(x, z) {
-  const el = $('ping'); el.classList.remove('hidden'); el.style.transform = `translate(${(x / CELL * MAPS).toFixed(0)}px,${(z / CELL * MAPS).toFixed(0)}px)`;
+  const el = $('ping'); el.classList.remove('hidden'); el.style.transform = `translate(${(x / CELL * MAPS).toFixed(0)}px,${((z / CELL - MAPZ) * MAPS).toFixed(0)}px)`;
   clearTimeout(pingTimer); pingTimer = setTimeout(() => el.classList.add('hidden'), 4000);
 }
 function startOnlineGame() {
@@ -3563,6 +3981,7 @@ function showResult(d) {
   $('earned').textContent = got ? `+${got}P（合計 ${points}P）` : '';
   $('endTitle').style.color = won ? '#7de08a' : '';
   $('endText').textContent = d.reason || '';
+  if (STAGE.plane && d.survWin) { $('endTitle').textContent = 'END'; $('endText').textContent = '機械だったDAISUKE先生ともう一人の先生は、ハッキングされて飛行機から飛び降りた。'; unlock('plane_end'); }
   const list = $('endList'); list.textContent = ''; list.classList.remove('hidden');
   for (const p of d.list) { const row = document.createElement('div'); const a = document.createElement('span'); a.textContent = p.name; const b = document.createElement('span'); b.textContent = p.st; row.append(a, b); list.appendChild(row); }
   $('retry').classList.add('hidden'); $('toTitle2').classList.add('hidden');
@@ -3656,10 +4075,11 @@ const clock = new THREE.Clock();
 function loop() {
   requestAnimationFrame(loop);
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  const live = state === 'play' || state === 'cams' || (NET && NET.started && (state === 'pause' || state === 'scare'));
+  const live = state === 'play' || state === 'cams' || state === 'fly' || (NET && NET.started && (state === 'pause' || state === 'scare'));
   if (live) {
-    if (state === 'play' && !P.out) updatePlayer(dt); else { lookDX = lookDY = 0; if (state !== 'play') P.noise = 0; }
+    if (state === 'play' && !P.out) updatePlayer(dt); else if (state === 'fly') { lookDX = lookDY = 0; P.noise = 0; updateFly(dt); } else { lookDX = lookDY = 0; if (state !== 'play') P.noise = 0; }
     if (P.out && NET && NET.started && (state === 'play' || state === 'cams')) updateSpectate(dt);
+    if (state === 'fly' && NET && NET.started && P.out) exitFly(true);
     computeTargets(); updatePets(dt); updateClone(dt);
     if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt);
     updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt);
@@ -3668,8 +4088,9 @@ function loop() {
     drawMapArrow();
   }
   if (state === 'scare') updateScare(dt);
+  else if (state === 'ending') updateEnding(dt);
   else if (state === 'title' || state === 'end' && NET) {
-    if (state === 'title') { camera.position.set(4.5, 1.6, 10.5); camera.rotation.set(0, -Math.PI / 2 + Math.sin(t * 0.25) * 0.25, 0, 'YXZ'); }
+    if (state === 'title') { if (STAGE.plane) { camera.position.set(42, 1.6, 19.5); camera.rotation.set(0, Math.PI / 2 + Math.sin(t * 0.25) * 0.2, 0, 'YXZ'); } else { camera.position.set(4.5, 1.6, 10.5); camera.rotation.set(0, -Math.PI / 2 + Math.sin(t * 0.25) * 0.25, 0, 'YXZ'); } }
     for (const e of enemies) if (e.active && !e.remote) setAnim(e, 0, dt);
   }
   if (state === 'cams') {
@@ -3683,8 +4104,8 @@ function loop() {
   }
 }
 resize();
-window.__dk = { stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
-  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'play' || state === 'cams') { if (state === 'play' && !P.out) updatePlayer(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
+window.__dk = { FLY, TASK, startEnding, get END() { return END; }, stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+  step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'ending') { updateEnding(dt); continue; } if (state === 'play' || state === 'cams' || state === 'fly') { if (state === 'play' && !P.out) updatePlayer(dt); if (state === 'fly') updateFly(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
 </body>
