@@ -298,7 +298,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.5.1.1</div>
+  <div class="ver">ver.5.1.2</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
@@ -843,16 +843,20 @@ function furnish(r) {
     spots.genFront = new V3(ox + 3.0, 0, oz + 4.5);
     interact.push({ id: 'gen', pos: new V3(ox + 3.0, 0, oz + 6.0), r: 1.95 });
   } else if (type === 'broadcast') {
+    // the desk goes on the wall opposite the door (rooms in the bottom row have their door on the top wall)
+    const fl = r.ri === 2, mv = v => fl ? 9 - v : v;
+    const B = (k, u0, y0, v0, u1, y1, v1) => box(k, ox + u0, y0, oz + Math.min(mv(v0), mv(v1)), ox + u1, y1, oz + Math.max(mv(v0), mv(v1)));
+    const F = (u0, v0, u1, v1, cover, top) => { addCol(ox + u0, oz + Math.min(mv(v0), mv(v1)), ox + u1, oz + Math.max(mv(v0), mv(v1)), 'F', top); if (cover) covers.push([ox + u0, oz + Math.min(mv(v0), mv(v1)), ox + u1, oz + Math.max(mv(v0), mv(v1))]); };
     B('dark', 1.5, 0.72, 0.12, 7.5, 0.78, 0.85); B('metal', 1.55, 0.02, 0.15, 7.45, 0.72, 0.8); F(1.5, 0.12, 7.5, 0.85, true, 0.78);
     B('dark', 2.0, 0.78, 0.25, 4.0, 0.86, 0.75);
     for (let i = 0; i < 14; i++) B(i % 3 ? 'led' : 'ledR', 2.1 + i * 0.13, 0.86, 0.35, 2.16 + i * 0.13, 0.87, 0.4);
     B('metal', 5.6, 0.78, 0.45, 5.63, 1.2, 0.48); B('dark', 5.56, 1.2, 0.42, 5.67, 1.3, 0.51);
-    for (let u = 0.6; u < 8.6; u += 1.0) B('dark', u, 1.0, 8.86, u + 0.8, 2.6, 8.9);  // sound panels
-    face('onair', 'nz', ox + 3.9, 2.45, oz + 8.86, ox + 5.1, 2.75, oz + 8.86);
-    lightCands.push({ pos: new V3(ox + 4.5, 2.3, oz + 7.8), color: 0xff2a2a, intensity: 1.2, dist: 6, special: true, onair: true });
-    spots.musicbox = new V3(ox + 4.5, 0.78, oz + 0.5);
+    for (let u = 0.6; u < 8.6; u += 1.0) if (u + 0.8 < 3.6 || u > 5.4) B('dark', u, 1.0, 8.86, u + 0.8, 2.6, 8.9);  // sound panels (not over the door)
+    face('onair', fl ? 'pz' : 'nz', ox + 3.9, 2.45, oz + mv(8.86), ox + 5.1, 2.75, oz + mv(8.86));
+    lightCands.push({ pos: new V3(ox + 4.5, 2.3, oz + mv(7.8)), color: 0xff2a2a, intensity: 1.2, dist: 6, special: true, onair: true });
+    spots.musicbox = new V3(ox + 4.5, 0.78, oz + mv(0.5));
     spots.broadcast = new V3(ox + 4.5, 0, oz + 4.5);
-    interact.push({ id: 'music', pos: new V3(ox + 4.5, 0, oz + 0.6), r: 2.0 });
+    interact.push({ id: 'music', pos: new V3(ox + 4.5, 0, oz + mv(0.6)), r: 2.0 });
   }
 }
 MATS.onair = M({ map: onAirTex, emissive: 0xffffff, emissiveMap: onAirTex, emissiveIntensity: 0.25 });
@@ -2138,7 +2142,7 @@ function updateBots(dt) {
     }
     // pick up textbooks
     if (!(NET && NET.started && !NET.host)) for (let i = books.length - 1; i >= 0; i--) {
-      const bk = books[i]; if (Math.hypot(b.pos.x - bk.g.position.x, b.pos.z - bk.g.position.z) < 1.3) {
+      const bk = books[i]; if (Math.hypot(b.pos.x - bk.g.position.x, b.pos.z - bk.g.position.z) < (STAGE.plane ? 1.85 : 1.3)) {
         if (NET && NET.started) netEvent({ k: 'book', id: bk.id, by: 'bot', name: b.name });
         else { scene.remove(bk.g); books.splice(i, 1); collectBook(bk, b.name); if (isFPS()) checkObjectives(); }
       }
@@ -2351,9 +2355,9 @@ function furnishPlane(r) {
   } else if (type === 'avionics') {   // the teachers' control servers
     for (let x = 0.3; x < 8.6; x += 0.9) { B('rack', x, 0, 2.25, x + 0.8, 2.3, 2.9); for (let y = 0.3; y < 2.1; y += 0.25) B(Math.random() < 0.3 ? 'ledR' : 'ledC', x + 0.1, y, 2.24, x + 0.16, y + 0.03, 2.25); }
     F(0.3, 2.25, 8.6, 2.9);
-    B('dark', 3.6, 0, 0.6, 5.4, 0.8, 1.2); B('screen', 3.9, 0.85, 0.75, 5.1, 1.5, 0.8); F(3.6, 0.6, 5.4, 1.2, 0.8);
-    lightCands.push({ pos: new V3(ox + 4.5, 2.2, oz + 1.5), color: 0x40e0ff, intensity: 2.6, dist: 7, special: true });
-    spots.hack = new V3(ox + 4.5, 0, oz + 1.6); interact.push({ id: 'hack', pos: new V3(ox + 4.5, 0, oz + 1.65), r: 1.4 });
+    B('dark', 6.3, 0, 0.6, 8.1, 0.8, 1.2); B('screen', 6.6, 0.85, 0.75, 7.8, 1.5, 0.8); F(6.3, 0.6, 8.1, 1.2, 0.8);   // off to the side of the door
+    lightCands.push({ pos: new V3(ox + 7.2, 2.2, oz + 1.5), color: 0x40e0ff, intensity: 2.6, dist: 7, special: true });
+    spots.hack = new V3(ox + 7.2, 0, oz + 1.6); interact.push({ id: 'hack', pos: new V3(ox + 7.2, 0, oz + 1.65), r: 1.4 });
   } else if (type === 'staff') {   // purser's office (the secret drawer)
     B('wood', 1.0, 0.72, 1.6, 3.2, 0.77, 2.6); B('metal', 1.05, 0, 1.65, 3.15, 0.72, 2.55); B('ledB', 2.0, 0.77, 2.0, 2.2, 0.87, 2.2); F(1.0, 1.6, 3.2, 2.6, 0.77);
     interact.push({ id: 'invis', pos: new V3(ox + 3, 0, oz + 1.0), r: 1.6 });
@@ -2389,7 +2393,7 @@ function furnishPlane(r) {
     for (const [z0, z1] of [[2.4, 3.6], [6.6, 7.8], [12.8, 14.0]]) { B('metal', 2.0, 0, z0, 3.4, 0.55, z1); B('crate', 2.1, 0.55, z0 + 0.1, 3.0, 1.1, z0 + 0.7); F(2.0, z0, 3.4, z1, 0.55); }
     B('dark', 0.15, 0, 1.0, 0.9, 0.7, 14.5); F(0.15, 1.0, 0.9, 14.5, 0.7);
   } else if (type === 'cargo') {
-    for (const [x0, z0, x1, z1, hh] of [[0.6, 0.3, 2.0, 1.6, 1.3], [3.4, 0.4, 5.6, 1.5, 1.0], [0.6, 7.3, 2.2, 8.7, 1.5], [3.6, 7.6, 5.4, 8.7, 1.1]]) { B('crate', x0, 0, z0, x1, hh, z1); F(x0, z0, x1, z1, hh); }
+    for (const [x0, z0, x1, z1, hh] of [[0.6, 0.3, 2.0, 1.6, 1.3], [3.4, 0.4, 5.6, 1.5, 1.0], [0.6, 7.3, 2.2, 8.7, 1.5], [2.5, 7.9, 3.3, 8.7, 0.9]]) { B('crate', x0, 0, z0, x1, hh, z1); F(x0, z0, x1, z1, hh); }
     for (let x = 0.4; x < 6; x += 0.5) { B('metal', x, 0.01, 0.2, x + 0.04, 0.02, 8.8); }
     lightCands.push({ pos: new V3(ox + 3, 2.3, oz + 4.5), color: 0xffd2a0, intensity: 3, dist: 9, special: true, flicker: true });
   }
@@ -3408,7 +3412,7 @@ function updateWorld(dt, t) {
   const canCollect = !hunter && !P.out && state !== 'scare';
   for (let i = books.length - 1; i >= 0; i--) {
     const b = books[i]; b.s.material.opacity = 0.55 + 0.35 * Math.sin(t * 3 + i);
-    if (canCollect && Math.hypot(P.pos.x - b.g.position.x, P.pos.z - b.g.position.z) < 1.4) {
+    if (canCollect && Math.hypot(P.pos.x - b.g.position.x, P.pos.z - b.g.position.z) < (STAGE.plane ? 1.85 : 1.4)) {   // plane keys can sit on a window seat
       if (NET) { if (!b.req || t - b.req > 2) { b.req = t; act('book', { id: b.id }); } }
       else { scene.remove(b.g); books.splice(i, 1); collectBook(b, null); }
     }
@@ -4176,7 +4180,7 @@ function loop() {
   }
 }
 resize();
-window.__dk = { isStory, inPlaneArea, bfs, toCell, FLY, TASK, startEnding, get END() { return END; }, stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
+window.__dk = { deskTops, boxes, solid, rooms, isStory, inPlaneArea, bfs, toCell, FLY, TASK, startEnding, get END() { return END; }, stick, FP, get bots() { return bots; }, setMode, setStage, setBots, fireWeapon, damageEnemy, buildWorld, get STAGE() { return STAGE; }, get MODE() { return MODE; }, groundAt, swapWeapon, startReload, get loadout() { return loadout; }, set loadout(v) { loadout = v; }, renderWpnSel, VM, get clone() { return clone; }, get SPECT() { return SPECT; }, useTonic, makeAlly, switchSpect, get tonicUsed() { return tonicUsed; }, get voicePlays() { return voicePlays; }, get masterGain() { return master ? master.gain.value : null; }, get voiceLoaded() { return !!(sfx.voice1 && sfx.voice2); }, get NET() { return NET; }, get avatars() { return avatars; }, act, hostStart, get state() { return state; }, P, get enemies() { return enemies; }, get books() { return books; }, spots, interact, startGame, keys, stick,
   step(n, dt = 1 / 30) { for (let i = 0; i < n; i++) { if (state === 'ending') { updateEnding(dt); continue; } if (state === 'play' || state === 'cams' || state === 'fly') { if (state === 'play' && !P.out) updatePlayer(dt); if (state === 'fly') updateFly(dt); if (P.out && NET && NET.started) updateSpectate(dt); computeTargets(); updatePets(dt); updateClone(dt); if (NET && NET.started) { updateAvatars(dt); if (NET.host) for (const e of enemies) updateEnemy(e, dt); } else for (const e of enemies) updateEnemy(e, dt); updateBots(dt); for (const e of enemies) updateEnemyGun(e); updateFx(dt); updateWorld(dt, clock.elapsedTime); if (NET && NET.started) netTick(dt); } else if (state === 'scare') updateScare(dt); } },
   homeOn: () => !!homeSrc, musicOn: () => !!musicSrc, nearGainValue: () => nearGain ? +nearGain.gain.value.toFixed(2) : null, useItem, buyAll(){ points = 99; saveShop(); }, get INV() { return INV; }, get points() { return points; }, pull, unlock, get ACH() { return ACH; }, get HIST() { return HIST; }, get pets() { return pets; }, spawnPet, loadProfile, doInteract, enterCams, exitCams, switchCam, setDoor, setDiff, get doorsClosed() { return doorsClosed; }, get genBroken() { return genBroken; }, setCount, openTablet, useInvis, toggleDoor, get freezeT() { return freezeT; }, get collected() { return collected; }, toggleCrouch, camera, secCam, renderer, scene, boxes, covers };
 </script>
