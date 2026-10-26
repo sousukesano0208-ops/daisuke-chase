@@ -19,6 +19,7 @@ canvas#gl.cam{filter:grayscale(.85) sepia(.4) hue-rotate(62deg) saturate(1.5) co
 #hud{padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left))}
 #count{font-size:21px;font-weight:700;text-shadow:0 2px 6px #000;letter-spacing:.04em}
 #hint{font-size:14px;color:var(--dim);margin-top:4px;text-shadow:0 2px 4px #000}
+#hint .kr{color:#6ff2ff;font-weight:700}
 .bat{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--dim);text-shadow:0 1px 3px #000}
 .bat .bar{width:110px;height:8px;border:1px solid rgba(255,255,255,.45);border-radius:2px;overflow:hidden;background:rgba(0,0,0,.5)}
 .bat .bar i{display:block;height:100%;background:#7fd36b;transform-origin:left center;will-change:transform}
@@ -127,6 +128,12 @@ body.flying .tbtn{display:none!important}
 .row{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px;color:var(--dim);font-size:14px}
 .row input[type=range]{width:150px}
 #loading{font-size:15px;color:var(--dim);margin-top:14px}
+input[type=password]{-webkit-user-select:text;user-select:text;font-family:inherit;font-size:17px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:var(--fg)}
+.lform{display:grid;grid-template-columns:auto minmax(0,260px);gap:10px 12px;align-items:center;justify-content:center;margin:14px auto 4px;text-align:right}
+.lform input{width:100%;box-sizing:border-box}
+.lform .hidden{display:none}
+#syncInfo{color:#9fe0a8}
+#syncInfo.off{color:var(--dim)}
 input[type=text]{-webkit-user-select:text;user-select:text;font-family:inherit;font-size:17px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:var(--fg)}
 .code{font-size:56px;font-weight:700;letter-spacing:.25em;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;margin:4px 0 6px;-webkit-user-select:text;user-select:text}
 #roster{list-style:none;padding:0;margin:12px auto;max-width:440px;width:100%;text-align:left}
@@ -298,7 +305,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.5.1.2</div>
+  <div class="ver">ver.5.2</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
@@ -363,15 +370,28 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 <div id="toast"></div>
 <div id="login" class="panel hidden">
   <h1 style="font-size:clamp(28px,6vw,44px)">ログイン</h1>
-  <p class="keys">プレイヤー名でログインすると、ポイント・アイテム・実績・プレイ履歴がこの端末のブラウザに保存されます。<br>別の端末に移すときは、アカウント画面の「引き継ぎコード」を使ってください。</p>
-  <div class="row"><label>プレイヤー名 <input id="loginName" type="text" maxlength="10" autocomplete="off"></label><button id="loginBtn" class="btn" type="button" style="margin:0">ログイン</button></div>
+  <p class="keys" id="loginNote">名前と<b>自分で決めたパスワード</b>でログインすると、ポイント・アイテム・実績・プレイ履歴がサーバーに保存されます。<br><b>別の端末でも、同じ名前とパスワードでログインすれば続きから遊べます。</b></p>
+  <div class="lform">
+    <label for="loginName">プレイヤー名</label><input id="loginName" type="text" maxlength="10" autocomplete="username" autocapitalize="off" spellcheck="false">
+    <label for="loginPass" class="syncOnly">パスワード</label><input id="loginPass" class="syncOnly" type="password" maxlength="64" autocomplete="current-password" placeholder="6文字以上">
+    <label for="loginPass2" class="p2 hidden">もう一度</label><input id="loginPass2" class="p2 hidden" type="password" maxlength="64" autocomplete="new-password" placeholder="確認のためもう一度">
+  </div>
+  <div class="row"><button id="loginBtn" class="btn" type="button" style="margin:0">ログイン</button><button id="regBtn" class="btn sub syncOnly" type="button" style="margin:0">はじめて登録する</button></div>
+  <p id="loginMsg" class="keys" style="color:#ffb347"></p>
+  <p class="keys syncOnly" style="opacity:.75">パスワードを空けたまま「ログイン」すると、この端末だけに保存して遊べます。パスワードは忘れると元に戻せないので、メモしておいてね。</p>
   <div id="profList" class="row"></div>
   <details class="keys" style="margin-top:14px"><summary>引き継ぎコードで復元する</summary><textarea id="importCode" rows="3" style="width:min(520px,90vw)"></textarea><br><button id="importBtn" class="btn sub" type="button">復元してログイン</button></details>
-  <p id="loginMsg" class="keys" style="color:#ffb347"></p>
 </div>
 <div id="account" class="panel hidden">
   <h1 style="font-size:clamp(26px,6vw,40px)">アカウント</h1>
   <p id="accInfo"></p>
+  <p id="syncInfo" class="keys"></p>
+  <div id="passForm" class="lform hidden">
+    <label for="accPass">パスワード</label><input id="accPass" type="password" maxlength="64" autocomplete="new-password" placeholder="6文字以上">
+    <label for="accPass2">もう一度</label><input id="accPass2" type="password" maxlength="64" autocomplete="new-password">
+  </div>
+  <button id="passOpen" class="btn sub syncOnly" type="button">パスワードを決める</button>
+  <button id="syncNow" class="btn sub hidden" type="button">今すぐサーバーに保存</button>
   <button id="showCode" class="btn sub" type="button">引き継ぎコードを表示</button>
   <textarea id="exportCode" class="hidden" rows="4" readonly style="width:min(560px,92vw);margin-top:10px"></textarea>
   <button id="copyCode" class="btn sub hidden" type="button">コピー</button>
@@ -1079,7 +1099,8 @@ function init() {
   enemies.push(makeTeacher());
   applyQuality();
   $('loading').classList.add('hidden'); $('start').classList.remove('hidden'); $('online').classList.remove('hidden'); $('navRow').classList.remove('hidden'); updatePtsUI();
-  if (CUR && PROFILES[CUR]) { loadProfile(CUR); maybeGift(); } else showLogin();
+  if (CUR && PROFILES[CUR]) { loadProfile(CUR); maybeGift(); pullSave(); } else showLogin();
+  refreshSyncInfo();
   setMode(MODE); setStage(stageIdx); setBots(botCount);
   resetGame();
   requestAnimationFrame(loop);
@@ -1172,12 +1193,82 @@ function loadProfile(name) {
   }
   const sv = PROFILES[name]; CUR = name; store.set('dk_cur', name);
   points = sv.pts | 0; INV = sv.inv || {}; ACH = sv.ach || {}; HIST = sv.hist || []; STATS = sv.stats || {}; GIFT = !!sv.gift100;
-  saveShop();
+  const q = quietSave; quietSave = true; try { saveShop(); } finally { quietSave = q; }
   if ($('pname')) $('pname').value = name;
 }
 function saveShop() {
-  if (CUR) { PROFILES[CUR] = Object.assign(PROFILES[CUR] || {}, { pts: points, inv: INV, ach: ACH, hist: HIST, stats: STATS, gift100: GIFT }); store.set('dk_profiles', JSON.stringify(PROFILES)); }
+  if (CUR) { PROFILES[CUR] = Object.assign(PROFILES[CUR] || {}, { pts: points, inv: INV, ach: ACH, hist: HIST, stats: STATS, gift100: GIFT }); store.set('dk_profiles', JSON.stringify(PROFILES)); schedulePush(); }
   updatePtsUI(); renderItems();
+}
+// ---- password accounts: saves live on a Google Apps Script web app (server/Code.gs), so another device can log in and continue
+const SYNC_URL = '__SYNC_URL__';
+const syncOn = () => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(SYNC_URL);
+const SAVE_KEYS = ['pts', 'inv', 'ach', 'hist', 'stats', 'gift100', 'created'];
+const payloadOf = sv => { const o = {}; for (const k of SAVE_KEYS) if (sv[k] !== undefined) o[k] = sv[k]; return o; };
+const persistProfiles = () => store.set('dk_profiles', JSON.stringify(PROFILES));
+const API_ERR = { net: 'サーバーにつながりません。通信を確認して、もう一度ためしてね', busy: '混み合っています。少し待ってからもう一度ためしてね', name: '名前は1〜10文字にしてね',
+  pass: 'パスワードは6〜64文字で、名前と同じにはできません', taken: 'この名前はもう登録されています。自分の名前ならパスワードを入れて「ログイン」、ちがうなら別の名前にしてね',
+  noname: 'この名前はまだ登録されていません。はじめての人は「はじめて登録する」を押してね', wrong: 'パスワードがちがいます', locked: 'パスワードのまちがいが続いたので、この名前は10分間ロックされています',
+  data: 'セーブデータが大きすぎて保存できませんでした', auth: 'ログインが切れました。もう一度パスワードでログインしてね', bad: 'エラーが起きました' };
+async function api(a, o) {
+  if (!syncOn()) return { ok: false, err: 'net' };
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 25000);
+  try {
+    const r = await fetch(SYNC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ a }, o)), redirect: 'follow', credentials: 'omit', cache: 'no-store', signal: ctl.signal });
+    const j = await r.json(); return j && typeof j === 'object' ? j : { ok: false, err: 'bad' };
+  } catch (e) { return { ok: false, err: 'net' }; } finally { clearTimeout(tm); }
+}
+let pushT = 0, pushing = false, quietSave = false;
+function schedulePush() { const sv = CUR && PROFILES[CUR]; if (quietSave || !sv || !sv.tok || !syncOn()) return; sv.dirty = true; clearTimeout(pushT); pushT = setTimeout(pushSave, 2500); }
+async function pushSave() {
+  const name = CUR, sv = PROFILES[name]; if (!sv || !sv.tok || !sv.dirty) return true;
+  if (pushing) { clearTimeout(pushT); pushT = setTimeout(pushSave, 1500); return false; }
+  pushing = true; sv.dirty = false;
+  const r = await api('save', { name, token: sv.tok, data: payloadOf(sv), base: sv.srv || 0 });
+  pushing = false;
+  if (r.ok) { sv.srv = r.updated; sv.syncAt = Date.now(); persistProfiles(); refreshSyncInfo(); return true; }
+  if (r.err === 'conflict') { resolveConflict(name, r.data, r.updated); return true; }
+  if (r.err === 'auth') { sv.tok = null; sv.dirty = false; persistProfiles(); toast(API_ERR.auth); refreshSyncInfo(); return false; }
+  sv.dirty = true; persistProfiles(); clearTimeout(pushT); pushT = setTimeout(pushSave, 20000); refreshSyncInfo(); return false;
+}
+function adoptServer(name, data, updated) {
+  const sv = PROFILES[name]; if (!sv) return;
+  const keep = { tok: sv.tok, srv: updated, syncAt: Date.now(), dirty: false };
+  PROFILES[name] = Object.assign(newSave(), data && typeof data === 'object' ? data : {}, keep);
+  persistProfiles();
+  if (name === CUR) { quietSave = true; try { loadProfile(name); } finally { quietSave = false; } }
+}
+function resolveConflict(name, data, updated) {   // both devices changed: keep the one that has played more
+  const sv = PROFILES[name]; if (!sv) return;
+  const mine = (sv.stats && sv.stats.plays) | 0, theirs = (data && data.stats && data.stats.plays) | 0;
+  if (mine > theirs) { sv.srv = updated; sv.dirty = true; persistProfiles(); clearTimeout(pushT); pushT = setTimeout(pushSave, 500); }
+  else { adoptServer(name, data, updated); if (name === CUR) toast('別の端末で遊んだデータを読み込みました'); }
+}
+async function pullSave() {
+  const name = CUR, sv = PROFILES[name]; if (!sv || !sv.tok || !syncOn()) return;
+  const r = await api('load', { name, token: sv.tok });
+  if (!r.ok) { if (r.err === 'auth') { sv.tok = null; persistProfiles(); toast(API_ERR.auth); refreshSyncInfo(); } return; }
+  if (CUR !== name || state === 'play') return;
+  if ((r.updated | 0) > (sv.srv | 0) && r.updated !== sv.srv) { if (sv.dirty) resolveConflict(name, r.data, r.updated); else { adoptServer(name, r.data, r.updated); toast('別の端末で遊んだデータを読み込みました'); } }
+  else if (sv.dirty) pushSave();
+  refreshSyncInfo();
+}
+document.addEventListener('visibilitychange', () => {
+  const sv = CUR && PROFILES[CUR]; if (!sv || !sv.tok || !syncOn()) return;
+  if (document.visibilityState === 'hidden') { if (sv.dirty && navigator.sendBeacon) { try { navigator.sendBeacon(SYNC_URL, new Blob([JSON.stringify({ a: 'save', name: CUR, token: sv.tok, data: payloadOf(sv), base: sv.srv || 0 })], { type: 'text/plain' })); } catch (e) {} } }
+  else if (state !== 'play') pullSave();
+});
+function refreshSyncInfo() {
+  const el = $('syncInfo'); if (!el) return;
+  const sv = CUR && PROFILES[CUR];
+  for (const e of document.querySelectorAll('.syncOnly')) e.classList.toggle('hidden', !syncOn());
+  if (!syncOn()) { el.textContent = ''; return; }
+  const linked = !!(sv && sv.tok);
+  el.classList.toggle('off', !linked);
+  el.textContent = linked ? `パスワード：設定ずみ ── 別の端末でも「${CUR}」とパスワードでログインすれば続きから遊べます。${sv.dirty ? '（保存待ち）' : sv.syncAt ? `（${new Date(sv.syncAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} に保存ずみ）` : ''}`
+                          : 'この名前はまだこの端末だけに保存されています。パスワードを決めると、別の端末でも続きから遊べます。';
+  $('passOpen').textContent = linked ? 'パスワードを変える' : 'パスワードを決めて別の端末でも遊べるようにする';
+  $('syncNow').classList.toggle('hidden', !linked);
 }
 let toastTimer = 0;
 function toast(t) { const el = $('toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toastTimer); toastTimer = setTimeout(() => el.style.opacity = 0, 3200); }
@@ -1185,19 +1276,55 @@ function showPanel(id) { for (const x of ['title', 'login', 'account', 'notice',
 function showLogin() {
   showPanel('login'); $('loginMsg').textContent = '';
   const box = $('profList'); box.textContent = '';
-  for (const n of Object.keys(PROFILES)) { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.addEventListener('click', () => { loadProfile(n); afterLogin(); }); box.appendChild(b); }
+  for (const n of Object.keys(PROFILES)) { const b = document.createElement('button'); b.type = 'button'; b.textContent = (PROFILES[n].tok ? '🔑 ' : '') + n; b.title = PROFILES[n].tok ? 'サーバーに保存されている名前' : 'この端末だけの名前'; b.addEventListener('click', () => { loadProfile(n); afterLogin(); pullSave(); }); box.appendChild(b); }
+  $('loginPass').value = $('loginPass2').value = ''; setReg(false); refreshSyncInfo();
+}
+let regMode = false;
+function setReg(on) { regMode = on; for (const e of document.querySelectorAll('#login .p2')) e.classList.toggle('hidden', !on); $('regBtn').textContent = on ? '登録する' : 'はじめて登録する'; $('loginBtn').textContent = on ? 'やめる' : 'ログイン'; }
+function lockLogin(on, msg) { for (const id of ['loginBtn', 'regBtn']) $(id).disabled = on; if (msg !== undefined) $('loginMsg').textContent = msg; }
+async function serverLogin(n, pass) {
+  lockLogin(true, '通信中…');
+  const r = await api('login', { name: n, pass });
+  lockLogin(false, r.ok ? '' : (API_ERR[r.err] || API_ERR.bad));
+  if (!r.ok) return;
+  const name = (r.name || n).slice(0, 10);
+  PROFILES[name] = Object.assign(newSave(), r.data || {}, { tok: r.token, srv: r.updated, syncAt: Date.now(), dirty: false });
+  persistProfiles(); quietSave = true; try { loadProfile(name); } finally { quietSave = false; }
+  $('loginPass').value = ''; afterLogin();
+}
+async function serverRegister(n, pass, pass2, msgEl, lock) {   // also used from the account screen to give a local name a password
+  if (pass.length < 6 || pass.length > 64 || pass.normalize('NFKC').toLowerCase() === n.normalize('NFKC').toLowerCase()) { msgEl.textContent = API_ERR.pass; return false; }
+  if (pass !== pass2) { msgEl.textContent = '2つのパスワードがちがいます。もう一度入れてね'; return false; }
+  lock(true); msgEl.textContent = '通信中…';
+  const sv = PROFILES[n] || newSave();
+  const r = await api('register', { name: n, pass, data: payloadOf(sv) });
+  lock(false);
+  if (!r.ok) { msgEl.textContent = API_ERR[r.err] || API_ERR.bad; return false; }
+  PROFILES[n] = Object.assign(sv, { tok: r.token, srv: r.updated, syncAt: Date.now(), dirty: false });
+  persistProfiles(); msgEl.textContent = ''; return true;
 }
 function afterLogin() { showPanel('title'); toast(`${CUR} でログインしました`); maybeGift(); }
 function maybeGift() { if (CUR && !GIFT) showPanel('notice'); }
 $('giftBtn').addEventListener('click', () => { GIFT = true; points += 100; saveShop(); showPanel('title'); toast('100Pを受け取りました！'); });
 $('loginBtn').addEventListener('click', () => {
-  const n = $('loginName').value.trim().slice(0, 10);
+  if (regMode) { setReg(false); $('loginMsg').textContent = ''; return; }
+  const n = $('loginName').value.normalize('NFKC').trim().slice(0, 10), pass = $('loginPass').value;
   if (!n) { $('loginMsg').textContent = 'プレイヤー名を入れてください'; return; }
-  loadProfile(n); afterLogin();
+  if (syncOn() && pass) { serverLogin(n, pass); return; }
+  const had = !!PROFILES[n]; loadProfile(n); afterLogin(); if (PROFILES[n].tok) pullSave(); else if (syncOn() && !had) toast('この端末だけに保存します。アカウント画面でパスワードを決めると別の端末でも遊べます');
 });
-$('loginName').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('regBtn').addEventListener('click', async () => {
+  const n = $('loginName').value.normalize('NFKC').trim().slice(0, 10), pass = $('loginPass').value;
+  if (!n) { $('loginMsg').textContent = 'プレイヤー名を入れてください'; return; }
+  if (!regMode) { setReg(true); $('loginMsg').textContent = pass ? '確認のため、下にもう一度同じパスワードを入れて「登録する」を押してね' : 'パスワード（6文字以上）を決めて、2か所に同じものを入れてね'; ($('loginPass').value ? $('loginPass2') : $('loginPass')).focus(); return; }
+  if (await serverRegister(n, pass, $('loginPass2').value, $('loginMsg'), on => lockLogin(on))) {
+    quietSave = true; try { loadProfile(n); } finally { quietSave = false; }
+    $('loginPass').value = $('loginPass2').value = ''; setReg(false); afterLogin(); toast(`「${n}」を登録しました。別の端末でも同じ名前とパスワードで遊べます`);
+  }
+});
+for (const id of ['loginName', 'loginPass', 'loginPass2']) $(id).addEventListener('keydown', e => { if (e.key === 'Enter') (regMode ? $('regBtn') : $('loginBtn')).click(); });
 function exportCode() {
-  const json = JSON.stringify({ n: CUR, s: PROFILES[CUR] });
+  const json = JSON.stringify({ n: CUR, s: payloadOf(PROFILES[CUR]) });
   const bytes = new TextEncoder().encode(json); let bin = ''; for (const b of bytes) bin += String.fromCharCode(b);
   return 'DK1-' + btoa(bin);
 }
@@ -1207,17 +1334,38 @@ $('importBtn').addEventListener('click', () => {
     const bin = atob(raw); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     const o = JSON.parse(new TextDecoder().decode(bytes));
     if (!o || typeof o.n !== 'string' || !o.s || typeof o.s !== 'object') throw 0;
-    PROFILES[o.n.slice(0, 10)] = Object.assign(newSave(), o.s); loadProfile(o.n.slice(0, 10)); afterLogin();
+    const sv = Object.assign(newSave(), o.s); delete sv.tok; delete sv.srv; delete sv.dirty; PROFILES[o.n.slice(0, 10)] = sv; loadProfile(o.n.slice(0, 10)); afterLogin();
   } catch (e) { $('loginMsg').textContent = '引き継ぎコードが正しくありません。もう一度コピーし直してください'; }
 });
 $('accBtn').addEventListener('click', () => {
   showPanel('account'); $('exportCode').classList.add('hidden'); $('copyCode').classList.add('hidden'); $('accMsg').textContent = '';
   const n = Object.keys(ACH).length;
   $('accInfo').textContent = `ログイン中：${CUR}　ポイント：${points}P　実績：${n}/${ACHS.length}　プレイ回数：${STATS.plays | 0}`;
+  $('passForm').classList.add('hidden'); $('accPass').value = $('accPass2').value = ''; refreshSyncInfo();
 });
+$('passOpen').addEventListener('click', async () => {
+  const sv = PROFILES[CUR]; if (!sv) return;
+  if ($('passForm').classList.contains('hidden')) { $('passForm').classList.remove('hidden'); $('passOpen').textContent = '決定'; $('accMsg').textContent = sv.tok ? '新しいパスワードを2か所に入れてね（ほかの端末はログアウトされます）' : 'パスワード（6文字以上）を2か所に入れてね。忘れると元に戻せないのでメモしておいてね'; $('accPass').focus(); return; }
+  const pass = $('accPass').value, pass2 = $('accPass2').value, lock = on => { $('passOpen').disabled = on; };
+  if (!sv.tok) { if (await serverRegister(CUR, pass, pass2, $('accMsg'), lock)) { $('passForm').classList.add('hidden'); $('accMsg').textContent = `パスワードを決めました。別の端末でも「${CUR}」とこのパスワードでログインできます`; refreshSyncInfo(); } return; }
+  if (pass.length < 6 || pass.length > 64) { $('accMsg').textContent = API_ERR.pass; return; }
+  if (pass !== pass2) { $('accMsg').textContent = '2つのパスワードがちがいます。もう一度入れてね'; return; }
+  lock(true); $('accMsg').textContent = '通信中…'; const r = await api('setpass', { name: CUR, token: sv.tok, pass }); lock(false);
+  if (!r.ok) { $('accMsg').textContent = API_ERR[r.err] || API_ERR.bad; if (r.err === 'auth') { sv.tok = null; persistProfiles(); refreshSyncInfo(); } return; }
+  sv.tok = r.token; persistProfiles(); $('passForm').classList.add('hidden'); $('accMsg').textContent = 'パスワードを変えました'; refreshSyncInfo();
+});
+$('syncNow').addEventListener('click', async () => { const sv = PROFILES[CUR]; if (!sv || !sv.tok) return; sv.dirty = true; $('accMsg').textContent = '保存中…'; const ok = await pushSave(); $('accMsg').textContent = ok ? 'サーバーに保存しました' : API_ERR.net; refreshSyncInfo(); });
 $('showCode').addEventListener('click', () => { const t = $('exportCode'); t.value = exportCode(); t.classList.remove('hidden'); $('copyCode').classList.remove('hidden'); $('accMsg').textContent = 'このコードを別の端末のログイン画面「引き継ぎコードで復元する」に貼りつけてください。'; });
 $('copyCode').addEventListener('click', () => { const t = $('exportCode'); const ok = () => $('accMsg').textContent = 'コピーしました'; try { navigator.clipboard.writeText(t.value).then(ok, () => { t.select(); $('accMsg').textContent = '選択したので、長押し（右クリック）でコピーしてください'; }); } catch (e) { t.select(); } });
-$('switchUser').addEventListener('click', () => { CUR = ''; store.set('dk_cur', ''); showLogin(); });
+$('switchUser').addEventListener('click', async () => {
+  const sv = CUR && PROFILES[CUR];
+  if (sv && sv.tok) {
+    $('accMsg').textContent = '保存中…'; if (sv.dirty) { clearTimeout(pushT); await pushSave(); }
+    if (sv.dirty) { $('accMsg').textContent = 'サーバーに保存できなかったので、この端末にも残しておきます'; }
+    else { api('logout', { name: CUR, token: sv.tok }); delete PROFILES[CUR]; persistProfiles(); }
+  }
+  CUR = ''; store.set('dk_cur', ''); showLogin();
+});
 $('accBack').addEventListener('click', () => showPanel('title'));
 
 // ---- achievements & history
@@ -2328,7 +2476,7 @@ function furnishPlane(r) {
       B('metal', x - 0.22, 0, z0 + 0.05, x + 0.18, 0.38, z0 + 0.1); B('metal', x - 0.22, 0, z1 - 0.1, x + 0.18, 0.38, z1 - 0.05);
       B(mat, x - 0.26, 0.38, z0, x + 0.26, 0.5, z1); B(mat, x - 0.36, 0.45, z0, x - 0.26, 1.2, z1);
       for (let k = 0; k <= nSeat; k++) { const zb = z0 + k * sw; B('metal', x - 0.26, 0.5, zb - 0.025, x + 0.18, 0.64, zb + 0.025); }
-      for (let k = 0; k < nSeat; k++) { const zc = z0 + (k + 0.5) * sw; B('dark', x - 0.37, 1.0, zc - sw * 0.35, x - 0.36, 1.12, zc + sw * 0.35); deskTops[name].push({ x: ox + x + 0.02, z: oz + zc, y: 0.5 }); }
+      for (let k = 0; k < nSeat; k++) { const zc = z0 + (k + 0.5) * sw; B('dark', x - 0.37, 1.0, zc - sw * 0.35, x - 0.36, 1.12, zc + sw * 0.35); deskTops[name].push({ x: ox + x + 0.02, z: oz + zc, y: 0.5, win: nSeat > 1 && k === (top ? 0 : nSeat - 1) }); }
       if (first) { B('seatF', x + 0.35, 0.0, top ? z1 : z0 - 0.08, x + 0.95, 1.1, top ? z1 + 0.08 : z0); B('wood', x + 0.45, 0.6, z0 + 0.1, x + 0.9, 0.66, z1 - 0.1); }
       F(x - 0.36, z0, x + 0.26, z1, 0.5);
     }
@@ -2465,7 +2613,8 @@ function hostTask(t, dt) {
   }
 }
 function taskLines() {
-  return [[`暗号キーを集める（機内と空港）　${collected} / ${collected + books.length}`, keysDone()], ['電源室でシステム電源を入れる', TASK.power >= TASK_NEED.power], ['コックピットで離陸する（長押し）', TASK.takeoff >= TASK_NEED.takeoff], ['【ストーリー】アビオニクス室でハッキング', TASK.hack >= TASK_NEED.hack]];
+  const left = [...new Set(books.map(b => b.room))];
+  return [[`暗号キーを集める　${collected} / ${collected + books.length}${left.length ? `<span class="kr">（${left.join('・')}／地図の水色◆）</span>` : ''}`, keysDone()], ['電源室でシステム電源を入れる', TASK.power >= TASK_NEED.power], ['コックピットで離陸する（長押し）', TASK.takeoff >= TASK_NEED.takeoff], ['【ストーリー】アビオニクス室でハッキング', TASK.hack >= TASK_NEED.hack]];
 }
 const TASK_ROOM = { power: 'generator', takeoff: 'cockpit', hack: 'avionics' };
 
@@ -2653,7 +2802,8 @@ function resetGame() {
 function makeBookPlan(n) {
   const classes = rooms.filter(r => (r.type === 'class' || r.keyRoom) && r.name !== '2-A').map(r => r.name).sort(() => Math.random() - 0.5).slice(0, n);
   const subs = SUBJECTS.map((s, i) => i).sort(() => Math.random() - 0.5);
-  return classes.map((rn, i) => ({ id: i, room: rn, di: Math.floor(Math.random() * deskTops[rn].length), sub: subs[i % subs.length] }));
+  return classes.map((rn, i) => { const L = deskTops[rn], ok = L.map((d, j) => j).filter(j => !L[j].win); const pool = ok.length ? ok : L.map((d, j) => j);
+    return { id: i, room: rn, di: pool[Math.floor(Math.random() * pool.length)], sub: subs[i % subs.length] }; });
 }
 const KEY_NAMES = ['暗号キーα', '暗号キーβ', '暗号キーγ', '暗号キーδ', '暗号キーε'];
 function spawnBook(bp) {
@@ -2663,8 +2813,13 @@ function spawnBook(bp) {
     const g = new THREE.Group(); g.position.set(d.x, d.y ?? 0.5, d.z);
     const m = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 0.06), new THREE.MeshStandardMaterial({ color: 0x1b1e26, metalness: 0.5, roughness: 0.4, emissive: 0x0a3a4a })); m.position.y = 0.02; m.rotation.y = Math.random() * 3; g.add(m);
     const tip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.025, 0.045), new THREE.MeshStandardMaterial({ color: 0xc8ccd2, metalness: 0.9, roughness: 0.3 })); tip.position.set(Math.cos(m.rotation.y) * 0.1, 0.02, -Math.sin(m.rotation.y) * 0.1); g.add(tip);
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x60e8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); s.scale.set(0.7, 0.7, 1); s.position.y = 0.1; g.add(s);
-    scene.add(g); books.push({ g, name: KEY_NAMES[bp.id % KEY_NAMES.length], room: bp.room, s, id: bp.id }); return;
+    m.scale.setScalar(1.8); tip.scale.setScalar(1.8); tip.position.multiplyScalar(1.8); m.material.emissive.setHex(0x1a8aa8);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x60e8ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); s.scale.set(1.5, 1.5, 1); s.position.y = 0.12; g.add(s);
+    // a beam of light from the seat to the ceiling, so you can spot it over the seat backs
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.6, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0x4ff0ff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+    beam.position.y = 1.3; g.add(beam);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0x4ff0ff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); halo.scale.set(1.2, 1.2, 1); halo.position.y = 2.2; g.add(halo);
+    scene.add(g); books.push({ g, name: KEY_NAMES[bp.id % KEY_NAMES.length], room: bp.room, s, beam, halo, id: bp.id }); return;
   }
   const g = new THREE.Group(); g.position.set(d.x, d.y ?? 0.735, d.z);
   const side = new THREE.MeshStandardMaterial({ color: 0xf1ece0, roughness: 0.9 }), cover = new THREE.MeshStandardMaterial({ map: bookCover(sname, col), roughness: 0.6, emissive: 0x222222 });
@@ -3412,6 +3567,7 @@ function updateWorld(dt, t) {
   const canCollect = !hunter && !P.out && state !== 'scare';
   for (let i = books.length - 1; i >= 0; i--) {
     const b = books[i]; b.s.material.opacity = 0.55 + 0.35 * Math.sin(t * 3 + i);
+    if (b.beam) { const k = 0.5 + 0.5 * Math.sin(t * 2.5 + i); b.beam.material.opacity = 0.25 + 0.22 * k; b.halo.material.opacity = 0.5 + 0.4 * k; b.g.children[0].rotation.y += dt * 1.5; }
     if (canCollect && Math.hypot(P.pos.x - b.g.position.x, P.pos.z - b.g.position.z) < (STAGE.plane ? 1.85 : 1.4)) {   // plane keys can sit on a window seat
       if (NET) { if (!b.req || t - b.req > 2) { b.req = t; act('book', { id: b.id }); } }
       else { scene.remove(b.g); books.splice(i, 1); collectBook(b, null); }
@@ -3507,6 +3663,15 @@ function drawZones(g, s, labels) {
     if (!STAGE.plane) { g.font = `bold ${Math.round(s * 0.75)}px ${JFONT}`; g.fillStyle = '#9dffb0'; g.strokeText('玄関', 23 * s, 12.45 * s); g.fillText('玄関', 23 * s, 12.45 * s); }
   }
   if (!STAGE.plane) { g.fillStyle = exitOpen ? '#4f4' : 'rgba(80,200,90,.6)'; g.fillRect(22.5 * s, 13 * s - 4, s, 4); }
+  if (STAGE.plane && books.length) {   // where the cipher keys are: cyan frame on the room, a key marker on the seat
+    g.lineWidth = Math.max(2, s * 0.16); g.strokeStyle = '#4ff0ff';
+    for (const rn of new Set(books.map(b => b.room))) { const r = ROOM[rn] || rooms.find(q => q.name === rn); if (r) g.strokeRect(r.x0 * s + 2, r.y0 * s + 2, (r.w || 3) * s - 5, (r.h || 3) * s - 5); }
+    for (const b of books) {
+      const x = b.g.position.x / CELL * s, y = b.g.position.z / CELL * s, k = Math.max(5, s * 0.34);
+      g.beginPath(); g.moveTo(x, y - k); g.lineTo(x + k, y); g.lineTo(x, y + k); g.lineTo(x - k, y); g.closePath();
+      g.fillStyle = '#4ff0ff'; g.fill(); g.lineWidth = Math.max(1.5, s * 0.08); g.strokeStyle = '#002a33'; g.stroke();
+    }
+  }
 }
 function drawMapBase() {
   const c = $('map'), rows = STAGE.plane ? 9 : H; MAPZ = STAGE.plane ? 4 : 0;
@@ -3554,7 +3719,7 @@ function drawMapArrow() {
   const px = P.pos.x / CELL * MAPS, pz = (P.pos.z / CELL - MAPZ) * MAPS;
   const tr = `translate(${px.toFixed(0)}px,${pz.toFixed(0)}px) rotate(${(-P.yaw).toFixed(2)}rad)`;
   if (tr !== UI.tr) { UI.tr = tr; $('arrow').style.transform = tr; }
-  if (exitOpen !== UI.exitDrawn) { UI.exitDrawn = exitOpen; drawMapBase(); }
+  if (exitOpen !== UI.exitDrawn || UI.keysDrawn !== books.length) { UI.exitDrawn = exitOpen; UI.keysDrawn = books.length; drawMapBase(); }
 }
 
 
