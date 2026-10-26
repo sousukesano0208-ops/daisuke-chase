@@ -298,7 +298,7 @@ textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;paddin
 
 <div id="title" class="panel">
   <h1>DAISUKE先生から逃げる</h1>
-  <div class="ver">ver.5.1</div>
+  <div class="ver">ver.5.1.1</div>
   <p>明日はテスト。教室に置き忘れた<b>教科書</b>を取りに、夜の校舎へ忍び込んだ。<br>
   教科書をぜんぶ回収して<b>玄関</b>から脱出しろ。赤い目のDAISUKE先生に見つかったら――走れ。</p>
   <p class="keys">しゃがんで机やロッカーのそばにいれば隠れられる。手元の<b>タブレット</b>で監視カメラを見られるが、バッテリーを使う。<br>
@@ -647,7 +647,7 @@ for (const r of rooms) ROOM[r.type === 'class' ? r.name : r.type] = r;
 allDoors.length = 0; for (const r of rooms) for (const d of r.doors) allDoors.push(Object.assign(d, { r }));
 shDoors.length = 0; ROOM.shelter.doors.forEach((d, i) => { d.si = i; shDoors.push(d); });
 }
-layoutRooms(STAGE.layout);
+layoutRooms(STAGE.layout || STAGES[0].layout);   // the plane is laid out later in buildWorld
 const zoneAt = (cx, cy) => (cx < 0 || cy < 0 || cx >= W || cy >= H) ? null : ZONE[cy][cx];
 
 // collision boxes: [x0,z0,x1,z1,type]  W=wall F=furniture(cover) D=monitor door X=exit door
